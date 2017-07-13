@@ -1,3 +1,9 @@
+###############################
+# DISTRIBUTION
+###############################
+
+distribution/ddf-common/*	@stustison
+
 
 ###############################
 # CATALOG
@@ -6,21 +12,36 @@
 catalog/core/catalog-core-commands/src/main/java/org/codice/ddf/commands/catalog/ExportCommand.java		@rzwiefel
 catalog/core/catalog-core-commands/src/main/java/org/codice/ddf/commands/catalog/ImportCommand.java		@rzwiefel
 
+catalog/core/catalog-core-contentresourcereader/*	@stustison
+
+catalog/core/catalog-core-localstorageprovider/*	@stustison
+
 catalog/core/catalog-core-standardframework/src/main/java/ddf/catalog/history/*		@rzwiefel
+catalog/core/catalog-core-standardframework/src/main/java/ddf/catalog/impl*		@stustison
+catalog/core/catalog-core-standardframework/src/main/java/ddf/catalog/resource*		@stustison
 
 catalog/core/catalog-core-validationparser/* 	@jrnorth @rzwiefel
 
 catalog/core/catalog-core-versioning/*				@rzwiefel
 
+catalog/opensearch/*	@stustison
+
+catalog/rest/*		@stustison
+
+catalog/security/*		@stustison
+
 catalog/ui/catalog-ui-search/src/main/java/*		@rzwiefel
 
-platform/security/*		@stustison
+catalog/ui/search-ui/standard/*		@stustison
+
+
+###############################
+# PLATFORM
+###############################
 
 platform/admin/*		@stustison
 
 platform/error/*		@stustison
-
-platform/util/*			@stustison
 
 platform/platform-filter-delegate/*		@stustison
 
@@ -28,20 +49,6 @@ platform/platform-http-proxy/*		@stustison
 
 platform/platform-paxweb-jettyconfig/*	@stustison
 
-distribution/ddf-common/*	@stustison
+platform/security/*		@stustison
 
-catalog/ui/search-ui/standard/*		@stustison
-
-catalog/security/*		@stustison
-
-catalog/rest/*		@stustison
-
-catalog/opensearch/*	@stustison
-
-catalog/core/catalog-core-standardframework/src/main/java/ddf/catalog/impl*		@stustison
-
-catalog/core/catalog-core-standardframework/src/main/java/ddf/catalog/resource*		@stustison
-
-catalog/core/catalog-core-localstorageprovider/*	@stustison
-
-catalog/core/catalog-core-contentresourcereader/*	@stustison
+platform/util/*			@stustison
