@@ -21,8 +21,8 @@
     <reference id="xmlParser" interface="org.codice.ddf.parser.Parser" filter="(id=xml)"
                availability="mandatory"/>
 
-    <bean id="pdpAuthzRealm" class="ddf.security.pdp.realm.AuthzRealm">
-        <cm:managed-properties persistent-id="ddf.security.pdp.realm.AuthzRealm"
+    <bean id="pdpAuthzRealm" class="ddf.security.pdp.realm.impl.AuthzRealm">
+        <cm:managed-properties persistent-id="ddf.security.pdp.realm.impl.AuthzRealm"
                                update-strategy="container-managed"/>
         <argument value="${ddf.etc}/pdp/policies"/>
         <argument ref="xmlParser"/>

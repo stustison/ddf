@@ -31,7 +31,7 @@
     </bean>
 
     <bean id="registrySourceConfigHandlerThreadFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          class="org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder"
           factory-method="newThreadFactory">
         <argument value="registrySourceConfigHandlerThread"/>
     </bean>

@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.commons.lang.StringUtils;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

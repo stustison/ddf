@@ -84,11 +84,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
@@ -350,20 +345,20 @@
                         <Embed-Dependency>
                             catalog-core-api-impl,
                             ddf-security-common,
-                            platform-util,
-                            platform-util-unavailableurls,
                             failsafe,
                             hazelcast,
                             sardine,
-                            httpclient,
+                            commons-lang3,
+                            platform-util,
                             httpcore,
-                            commons-lang3
+                            httpclient
                         </Embed-Dependency>
                         <Import-Package>
                             !org.eclipse.jetty.server.bio,
                             !org.eclipse.jetty.server.ssl,
                             !org.apache.tools.ant,
                             !org.apache.tools.ant.types,
+                            !org.codice.ddf.platform.util,
                             org.apache.commons.io.comparator,
                             *
                         </Import-Package>

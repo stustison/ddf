@@ -26,7 +26,6 @@
  */
 package org.codice.ddf.security.validator.pki;
 
-import ddf.security.PropertiesLoader;
 import ddf.security.SubjectUtils;
 import java.io.IOException;
 import java.security.cert.CertificateParsingException;
@@ -57,6 +56,7 @@ import org.apache.wss4j.dom.handler.RequestData;
 import org.apache.wss4j.dom.validate.Credential;
 import org.apache.wss4j.dom.validate.SignatureTrustValidator;
 import org.apache.wss4j.dom.validate.Validator;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.PKIAuthenticationToken;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public class PKITokenValidator implements TokenValidator {
     try {
       merlin =
           new Merlin(
-              PropertiesLoader.loadProperties(signaturePropertiesPath),
+              PropertiesLoader.getInstance().loadProperties(signaturePropertiesPath),
               PKITokenValidator.class.getClassLoader(),
               null);
     } catch (WSSecurityException | IOException e) {

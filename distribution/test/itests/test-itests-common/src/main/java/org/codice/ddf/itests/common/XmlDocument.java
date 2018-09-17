@@ -16,7 +16,7 @@ package org.codice.ddf.itests.common;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.w3c.dom.Document;
 
 /**
@@ -30,7 +30,7 @@ import org.w3c.dom.Document;
  * with the most information possible when debugging test cases.
  *
  * <p>To format (pretty print) XML, use the ddf.util.XPathHelper or
- * org.codice.ddf.platform.util.XMLUtils classes.
+ * org.codice.ddf.platform.util.xml.XMLUtils classes.
  */
 public class XmlDocument {
 

@@ -54,10 +54,6 @@
             <artifactId>security-core-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.codice.thirdparty</groupId>
             <artifactId>ogc-filter-v_1_1_0-schema</artifactId>
         </dependency>
@@ -78,7 +74,8 @@
         </dependency>
         <dependency>
             <groupId>ddf.platform.security</groupId>
-            <artifactId>security-rest-cxfwrapper</artifactId>
+            <artifactId>security-rest-clientapi</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -174,21 +171,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf.spatial</groupId>
@@ -203,11 +191,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ddf.security.core</groupId>
-            <artifactId>security-core-impl</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf</groupId>
@@ -251,13 +234,9 @@
                             catalog-core-api-impl,
                             commons-collections4,
                             ogc-tools-gml-jts,
-                            ddf-security-common,
-                            platform-util,
-                            platform-util-unavailableurls,
                             jaxb2-basics-runtime,
                             commons-lang3,
-                            geospatial,
-                            security-core-impl
+                            geospatial
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

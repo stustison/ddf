@@ -116,7 +116,7 @@ import org.apache.cxf.common.util.CollectionUtils;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.cxf.client.ClientFactoryFactory;
 import org.codice.ddf.cxf.client.SecureCxfClientFactory;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.codice.ddf.security.common.Security;
 import org.codice.ddf.spatial.ogc.catalog.MetadataTransformer;
 import org.codice.ddf.spatial.ogc.catalog.common.AvailabilityCommand;

@@ -51,7 +51,7 @@ import org.codice.ddf.catalog.ui.metacard.impl.StorableResourceImpl;
 import org.codice.ddf.catalog.ui.metacard.internal.Splitter;
 import org.codice.ddf.catalog.ui.metacard.internal.SplitterLocator;
 import org.codice.ddf.catalog.ui.metacard.internal.StorableResource;
-import org.codice.ddf.platform.util.TemporaryFileBackedOutputStream;
+import org.codice.ddf.platform.util.stream.TemporaryFileBackedOutputStream;
 import org.codice.ddf.platform.util.uuidgenerator.UuidGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

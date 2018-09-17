@@ -30,6 +30,10 @@
             <artifactId>platform-filter-delegate</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-core</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

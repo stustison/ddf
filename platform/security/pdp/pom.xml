@@ -24,6 +24,7 @@
     <name>DDF Security PDP</name>
     <packaging>pom</packaging>
     <modules>
+        <module>security-pdp-api</module>
         <module>security-pdp-authzrealm</module>
     </modules>
 </project>

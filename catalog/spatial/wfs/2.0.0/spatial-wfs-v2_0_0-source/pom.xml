@@ -126,10 +126,6 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jvnet.ogc</groupId>
             <artifactId>ows-v_1_1_0-schema</artifactId>
             <version>1.1.0</version>
@@ -141,21 +137,11 @@
         </dependency>
         <dependency>
             <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.platform.util</groupId>
             <artifactId>platform-util</artifactId>
         </dependency>
         <dependency>
             <groupId>ddf.security.encryption</groupId>
             <artifactId>security-encryption-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ddf.security.core</groupId>
-            <artifactId>security-core-impl</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codice.ddf</groupId>
@@ -193,11 +179,8 @@
                             catalog-core-api-impl,
                             jaxb2-basics-runtime,
                             gml-v_3_2_1-schema,
-                            ddf-security-common,
                             geospatial,
-                            platform-util-unavailableurls,
-                            platform-util,
-                            security-core-impl
+                            platform-util
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Include-Resource>{maven-resources},target/classes/describable.properties</Include-Resource>

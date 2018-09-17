@@ -15,7 +15,7 @@ package ddf.catalog.impl.filter;
 
 import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.codice.ddf.platform.util.DateUtils;
+import org.codice.ddf.platform.util.date.DateUtils;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;

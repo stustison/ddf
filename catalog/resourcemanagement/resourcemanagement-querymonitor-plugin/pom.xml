@@ -71,7 +71,8 @@
                             gt-cql;scope=runtime|compile,
                             catalog-core-api-impl,
                             commons-lang3,
-                            org.geotools.filter.text.cql2
+                            org.geotools.filter.text.cql2,
+                            ddf-security-common
                         </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>

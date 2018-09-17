@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 import org.codice.ddf.parser.Parser;
 import org.codice.ddf.parser.ParserConfigurator;
 import org.codice.ddf.parser.ParserException;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;

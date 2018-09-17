@@ -14,7 +14,6 @@
 package org.codice.ddf.security.filter.login;
 
 import com.google.common.hash.Hashing;
-import ddf.security.PropertiesLoader;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
@@ -69,7 +68,8 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.platform.filter.SecurityFilter;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.InvalidSAMLReceivedException;
@@ -720,7 +720,8 @@ public class LoginFilter implements SecurityFilter {
    */
   private Crypto getSignatureCrypto() {
     if (signatureCrypto == null && signaturePropertiesFile != null) {
-      Properties sigProperties = PropertiesLoader.loadProperties(signaturePropertiesFile);
+      Properties sigProperties =
+          PropertiesLoader.getInstance().loadProperties(signaturePropertiesFile);
       if (sigProperties == null) {
         LOGGER.trace("Cannot load signature properties using: {}", signaturePropertiesFile);
         return null;

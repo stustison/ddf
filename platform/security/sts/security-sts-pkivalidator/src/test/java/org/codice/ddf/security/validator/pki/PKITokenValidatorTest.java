@@ -22,7 +22,6 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import ddf.security.PropertiesLoader;
 import ddf.security.SecurityConstants;
 import ddf.security.SubjectUtils;
 import java.io.InputStream;
@@ -41,6 +40,7 @@ import org.apache.cxf.sts.token.validator.TokenValidatorResponse;
 import org.apache.cxf.ws.security.sts.provider.model.secext.BinarySecurityTokenType;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.dom.WSConstants;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.codice.ddf.security.handler.api.PKIAuthenticationToken;
 import org.codice.ddf.security.handler.api.PKIAuthenticationTokenFactory;
 import org.junit.AfterClass;
@@ -113,8 +113,9 @@ public class PKITokenValidatorTest {
       }
       merlin =
           new Merlin(
-              PropertiesLoader.loadProperties(
-                  PKITokenValidatorTest.class.getResource("/signature.properties").getPath()),
+              PropertiesLoader.getInstance()
+                  .loadProperties(
+                      PKITokenValidatorTest.class.getResource("/signature.properties").getPath()),
               PKITokenValidator.class.getClassLoader(),
               null);
 

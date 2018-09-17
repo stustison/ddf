@@ -44,9 +44,12 @@
             <artifactId>security-core-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
-            <version>${project.version}</version>
+            <groupId>ddf.security.core</groupId>
+            <artifactId>security-core-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ddf.platform.util</groupId>
+            <artifactId>platform-util</artifactId>
         </dependency>
         <dependency>
             <groupId>ddf.security.encryption</groupId>
@@ -78,14 +81,6 @@
             <artifactId>validation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
             <groupId>ddf.platform.util</groupId>
             <artifactId>platform-util-unavailableurls</artifactId>
             <version>${project.version}</version>
@@ -109,7 +104,8 @@
                             *
                         </Import-Package>
                         <Embed-Dependency>
-                            httpclient,httpcore,platform-util-unavailableurls,ddf-security-common,platform-util
+                            security-core-impl,
+                            platform-util
                         </Embed-Dependency>
                     </instructions>
                 </configuration>

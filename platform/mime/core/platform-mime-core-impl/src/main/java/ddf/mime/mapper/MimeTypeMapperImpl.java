@@ -28,8 +28,8 @@ import org.apache.tika.detect.Detector;
 import org.apache.tika.io.IOUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
-import org.codice.ddf.platform.util.TemporaryFileBackedOutputStream;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.stream.TemporaryFileBackedOutputStream;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

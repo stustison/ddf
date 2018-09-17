@@ -45,7 +45,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.SolrPingResponse;
 import org.apache.solr.common.SolrException;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.codice.solr.client.solrj.UnavailableSolrException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

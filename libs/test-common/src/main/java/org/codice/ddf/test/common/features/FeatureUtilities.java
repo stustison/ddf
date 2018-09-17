@@ -39,7 +39,7 @@ import org.apache.karaf.bundle.core.BundleInfo;
 import org.apache.karaf.bundle.core.BundleService;
 import org.apache.karaf.bundle.core.BundleState;
 import org.apache.karaf.features.FeaturesService;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.ops4j.pax.exam.options.UrlProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

@@ -15,7 +15,7 @@ package ddf.catalog.pubsub.criteria.temporal;
 
 import java.util.Date;
 import org.apache.commons.lang.Validate;
-import org.codice.ddf.platform.util.DateUtils;
+import org.codice.ddf.platform.util.date.DateUtils;
 
 public class TemporalEvaluationCriteriaImpl implements TemporalEvaluationCriteria {
   private Date end;

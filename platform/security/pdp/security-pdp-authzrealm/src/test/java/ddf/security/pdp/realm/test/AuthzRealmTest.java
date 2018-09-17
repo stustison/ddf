@@ -15,7 +15,7 @@ package ddf.security.pdp.realm.test;
 
 import static org.mockito.Mockito.when;
 
-import ddf.security.pdp.realm.AuthzRealm;
+import ddf.security.pdp.realm.impl.AuthzRealm;
 import ddf.security.pdp.realm.xacml.processor.PdpException;
 import ddf.security.permission.CollectionPermission;
 import ddf.security.permission.KeyValueCollectionPermission;

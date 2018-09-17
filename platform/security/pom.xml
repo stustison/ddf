@@ -52,6 +52,11 @@
             </dependency>
             <dependency>
                 <groupId>ddf.security.pdp</groupId>
+                <artifactId>security-pdp-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ddf.security.pdp</groupId>
                 <artifactId>security-pdp-authzrealm</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -244,5 +249,6 @@
         <module>security-migratable</module>
         <module>command</module>
         <module>secure-boot</module>
+        <module>soap</module>
     </modules>
 </project>

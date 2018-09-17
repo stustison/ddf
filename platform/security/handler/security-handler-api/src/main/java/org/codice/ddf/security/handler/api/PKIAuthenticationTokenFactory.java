@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.handler.api;
 
-import ddf.security.PropertiesLoader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
@@ -21,6 +20,7 @@ import java.util.Base64;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.common.ext.WSSecurityException;
 import org.apache.xml.security.Init;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class PKIAuthenticationTokenFactory {
     try {
       merlin =
           new Merlin(
-              PropertiesLoader.loadProperties(signaturePropertiesPath),
+              PropertiesLoader.getInstance().loadProperties(signaturePropertiesPath),
               PKIAuthenticationTokenFactory.class.getClassLoader(),
               null);
     } catch (WSSecurityException | IOException e) {

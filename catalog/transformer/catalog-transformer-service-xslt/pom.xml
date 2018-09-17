@@ -49,6 +49,10 @@
             <artifactId>platform-util</artifactId>
         </dependency>
         <dependency>
+            <groupId>ddf.platform.util</groupId>
+            <artifactId>platform-util-bundle</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.ops4j.pax.swissbox</groupId>
             <artifactId>pax-swissbox-extender</artifactId>
             <version>${org.ops4j.pax.swissbox.version}</version>

@@ -25,6 +25,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>platform-util</module>
+        <module>platform-util-bundle</module>
         <module>platform-util-unavailableurls</module>
         <module>platform-util-uuidgenerator</module>
     </modules>

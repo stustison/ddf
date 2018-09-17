@@ -26,7 +26,7 @@
     </bean>
 
     <bean id="registryPublicationThreadFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          class="org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder"
           factory-method="newThreadFactory">
         <argument value="registryPublicationThread"/>
     </bean>

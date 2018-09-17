@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang.StringUtils;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.codice.ddf.transformer.xml.streaming.SaxEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

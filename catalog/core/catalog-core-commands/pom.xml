@@ -106,11 +106,6 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>net.lingala.zip4j</groupId>
             <artifactId>zip4j</artifactId>
             <version>1.3.2</version>
@@ -153,7 +148,6 @@
                             catalog-core-api-impl,
                             catalog-transformer-zip,
                             ddf-security-common,
-                            platform-util-unavailableurls,
                             platform-util,
                             zip4j
                         </Embed-Dependency>

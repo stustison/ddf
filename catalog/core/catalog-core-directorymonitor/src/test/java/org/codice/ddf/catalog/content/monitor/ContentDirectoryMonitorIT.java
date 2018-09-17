@@ -305,6 +305,8 @@ public class ContentDirectoryMonitorIT extends AbstractComponentTest {
 
   private List<BundleInfo> contentDirectoryMonitorDependencies() {
     return Arrays.asList(
+        new BundleInfo("ddf.platform.util", "platform-util-bundle"),
+        new BundleInfo("com.google.guava", "guava"),
         new BundleInfo("org.apache.commons", "commons-lang3"),
         new BundleInfo("commons-lang", "commons-lang"),
         new BundleInfo("commons-io", "commons-io"),

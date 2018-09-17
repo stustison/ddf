@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ public class PropertiesFileReader {
    */
   public List<Map<String, String>> loadPropertiesFilesInDirectory(String directoryPath) {
     List<Map<String, String>> loadedPropertiesFiles = new ArrayList<>();
-    if (!StringUtils.isEmpty(directoryPath)) {
+    if (directoryPath != null && !directoryPath.isEmpty()) {
       File directory = new File(directoryPath);
       if (directory.exists()) {
         File[] propertyFiles =
@@ -68,7 +67,7 @@ public class PropertiesFileReader {
    */
   public Map<String, String> loadSinglePropertiesFile(String filePath) {
     Map<String, String> propertyMap = new HashMap<>();
-    if (!StringUtils.isEmpty(filePath)) {
+    if (filePath != null && !filePath.isEmpty()) {
       File propertyFile = new File(filePath);
       if (propertyFile.exists()) {
         if (!propertyFile.isDirectory()) {

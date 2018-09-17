@@ -16,7 +16,6 @@ package ddf.security.realm.sts;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.impl.SecurityAssertionImpl;
 import ddf.security.sts.client.configuration.STSClientConfiguration;
@@ -48,6 +47,7 @@ import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.realm.AuthenticatingRealm;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.configuration.PropertyResolver;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -315,21 +315,23 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     String signaturePropertiesPath = getSignatureProperties();
     if (signaturePropertiesPath != null && !signaturePropertiesPath.isEmpty()) {
       LOGGER.debug("Setting signature properties on STSClient: {}", signaturePropertiesPath);
-      Properties signatureProperties = PropertiesLoader.loadProperties(signaturePropertiesPath);
+      Properties signatureProperties =
+          PropertiesLoader.getInstance().loadProperties(signaturePropertiesPath);
       map.put(SecurityConstants.SIGNATURE_PROPERTIES, signatureProperties);
     }
 
     String encryptionPropertiesPath = getEncryptionProperties();
     if (encryptionPropertiesPath != null && !encryptionPropertiesPath.isEmpty()) {
       LOGGER.debug("Setting encryption properties on STSClient: {}", encryptionPropertiesPath);
-      Properties encryptionProperties = PropertiesLoader.loadProperties(encryptionPropertiesPath);
+      Properties encryptionProperties =
+          PropertiesLoader.getInstance().loadProperties(encryptionPropertiesPath);
       map.put(SecurityConstants.ENCRYPT_PROPERTIES, encryptionProperties);
     }
 
     String stsPropertiesPath = getTokenProperties();
     if (stsPropertiesPath != null && !stsPropertiesPath.isEmpty()) {
       LOGGER.debug("Setting sts properties on STSClient: {}", stsPropertiesPath);
-      Properties stsProperties = PropertiesLoader.loadProperties(stsPropertiesPath);
+      Properties stsProperties = PropertiesLoader.getInstance().loadProperties(stsPropertiesPath);
       map.put(SecurityConstants.STS_TOKEN_PROPERTIES, stsProperties);
     }
 

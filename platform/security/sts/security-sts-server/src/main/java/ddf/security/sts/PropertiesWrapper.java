@@ -13,13 +13,13 @@
  */
 package ddf.security.sts;
 
-import ddf.security.PropertiesLoader;
 import java.util.Properties;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 
 /** A wrapper to handle properties with variables */
 public class PropertiesWrapper extends Properties {
   public PropertiesWrapper(String propsFile) {
     super();
-    this.putAll(PropertiesLoader.loadProperties(propsFile));
+    this.putAll(PropertiesLoader.getInstance().loadProperties(propsFile));
   }
 }

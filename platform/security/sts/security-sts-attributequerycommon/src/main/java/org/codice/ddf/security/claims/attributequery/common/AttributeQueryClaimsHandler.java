@@ -14,7 +14,6 @@
 package org.codice.ddf.security.claims.attributequery.common;
 
 import com.google.common.collect.ImmutableList;
-import ddf.security.PropertiesLoader;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.samlp.SimpleSign;
 import java.net.InetAddress;
@@ -40,6 +39,7 @@ import org.apache.cxf.sts.claims.ClaimsHandler;
 import org.apache.cxf.sts.claims.ClaimsParameters;
 import org.apache.cxf.sts.claims.ProcessedClaim;
 import org.apache.cxf.sts.claims.ProcessedClaimCollection;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
@@ -353,7 +353,9 @@ public class AttributeQueryClaimsHandler implements ClaimsHandler {
   public void setAttributeMapLocation(String attributeMapLocation) {
     if (StringUtils.isNotBlank(attributeMapLocation)
         && !attributeMapLocation.equals(this.attributeMapLocation)) {
-      attributeMap = PropertiesLoader.toMap(PropertiesLoader.loadProperties(attributeMapLocation));
+      attributeMap =
+          PropertiesLoader.getInstance()
+              .toMap(PropertiesLoader.getInstance().loadProperties(attributeMapLocation));
       this.attributeMapLocation = attributeMapLocation;
     }
   }

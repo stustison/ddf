@@ -131,6 +131,11 @@
         <bundle>mvn:ddf.platform/platform-logging/${project.version}</bundle>
     </feature>
 
+    <feature name="platform-util" version="${project.version}"
+             description="Platform Utilities">
+        <bundle>mvn:ddf.platform.util/platform-util-bundle/${project.version}</bundle>
+    </feature>
+
     <feature name="platform-api" version="${project.version}"
              description="Top Level Platform API">
         <bundle>mvn:ddf.platform.api/platform-api/${project.version}</bundle>

@@ -59,7 +59,7 @@ import org.codice.ddf.catalog.ui.query.monitor.api.QueryUpdateSubscriber;
 import org.codice.ddf.catalog.ui.query.monitor.api.SecurityService;
 import org.codice.ddf.catalog.ui.query.monitor.api.WorkspaceQueryService;
 import org.codice.ddf.catalog.ui.query.monitor.api.WorkspaceService;
-import org.codice.ddf.platform.util.ForkJoinPoolFactory;
+import org.codice.ddf.platform.util.concurrent.ForkJoinPoolFactory;
 import org.codice.ddf.security.common.Security;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;

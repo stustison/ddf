@@ -17,7 +17,7 @@
 
     <OCD description="AuthZ Security Settings"
          name="Security AuthZ Realm"
-         id="ddf.security.pdp.realm.AuthzRealm">
+         id="ddf.security.pdp.realm.impl.AuthzRealm">
         <AD description="List of 'Match-All' subject attribute to Metacard attribute mapping. All values of this metacard key must be present in the corresponding subject key values. Format is subjectAttrName=metacardAttrName."
             name="Match-All Mappings" id="matchAllMappings" required="false"
             cardinality="100"
@@ -36,8 +36,8 @@
             default=""/>
     </OCD>
 
-    <Designate pid="ddf.security.pdp.realm.AuthzRealm">
-        <Object ocdref="ddf.security.pdp.realm.AuthzRealm"/>
+    <Designate pid="ddf.security.pdp.realm.impl.AuthzRealm">
+        <Object ocdref="ddf.security.pdp.realm.impl.AuthzRealm"/>
     </Designate>
 
 </metatype:MetaData>

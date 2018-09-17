@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.shell.api.action.Option;
 import org.codice.ddf.commands.catalog.facade.CatalogFacade;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.opengis.filter.Filter;
 import org.opengis.filter.sort.SortOrder;
 import org.slf4j.Logger;

@@ -56,7 +56,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrException;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.codice.solr.client.solrj.SolrClient;
 import org.codice.solr.client.solrj.UnavailableSolrException;
 import org.codice.solr.factory.SolrClientFactory;

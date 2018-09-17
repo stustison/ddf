@@ -222,7 +222,9 @@ public class RestEndpointIT extends AbstractComponentTest {
                 "ddf.platform.util", "util-uuidgenerator-api", "feature", "uuidgenerator-api")
             .addFeatureFrom("ddf.mime.core", "mime-core-api", "feature", "mime-core-api-only")
             .addFeatureFrom(
-                "ddf.catalog.core", "catalog-core-api", "feature", "catalog-core-api-only");
+                "ddf.catalog.core", "catalog-core-api", "feature", "catalog-core-api-only")
+            .addFeatureFrom(
+                "ddf.platform.util", "platform-util-bundle", "feature", "platform-util");
       }
     };
   }

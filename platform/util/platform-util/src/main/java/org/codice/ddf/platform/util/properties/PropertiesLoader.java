@@ -13,8 +13,6 @@
  */
 package org.codice.ddf.platform.util.properties;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,13 +31,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.codice.ddf.configuration.AbsolutePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 /**
  * Utility class that attempts several different methods for loading in properties files from the
@@ -69,11 +66,10 @@ public final class PropertiesLoader {
 
   private static final List<BiFunction<String, ClassLoader, Properties>>
       PROPERTY_LOADING_STRATEGIES =
-          ImmutableList.of(
-              PropertiesLoader::attemptLoadWithSpring,
-              PropertiesLoader::attemptLoadWithSpringAndClassLoader,
+          Arrays.asList(
               PropertiesLoader::attemptLoadWithFileSystem,
-              PropertiesLoader::attemptLoadAsResource);
+              PropertiesLoader::attemptLoadAsResource,
+              PropertiesLoader::attemptLoadAsResourceClassloader);
 
   private PropertiesLoader() {
     // Perform operations using the singleton instance.
@@ -142,44 +138,6 @@ public final class PropertiesLoader {
     return properties;
   }
 
-  /** Default property loading strategy. */
-  @SuppressWarnings("squid:S1172" /* Used in bi-function */)
-  @VisibleForTesting
-  static Properties attemptLoadWithSpring(String propertiesFile, ClassLoader classLoader) {
-    Properties properties = new Properties();
-    try {
-      LOGGER.debug(
-          "Attempting to load properties from {} with Spring PropertiesLoaderUtils.",
-          propertiesFile);
-      properties = PropertiesLoaderUtils.loadAllProperties(propertiesFile);
-    } catch (IOException e) {
-      LOGGER.debug("Unable to load properties using default Spring properties loader.", e);
-    }
-    return properties;
-  }
-
-  /** Try loading properties using Spring and a provided class loader. */
-  @VisibleForTesting
-  static Properties attemptLoadWithSpringAndClassLoader(
-      String propertiesFile, ClassLoader classLoader) {
-    Properties properties = new Properties();
-    try {
-      LOGGER.debug(
-          "Attempting to load properties from {} with Spring PropertiesLoaderUtils with class loader.",
-          propertiesFile);
-      if (classLoader != null) {
-        properties = PropertiesLoaderUtils.loadAllProperties(propertiesFile, classLoader);
-      } else {
-        properties =
-            PropertiesLoaderUtils.loadAllProperties(
-                propertiesFile, PropertiesLoader.class.getClassLoader());
-      }
-    } catch (IOException e) {
-      LOGGER.debug("Unable to load properties using default Spring properties loader.", e);
-    }
-    return properties;
-  }
-
   /**
    * Try loading the properties directly from the file system. If the properties file has a
    * fully-qualified absolute path (which is what the blueprint file should specify) then it can be
@@ -188,7 +146,6 @@ public final class PropertiesLoader {
    * original path.
    */
   @SuppressWarnings("squid:S1172" /* Used in bi-function */)
-  @VisibleForTesting
   static Properties attemptLoadWithFileSystem(String propertiesFile, ClassLoader classLoader) {
     LOGGER.debug("Attempting to load properties from file system: {}", propertiesFile);
     Properties properties = new Properties();
@@ -197,11 +154,10 @@ public final class PropertiesLoader {
     String ddfHome = System.getProperty("ddf.home");
 
     File propFile;
-    AbsolutePathResolver absPath = new AbsolutePathResolver(propertiesFile);
-    if (StringUtils.isNotBlank(karafHome)) {
-      propFile = new File(absPath.getPath(karafHome));
-    } else if (StringUtils.isNotBlank(ddfHome)) {
-      propFile = new File(absPath.getPath(ddfHome));
+    if (karafHome != null && !karafHome.isEmpty()) {
+      propFile = new File(getPath(propertiesFile, karafHome));
+    } else if (ddfHome != null && !ddfHome.isEmpty()) {
+      propFile = new File(getPath(propertiesFile, ddfHome));
     } else {
       propFile = new File(propertiesFile);
     }
@@ -225,10 +181,12 @@ public final class PropertiesLoader {
 
   /** Try loading the properties using Java's resource loading facilities. */
   @SuppressWarnings("squid:S1172" /* Used in bi-function */)
-  @VisibleForTesting
   static Properties attemptLoadAsResource(String propertiesFile, ClassLoader classLoader) {
     LOGGER.debug("Attempting to load properties as a resource: {}", propertiesFile);
     InputStream ins = PropertiesLoader.class.getResourceAsStream(propertiesFile);
+    if (ins == null && !propertiesFile.startsWith("/")) {
+      ins = PropertiesLoader.class.getResourceAsStream("/" + propertiesFile);
+    }
     Properties properties = new Properties();
     if (ins != null) {
       try {
@@ -236,7 +194,39 @@ public final class PropertiesLoader {
       } catch (IOException e) {
         LOGGER.debug("Unable to load properties: {}", propertiesFile, e);
       } finally {
-        IOUtils.closeQuietly(ins);
+        try {
+          ins.close();
+        } catch (IOException e) {
+          LOGGER.debug("Unable to close properties stream.", e);
+        }
+      }
+    }
+    return properties;
+  }
+
+  @SuppressWarnings("squid:S1172" /* Used in bi-function */)
+  static Properties attemptLoadAsResourceClassloader(
+      String propertiesFile, ClassLoader classLoader) {
+    LOGGER.debug("Attempting to load properties as a resource: {}", propertiesFile);
+    Properties properties = new Properties();
+    if (classLoader == null) {
+      return properties;
+    }
+    InputStream ins = classLoader.getResourceAsStream(propertiesFile);
+    if (ins == null && !propertiesFile.startsWith("/")) {
+      ins = classLoader.getResourceAsStream("/" + propertiesFile);
+    }
+    if (ins != null) {
+      try {
+        properties.load(ins);
+      } catch (IOException e) {
+        LOGGER.debug("Unable to load properties: {}", propertiesFile, e);
+      } finally {
+        try {
+          ins.close();
+        } catch (IOException e) {
+          LOGGER.debug("Unable to close properties stream.", e);
+        }
       }
     }
     return properties;
@@ -249,7 +239,6 @@ public final class PropertiesLoader {
    * @return the given property object with system property placeholders switched to their actual
    *     values.
    */
-  @VisibleForTesting
   static Properties substituteSystemPropertyPlaceholders(Properties props) {
     Properties filtered = new Properties();
     for (Map.Entry<?, ?> entry : props.entrySet()) {
@@ -259,5 +248,29 @@ public final class PropertiesLoader {
       StrSubstitutor.replaceSystemProperties(new Object());
     }
     return filtered;
+  }
+
+  public static String getPath(String relativePath, String rootPath) {
+    if (relativePath == null) {
+      return null;
+    }
+
+    boolean trailingSeparator = relativePath.endsWith(File.separator);
+
+    Path absolutePath = Paths.get(relativePath);
+
+    if (!absolutePath.isAbsolute()) {
+      if (rootPath != null && !rootPath.isEmpty()) {
+        absolutePath = Paths.get(rootPath, relativePath);
+      } else {
+        LOGGER.debug(
+            "Root path is blank. Resolving relative path [{}] to: {}",
+            relativePath,
+            absolutePath.toAbsolutePath());
+      }
+    }
+
+    String absolutePathStr = absolutePath.toAbsolutePath().toString();
+    return trailingSeparator ? absolutePathStr + File.separator : absolutePathStr;
   }
 }

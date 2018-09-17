@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codice.ddf.platform.util.TemporaryFileBackedOutputStream;
+import org.codice.ddf.platform.util.stream.TemporaryFileBackedOutputStream;
 import org.codice.ddf.spatial.kml.converter.KmlToMetacard;
 
 public class KmlInputTransformer implements InputTransformer {

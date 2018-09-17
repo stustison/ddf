@@ -87,6 +87,11 @@
             <artifactId>security-encryption-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>ddf.security.idp</groupId>
+            <artifactId>security-idp-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ddf.security</groupId>
             <artifactId>ddf-security-common</artifactId>
         </dependency>
@@ -147,11 +152,6 @@
             <artifactId>validation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
             <version>1.4.01</version>
@@ -162,20 +162,29 @@
             <version>${saxon.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>ddf.security.core</groupId>
             <artifactId>security-core-impl</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
+            <groupId>ddf.platform.util</groupId>
+            <artifactId>platform-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ddf.platform.util</groupId>
+            <artifactId>platform-util-bundle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client</artifactId>
+            <version>1.22.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
         </dependency>
         <!--Spock dependencies-->
         <dependency>
@@ -235,14 +244,15 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Embed-Dependency>
+                            security-idp-common,
                             ddf-security-common,
-                            platform-util-unavailableurls,
-                            platform-util,
                             antlr4-runtime,
                             commons-lang3,
                             security-core-impl,
-                            httpcore,
-                            httpclient
+                            platform-util,
+                            google-http-client,
+                            httpclient,
+                            httpcore
                         </Embed-Dependency>
                         <Import-Package>
                             !org.abego.treelayout.*,

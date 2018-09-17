@@ -22,7 +22,7 @@ import ddf.catalog.pubsub.criteria.temporal.TemporalEvaluator;
 import ddf.catalog.pubsub.internal.PubSubConstants;
 import java.util.Date;
 import java.util.Map;
-import org.codice.ddf.platform.util.DateUtils;
+import org.codice.ddf.platform.util.date.DateUtils;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

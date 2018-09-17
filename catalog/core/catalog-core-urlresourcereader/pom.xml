@@ -118,7 +118,6 @@
                             ${project.artifactId};blueprint.graceperiod:=true;blueprint.timeout:=604800000
                         </Bundle-SymbolicName>
                         <Embed-Dependency>
-                            platform-util-unavailableurls,
                             ddf-security-common,
                             platform-util,
                             security-core-impl

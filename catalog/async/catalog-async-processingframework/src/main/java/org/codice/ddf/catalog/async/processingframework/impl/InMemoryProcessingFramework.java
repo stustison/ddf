@@ -51,7 +51,7 @@ import org.codice.ddf.catalog.async.data.api.internal.ProcessResourceItem;
 import org.codice.ddf.catalog.async.data.api.internal.ProcessUpdateItem;
 import org.codice.ddf.catalog.async.plugin.api.internal.PostProcessPlugin;
 import org.codice.ddf.catalog.async.processingframework.api.internal.ProcessingFramework;
-import org.codice.ddf.platform.util.TemporaryFileBackedOutputStream;
+import org.codice.ddf.platform.util.stream.TemporaryFileBackedOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

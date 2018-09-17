@@ -25,6 +25,7 @@
     <name>DDF :: Security :: IDP</name>
     <packaging>pom</packaging>
     <modules>
+        <module>security-idp-common</module>
         <module>security-idp-client</module>
         <module>security-idp-server</module>
         <module>security-idp-plugin</module>

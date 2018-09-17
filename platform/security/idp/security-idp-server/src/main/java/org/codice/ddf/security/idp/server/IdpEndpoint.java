@@ -117,7 +117,7 @@ import org.apache.wss4j.common.util.DOM2Writer;
 import org.boon.Boon;
 import org.codehaus.stax2.XMLInputFactory2;
 import org.codice.ddf.configuration.SystemBaseUrl;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.Security;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;

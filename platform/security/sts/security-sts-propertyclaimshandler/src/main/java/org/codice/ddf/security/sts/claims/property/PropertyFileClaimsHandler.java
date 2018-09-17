@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.sts.claims.property;
 
-import ddf.security.PropertiesLoader;
 import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -29,6 +28,7 @@ import org.apache.cxf.sts.claims.ClaimsParameters;
 import org.apache.cxf.sts.claims.ProcessedClaim;
 import org.apache.cxf.sts.claims.ProcessedClaimCollection;
 import org.apache.cxf.sts.token.realm.RealmSupport;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +160,9 @@ public class PropertyFileClaimsHandler implements ClaimsHandler, RealmSupport {
     if (propertyFileLocation != null
         && !propertyFileLocation.isEmpty()
         && !propertyFileLocation.equals(this.propertyFileLocation)) {
-      userMapping = PropertiesLoader.toMap(PropertiesLoader.loadProperties(propertyFileLocation));
+      userMapping =
+          PropertiesLoader.getInstance()
+              .toMap(PropertiesLoader.getInstance().loadProperties(propertyFileLocation));
     }
     this.propertyFileLocation = propertyFileLocation;
   }

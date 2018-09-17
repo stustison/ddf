@@ -13,7 +13,6 @@
  */
 package ddf.security.samlp;
 
-import ddf.security.PropertiesLoader;
 import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wss4j.common.crypto.Crypto;
@@ -21,6 +20,7 @@ import org.apache.wss4j.common.crypto.CryptoFactory;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.common.crypto.PasswordEncryptor;
 import org.apache.wss4j.common.ext.WSSecurityException;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +48,14 @@ public class SystemCrypto {
       PasswordEncryptor passwordEncryption) {
     this.passwordEncryption = passwordEncryption;
 
-    Properties sigProperties = PropertiesLoader.loadProperties(signaturePropertiesPath);
+    Properties sigProperties =
+        PropertiesLoader.getInstance().loadProperties(signaturePropertiesPath);
     signatureCrypto = createCrypto(sigProperties);
     signaturePassword = getPassword(sigProperties);
     signatureAlias = getAlias(signatureCrypto, sigProperties);
 
-    Properties encProperties = PropertiesLoader.loadProperties(encryptionPropertiesPath);
+    Properties encProperties =
+        PropertiesLoader.getInstance().loadProperties(encryptionPropertiesPath);
     encryptionCrypto = createCrypto(encProperties);
     encryptionPassword = getPassword(encProperties);
     encryptionAlias = getAlias(encryptionCrypto, encProperties);

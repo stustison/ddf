@@ -22,7 +22,7 @@
     </bean>
 
     <bean id="registryPublicationUpdateHandlerThreadFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          class="org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder"
           factory-method="newThreadFactory">
         <argument value="registryPublicationUpdateHandlerThread"/>
         <argument value="false"/><!--isDaemon is set to false since this thread is handling updates-->

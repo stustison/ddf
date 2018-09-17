@@ -112,10 +112,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>ddf.catalog.core</groupId>
             <artifactId>ddf-pubsub-tracker</artifactId>
             <version>${project.version}</version>
@@ -123,15 +119,6 @@
         <dependency>
             <groupId>ddf.platform.security</groupId>
             <artifactId>security-rest-cxfwrapper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ddf.security</groupId>
-            <artifactId>ddf-security-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ddf.platform.util</groupId>
-            <artifactId>platform-util-unavailableurls</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -151,6 +138,10 @@
             <groupId>org.codice.ddf</groupId>
             <artifactId>geospatial</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.platform.util</groupId>
+            <artifactId>platform-util-bundle</artifactId>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
@@ -200,13 +191,8 @@
                             spatial-csw-common,
                             spatial-csw-transformer,
                             catalog-core-api-impl,
-                            platform-util,
-                            ddf-security-common,
                             geospatial,
-                            platform-util,
-                            platform-util-unavailableurls,
-                            commons-lang3,
-                            security-core-impl
+                            commons-lang3
                         </Embed-Dependency>
                         <Private-Package>
                             org.codice.ddf.spatial.ogc.csw.catalog.endpoint.*

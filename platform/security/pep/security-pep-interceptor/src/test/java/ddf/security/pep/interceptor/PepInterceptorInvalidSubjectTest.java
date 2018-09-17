@@ -24,7 +24,6 @@ import ddf.security.common.audit.SecurityLogger;
 import ddf.security.permission.CollectionPermission;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
-import ddf.security.service.impl.SecurityAssertionStore;
 import javax.xml.namespace.QName;
 import org.apache.cxf.binding.soap.model.SoapOperationInfo;
 import org.apache.cxf.interceptor.security.AccessDeniedException;

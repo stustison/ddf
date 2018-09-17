@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.handler.pki;
 
-import ddf.security.PropertiesLoader;
 import ddf.security.common.audit.SecurityLogger;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,7 +35,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.codice.ddf.configuration.AbsolutePathResolver;
-import org.codice.ddf.platform.util.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class CrlChecker {
    * @return Properties from the file
    */
   static Properties loadProperties(String location) {
-    return PropertiesLoader.loadProperties(location);
+    return PropertiesLoader.getInstance().loadProperties(location);
   }
 
   /**

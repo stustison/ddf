@@ -28,7 +28,6 @@
  */
 package org.codice.ddf.security.validator.x509;
 
-import ddf.security.PropertiesLoader;
 import ddf.security.SubjectUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -61,6 +60,7 @@ import org.apache.wss4j.dom.validate.Validator;
 import org.apache.xml.security.exceptions.XMLSecurityException;
 import org.apache.xml.security.keys.content.X509Data;
 import org.apache.xml.security.keys.content.x509.XMLX509Certificate;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -93,7 +93,7 @@ public class X509PathTokenValidator implements TokenValidator {
     try {
       merlin =
           new Merlin(
-              PropertiesLoader.loadProperties(signaturePropertiesPath),
+              PropertiesLoader.getInstance().loadProperties(signaturePropertiesPath),
               X509PathTokenValidator.class.getClassLoader(),
               null);
     } catch (WSSecurityException | IOException e) {

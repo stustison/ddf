@@ -22,7 +22,7 @@
     </bean>
 
     <bean id="federationStrategyThreadFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          class="org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder"
           factory-method="newThreadFactory">
         <argument value="federationStrategyThread"/>
     </bean>

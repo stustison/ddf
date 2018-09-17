@@ -104,39 +104,6 @@ public class PropertiesLoaderTest {
   }
 
   @Test
-  public void testAttemptLoadWithSpring() throws Exception {
-    Properties testProperties =
-        PropertiesLoader.attemptLoadWithSpring(
-            PROPERTIES_FILENAME, this.getClass().getClassLoader());
-
-    assertThat(testProperties.entrySet(), equalTo(EXAMPLE_MAP.entrySet()));
-  }
-
-  @Test
-  public void testAttemptLoadWithSpringFileDNE() throws Exception {
-    Properties testProperties = PropertiesLoader.attemptLoadWithSpring(NON_EXISTENT_FILENAME, null);
-
-    assertThat(testProperties.entrySet(), is(empty()));
-  }
-
-  @Test
-  public void testAttemptLoadWithSpringAndClassLoader() throws Exception {
-    Properties testProperties =
-        PropertiesLoader.attemptLoadWithSpringAndClassLoader(
-            PROPERTIES_FILENAME, this.getClass().getClassLoader());
-
-    assertThat(testProperties.entrySet(), equalTo(EXAMPLE_MAP.entrySet()));
-  }
-
-  @Test
-  public void testAttemptLoadWithSpringAndClassLoaderFileDNE() throws Exception {
-    Properties testProperties =
-        PropertiesLoader.attemptLoadWithSpringAndClassLoader(NON_EXISTENT_FILENAME, null);
-
-    assertThat(testProperties.entrySet(), is(empty()));
-  }
-
-  @Test
   public void testAttemptLoadWithFileSystem() throws Exception {
     Properties testProperties =
         PropertiesLoader.attemptLoadWithFileSystem(propertiesFile.getPath(), null);

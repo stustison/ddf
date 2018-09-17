@@ -51,11 +51,6 @@
         <configuration>
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Embed-Dependency>
-              ddf-security-common,
-              platform-util,
-              platform-util-unavailableurls
-            </Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>

@@ -44,7 +44,7 @@ import org.apache.tika.detect.Detector;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
-import org.codice.ddf.platform.util.InputValidation;
+import org.codice.ddf.platform.util.validation.InputValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

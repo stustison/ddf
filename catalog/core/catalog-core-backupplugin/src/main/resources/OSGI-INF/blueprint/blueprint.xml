@@ -23,7 +23,7 @@
     </bean>
 
     <bean id="catalogCoreBackupThreadFactory"
-          class="org.codice.ddf.platform.util.StandardThreadFactoryBuilder"
+          class="org.codice.ddf.platform.util.concurrent.StandardThreadFactoryBuilder"
           factory-method="newThreadFactory">
         <argument value="catalogCoreBackupThread"/>
         <argument value="false"/><!--isDaemon is set to false since this thread is performing a backup-->

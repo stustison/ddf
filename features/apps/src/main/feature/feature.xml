@@ -51,6 +51,7 @@
     <feature name="platform-app" version="${project.version}"
              description="Installs the platform boot features which all other applications depend upon.\nPlatform features installed by default include Apache CXF, Apache Camel, Action Framework, MIME Framework, Metrics, Security Core API and Security Encryption::Platform">
         <feature>platform-api</feature>
+        <feature>platform-util</feature>
         <feature>platform-logging</feature>
         <feature>platform-migrate-all</feature>
         <feature>platform-scheduler</feature>

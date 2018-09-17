@@ -41,7 +41,7 @@ import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
 import javax.xml.bind.DataBindingException;
 import org.codice.ddf.parser.Parser;
-import org.codice.ddf.platform.util.ForkJoinPoolFactory;
+import org.codice.ddf.platform.util.concurrent.ForkJoinPoolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;

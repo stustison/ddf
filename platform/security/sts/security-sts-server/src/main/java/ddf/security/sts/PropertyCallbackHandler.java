@@ -13,7 +13,6 @@
  */
 package ddf.security.sts;
 
-import ddf.security.PropertiesLoader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +22,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.common.ext.WSPasswordCallback;
+import org.codice.ddf.platform.util.properties.PropertiesLoader;
 
 /** Callback handler for signature and encryption properties files. */
 public class PropertyCallbackHandler implements CallbackHandler {
@@ -33,18 +33,18 @@ public class PropertyCallbackHandler implements CallbackHandler {
 
   private String encryptionProperties;
 
-  private Map<String, String> signaturePropertiesMap = new HashMap<String, String>();
+  private Map<String, String> signaturePropertiesMap = new HashMap<>();
 
-  private Map<String, String> encryptionPropertiesMap = new HashMap<String, String>();
+  private Map<String, String> encryptionPropertiesMap = new HashMap<>();
 
   private void setPropertyMap(Map<String, String> map, String propertyLocation) {
     if (!map.isEmpty()) {
       map.clear();
     }
 
-    Properties properties = PropertiesLoader.loadProperties(propertyLocation);
+    Properties properties = PropertiesLoader.getInstance().loadProperties(propertyLocation);
 
-    map.putAll(PropertiesLoader.<String, String>toMap(properties));
+    map.putAll(PropertiesLoader.getInstance().toMap(properties));
   }
 
   @Override

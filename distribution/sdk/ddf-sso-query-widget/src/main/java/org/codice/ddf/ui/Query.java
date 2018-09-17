@@ -44,7 +44,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.platform.util.xml.XMLUtils;
 import org.jasig.cas.client.authentication.AttributePrincipal;
 import org.opengis.filter.Filter;
 import org.slf4j.Logger;
