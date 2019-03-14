@@ -113,7 +113,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         .orElse(0L);
   }
 
-  private void doRenew(String realm, SecurityToken securityToken, SecurityTokenHolder tokenHolder)
+  private void doRenew(String realm, Object securityToken, SecurityTokenHolder tokenHolder)
       throws SecurityServiceException {
     SAMLAuthenticationToken samlToken =
         new SAMLAuthenticationToken(securityToken.getPrincipal(), securityToken, realm);
