@@ -48,7 +48,7 @@ public class CasLogoutServiceTest {
 
     httpSession = mock(HttpSession.class);
     SecurityTokenHolder securityTokenHolder = mock(SecurityTokenHolder.class);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     when(httpSession.getId()).thenReturn("session-id");
     when(request.getSession(false)).thenReturn(httpSession);

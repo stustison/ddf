@@ -89,7 +89,7 @@ public class SessionManagementServiceImplTest {
                 .getDocumentElement());
     when(tokenHolder.getRealmTokenMap()).thenReturn(Collections.singletonMap("idp", token));
     when(request.getSession(false)).thenReturn(session);
-    when(session.getAttribute(SecurityConstants.SAML_ASSERTION)).thenReturn(tokenHolder);
+    when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     sessionManagementServiceImpl = new SessionManagementServiceImpl();
     sessionManagementServiceImpl.setSecurityManager(manager);
   }
@@ -119,7 +119,7 @@ public class SessionManagementServiceImplTest {
     saml = saml.replace("2113", "2213");
     when(laterToken.getToken())
         .thenReturn(readXml(IOUtils.toInputStream(saml, "UTF-8")).getDocumentElement());
-    HashMap<String, SecurityToken> tokenMap = new HashMap<>();
+    HashMap<String, Object> tokenMap = new HashMap<>();
     tokenMap.put("jaas", laterToken);
     tokenMap.put("idp", token);
     tokenMap.put("karaf", soonerToken);

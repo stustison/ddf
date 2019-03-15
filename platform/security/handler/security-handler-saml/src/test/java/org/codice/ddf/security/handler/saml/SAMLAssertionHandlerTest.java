@@ -173,7 +173,7 @@ public class SAMLAssertionHandlerTest {
     when(request.getSession(false)).thenReturn(session);
     when(request.getAttribute(ContextPolicy.ACTIVE_REALM)).thenReturn("foo");
     SecurityTokenHolder tokenHolder = mock(SecurityTokenHolder.class);
-    when(session.getAttribute(SecurityConstants.SAML_ASSERTION)).thenReturn(tokenHolder);
+    when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     SecurityToken securityToken = mock(SecurityToken.class);
     when(tokenHolder.getSecurityToken("foo")).thenReturn(securityToken);
     when(securityToken.getToken()).thenReturn(readDocument("/saml.xml").getDocumentElement());

@@ -28,7 +28,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,12 +56,12 @@ public class WhoAmIServlet extends HttpServlet {
     resp.setHeader("Pragma", "no-cache");
 
     HttpSession session = httpSessionFactory.getOrCreateSession(req);
-    Map<String, SecurityToken> tokenMap =
-        ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION))
+    Map<String, Object> tokenMap =
+        ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
             .getRealmTokenMap();
 
     Map<String, WhoAmI> realmToWhoMap = new HashMap<>();
-    for (Map.Entry<String, SecurityToken> entry : tokenMap.entrySet()) {
+    for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
       try {
         WhoAmI whoAmI = new WhoAmI(securityManager.getSubject(entry.getValue()));
         realmToWhoMap.put(entry.getKey(), whoAmI);

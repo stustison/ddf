@@ -63,7 +63,7 @@ public class AuthenticationServiceImplTest {
   public void setup() throws SecurityServiceException, URISyntaxException {
     HttpSessionFactory sessionFactory = mock(HttpSessionFactory.class);
     HttpSession session = mock(HttpSession.class);
-    when(session.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(mock(SecurityTokenHolder.class));
     when(sessionFactory.getOrCreateSession(any())).thenReturn(session);
 

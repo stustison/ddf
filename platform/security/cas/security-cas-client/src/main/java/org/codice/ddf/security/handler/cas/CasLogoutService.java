@@ -49,7 +49,7 @@ public class CasLogoutService {
     HttpSession session = request.getSession(false);
     if (session != null) {
       SecurityTokenHolder savedToken =
-          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION);
+          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (savedToken != null) {
         Subject subject = ThreadContext.getSubject();
         if (subject != null) {

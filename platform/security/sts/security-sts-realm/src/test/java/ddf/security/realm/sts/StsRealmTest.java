@@ -30,8 +30,8 @@ import org.apache.cxf.ws.security.trust.STSClient;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.codice.ddf.security.handler.api.BSTAuthenticationToken;
-import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
+import org.codice.ddf.security.handler.api.STSAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Ignore;
@@ -76,12 +76,12 @@ public class StsRealmTest {
     supports = realm.supports(authenticationToken);
     assertEquals(true, supports);
 
-    authenticationToken = mock(BaseAuthenticationToken.class);
+    authenticationToken = mock(STSAuthenticationToken.class);
     when(authenticationToken.getCredentials()).thenReturn("creds");
     supports = realm.supports(authenticationToken);
     assertEquals(true, supports);
 
-    authenticationToken = mock(BaseAuthenticationToken.class);
+    authenticationToken = mock(STSAuthenticationToken.class);
     when(authenticationToken.getCredentials()).thenReturn(null);
     supports = realm.supports(authenticationToken);
     assertEquals(false, supports);
@@ -90,7 +90,7 @@ public class StsRealmTest {
     assertEquals(false, supports);
 
     WssStsRealm wssStsRealm = new WssStsRealm();
-    BaseAuthenticationToken baseAuthTok = mock(BaseAuthenticationToken.class);
+    STSAuthenticationToken baseAuthTok = mock(STSAuthenticationToken.class);
     when(baseAuthTok.isUseWssSts()).thenReturn(false);
     when(baseAuthTok.getCredentials()).thenReturn("creds");
     assertEquals(true, realm.supports(baseAuthTok));
@@ -143,8 +143,8 @@ public class StsRealmTest {
           }
         };
 
-    BaseAuthenticationToken authenticationToken = mock(BaseAuthenticationToken.class);
-    when(authenticationToken.getCredentialsAsXMLString()).thenReturn("creds");
+    STSAuthenticationToken authenticationToken = mock(STSAuthenticationToken.class);
+    when(authenticationToken.getCredentialsAsString()).thenReturn("creds");
 
     AuthenticationInfo authenticationInfo = realm.doGetAuthenticationInfo(authenticationToken);
 

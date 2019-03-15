@@ -47,7 +47,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     HttpSession session = request.getSession(false);
     long timeLeft = 0;
     if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SAML_ASSERTION);
+      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (securityToken instanceof SecurityTokenHolder) {
         timeLeft = getTimeLeft((SecurityTokenHolder) securityToken);
       }
@@ -63,16 +63,16 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
     String timeLeft = null;
     if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SAML_ASSERTION);
+      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (securityToken instanceof SecurityTokenHolder) {
         SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
-        Map<String, SecurityToken> realmTokenMap = tokenHolder.getRealmTokenMap();
+        Map<String, Object> realmTokenMap = tokenHolder.getRealmTokenMap();
         realmTokenMap
             .keySet()
             .forEach(
                 s -> {
                   try {
-                    doRenew(s, realmTokenMap.get(s), tokenHolder);
+                    doRenew(s, (SecurityToken) realmTokenMap.get(s), tokenHolder);
                   } catch (SecurityServiceException e) {
                     securityServiceExceptionThrown[0] = true;
                     LOGGER.error("Failed to renew", e);
@@ -103,6 +103,8 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         .getRealmTokenMap()
         .values()
         .stream()
+        .filter(SecurityToken.class::isInstance)
+        .map(SecurityToken.class::cast)
         .map(SecurityAssertionImpl::new)
         .map(SecurityAssertionImpl::getNotOnOrAfter)
         .map(Date::getTime)
