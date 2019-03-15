@@ -32,6 +32,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.session.management.service.SessionManagementService;
+import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

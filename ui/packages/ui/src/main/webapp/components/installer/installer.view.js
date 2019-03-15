@@ -82,6 +82,33 @@ define([
       './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
   })
 
+  var ssoConfigurationServiceResponses = new Service.Response()
+  ssoConfigurationServiceResponses.listenTo(
+    // when the config is modified in the installer
+    wreqr.vent,
+    'ssoConfigModified',
+    function() {
+      ssoConfigurationServiceResponses.attributes.modified = true
+    }
+  )
+  ssoConfigurationServiceResponses.listenTo(
+    // when the config is persisted in the installer
+    wreqr.vent,
+    'ssoConfigPersisted',
+    function() {
+      ssoConfigurationServiceResponses.attributes.fetched = false
+      ssoConfigurationServiceResponses.attributes.modified = false
+      ssoConfigurationServiceResponses.fetch({
+        url:
+          './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
+      })
+    }
+  )
+  ssoConfigurationServiceResponses.fetch({
+    url:
+      './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
+  })
+
   var systemPropertiesWrapped = new ConfigurationModel.SystemPropertiesWrapped()
   systemPropertiesWrapped.fetch()
 

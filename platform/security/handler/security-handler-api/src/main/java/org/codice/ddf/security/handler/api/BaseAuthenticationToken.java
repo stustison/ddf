@@ -27,6 +27,14 @@ public abstract class BaseAuthenticationToken implements AuthenticationToken {
 
   private String requestURI;
 
+  boolean reference = false;
+
+  private boolean retrievedFromReference = false;
+
+  private X509Certificate[] x509Certs;
+
+  private String requestURI;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(BaseAuthenticationToken.class);
 
   /**

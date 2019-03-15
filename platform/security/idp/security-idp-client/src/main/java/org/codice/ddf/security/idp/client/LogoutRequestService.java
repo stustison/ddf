@@ -272,6 +272,8 @@ public class LogoutRequestService {
         .filter(Objects::nonNull)
         .map(PrincipalCollection.class::cast)
         .map(SessionToken::new)
+        .filter(SecurityToken.class::isInstance)
+        .map(SecurityToken.class::cast)
         .map(this::extractSubject)
         .filter(Objects::nonNull)
         .map(SubjectUtils::getName)
@@ -519,7 +521,7 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return getTokenHolder()
+    return (SecurityToken) getTokenHolder()
         .getPrincipals()
         .byType(SecurityAssertion.class)
         .stream()
