@@ -20,7 +20,7 @@ import com.google.common.hash.Hashing;
 import ddf.security.PropertiesLoader;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Principal;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -190,6 +191,8 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
 
   private int expirationTime = DEFAULT_EXPIRATION_TIME;
 
+  private List<String> usernameAttributeList;
+
   public AbstractStsRealm() {
     this.bus = getBus();
     setCredentialsMatcher(new STSCredentialsMatcher());
@@ -202,11 +205,8 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
   /** Determine if the supplied token is supported by this realm. */
   @Override
   public boolean supports(AuthenticationToken token) {
-    boolean supported = token != null && token.getCredentials() != null;
-    //    if (token instanceof STSAuthenticationToken) {
-    //      supported = supported && ((STSAuthenticationToken) token).isUseWssSts() ==
-    // shouldHandleWss();
-    //    }
+    boolean supported =
+        token != null && token.getCredentials() != null && token instanceof STSAuthenticationToken;
 
     if (supported) {
       LOGGER.debug(
@@ -264,14 +264,37 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
 
     LOGGER.debug("Creating token authentication information with SAML.");
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    SecurityAssertion assertion = new SecurityAssertionImpl(securityToken);
-    principals.add(assertion.getPrincipal(), NAME);
-    principals.add(assertion, NAME);
+    SimplePrincipalCollection principals = createPrincipalFromToken(securityToken);
     simpleAuthenticationInfo.setPrincipals(principals);
     simpleAuthenticationInfo.setCredentials(credential);
 
     return simpleAuthenticationInfo;
+  }
+
+  /**
+   * Creates a new principal object from an incoming security token.
+   *
+   * @param token SecurityToken that contains the principals.
+   * @return new SimplePrincipalCollection
+   */
+  private SimplePrincipalCollection createPrincipalFromToken(SecurityToken token) {
+    SimplePrincipalCollection principals = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = null;
+    try {
+      securityAssertion = new SecurityAssertionSaml(token, usernameAttributeList);
+      Principal principal = securityAssertion.getPrincipal();
+      if (principal != null) {
+        principals.add(principal.getName(), getName());
+      }
+    } catch (Exception e) {
+      LOGGER.warn(
+          "Encountered error while trying to get the Principal for the SecurityToken. Security functions may not work properly.",
+          e);
+    }
+    if (securityAssertion != null) {
+      principals.add(securityAssertion, getName());
+    }
+    return principals;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,11 +388,13 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
         for (Object principal : subject.getPrincipals().asList()) {
           if (principal instanceof SecurityAssertion) {
             if (LOGGER.isTraceEnabled()) {
-              Element samlToken = ((SecurityAssertion) principal).getSecurityToken().getToken();
+              Element samlToken =
+                  ((SecurityToken) ((SecurityAssertion) principal).getToken()).getToken();
 
               LOGGER.trace("SAML Assertion returned: {}", XML_UTILS.prettyFormat(samlToken));
             }
-            SecurityToken securityToken = ((SecurityAssertion) principal).getSecurityToken();
+            SecurityToken securityToken =
+                ((SecurityToken) ((SecurityAssertion) principal).getToken());
             addSamlToSession(httpRequest, token.getRealm(), securityToken);
           }
         }
@@ -616,7 +641,7 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     if (sessionToken == null) {
       addSecurityToken(session, realm, securityToken);
     }
-    SecurityAssertion securityAssertion = new SecurityAssertionImpl(securityToken);
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
     SecurityLogger.audit(
         "Added SAML for user [{}] to session [{}]",
         securityAssertion.getPrincipal().getName(),
@@ -644,7 +669,7 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     SecurityToken token = (SecurityToken) tokenHolder.getSecurityToken(realm);
 
     if (token != null) {
-      SecurityAssertionImpl assertion = new SecurityAssertionImpl(token);
+      SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
       if (!assertion.isPresentlyValid()) {
         LOGGER.debug("Session SAML token is invalid.  Removing from session.");
         tokenHolder.remove(realm);
@@ -992,6 +1017,14 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     } else {
       return "";
     }
+  }
+
+  public List<String> getUsernameAttributeList() {
+    return usernameAttributeList;
+  }
+
+  public void setUsernameAttributeList(List<String> usernameAttributeList) {
+    this.usernameAttributeList = usernameAttributeList;
   }
 
   @Override

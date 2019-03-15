@@ -79,7 +79,7 @@ public class SessionManagementServiceImplTest {
     Subject subject = mock(Subject.class);
     manager = mock(SecurityManager.class);
 
-    when(principal.getSecurityToken()).thenReturn(securityToken);
+    when(principal.getToken()).thenReturn(securityToken);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(principal));
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(manager.getSubject(isA(SAMLAuthenticationToken.class))).thenReturn(subject);

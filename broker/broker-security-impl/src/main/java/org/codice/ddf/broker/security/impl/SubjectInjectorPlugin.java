@@ -29,6 +29,7 @@ import org.apache.activemq.artemis.api.core.Message;
 import org.apache.activemq.artemis.core.server.ServerSession;
 import org.apache.activemq.artemis.core.transaction.Transaction;
 import org.apache.activemq.artemis.protocol.amqp.broker.AMQPMessage;
+import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.codice.ddf.broker.security.api.BrokerMessageInterceptor;
 import org.codice.ddf.security.handler.api.UPAuthenticationToken;
@@ -80,12 +81,17 @@ public class SubjectInjectorPlugin implements BrokerMessageInterceptor {
 
   private Element getSubjectAsElement(ServerSession session) {
     try {
-      return SUBJECT_CACHE
-          .get(session.getUsername(), () -> this.cacheAndReturnSubject(session))
-          .getPrincipals()
-          .oneByType(SecurityAssertion.class)
-          .getSecurityToken()
-          .getToken();
+      Object token =
+          SUBJECT_CACHE
+              .get(session.getUsername(), () -> this.cacheAndReturnSubject(session))
+              .getPrincipals()
+              .oneByType(SecurityAssertion.class)
+              .getToken();
+      if (token instanceof SecurityToken) {
+        return ((SecurityToken) token).getToken();
+      } else {
+        return null;
+      }
     } catch (ExecutionException e) {
       LOGGER.warn("Could not get Subject from token", e.getCause());
       return null;

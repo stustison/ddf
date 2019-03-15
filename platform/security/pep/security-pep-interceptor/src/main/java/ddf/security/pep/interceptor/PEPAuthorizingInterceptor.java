@@ -89,19 +89,16 @@ public class PEPAuthorizingInterceptor extends AbstractPhaseInterceptor<Message>
       SecurityAssertion assertion = assertionRetriever.apply(message);
       boolean isPermitted = false;
 
-      if ((assertion != null) && (assertion.getSecurityToken() != null)) {
+      if ((assertion != null) && (assertion.getToken() != null)) {
         Subject user = null;
         CollectionPermission action = null;
 
         String actionURI = getActionUri(message);
 
         try {
-          user = securityManager.getSubject(assertion.getSecurityToken());
+          user = securityManager.getSubject(assertion.getToken());
           if (user == null) {
             throw new AccessDeniedException("Unauthorized");
-          }
-          if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format(assertion.getSecurityToken().getToken()));
           }
 
           LOGGER.debug("Is user authenticated: {}", user.isAuthenticated());

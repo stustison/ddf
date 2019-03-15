@@ -145,7 +145,7 @@ public class AuthenticationServiceImplTest {
     Subject subject = mock(Subject.class);
     SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
     SecurityToken securityToken = mock(SecurityToken.class);
-    when(securityAssertion.getSecurityToken()).thenReturn(securityToken);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
 
     PrincipalCollection collection = mock(PrincipalCollection.class);
     Iterator iter = mock(Iterator.class);

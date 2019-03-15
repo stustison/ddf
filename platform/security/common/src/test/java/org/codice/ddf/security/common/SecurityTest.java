@@ -120,7 +120,7 @@ public class SecurityTest {
     when(subject.getPrincipals()).thenReturn(pc);
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
     when(pc.oneByType(any(Class.class))).thenReturn(assertion);
-    when(assertion.getSecurityToken()).thenReturn(st);
+    when(assertion.getToken()).thenReturn(st);
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
     when(st.isAboutToExpire(anyLong())).thenReturn(false);
     assertThat(security.tokenAboutToExpire(subject), equalTo(false));

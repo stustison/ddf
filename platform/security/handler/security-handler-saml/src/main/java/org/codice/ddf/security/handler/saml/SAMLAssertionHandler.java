@@ -15,7 +15,7 @@ package org.codice.ddf.security.handler.saml;
 
 import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -150,12 +150,12 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
       SecurityTokenHolder savedToken =
           (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (savedToken != null && savedToken.getSecurityToken(realm) != null) {
-        SecurityAssertionImpl assertion =
-            new SecurityAssertionImpl((SecurityToken) savedToken.getSecurityToken(realm));
+        SecurityAssertionSaml assertion =
+            new SecurityAssertionSaml((SecurityToken) savedToken.getSecurityToken(realm));
         if (assertion.isPresentlyValid()) {
           LOGGER.trace("Creating SAML authentication token with session.");
           SAMLAuthenticationToken samlToken =
-              new SAMLAuthenticationToken(null, session.getId(), realm, httpRequest);
+              new SAMLAuthenticationToken(null, session.getId(), realm);
           handlerResult.setToken(samlToken);
           handlerResult.setStatus(HandlerResult.Status.COMPLETED);
           return handlerResult;

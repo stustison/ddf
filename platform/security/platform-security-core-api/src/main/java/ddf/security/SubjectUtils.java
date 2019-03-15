@@ -13,6 +13,8 @@
  */
 package ddf.security;
 
+import ddf.security.assertion.Attribute;
+import ddf.security.assertion.AttributeStatement;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.principal.GuestPrincipal;
 import java.security.Principal;
@@ -37,9 +39,6 @@ import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.opensaml.core.xml.schema.XSString;
-import org.opensaml.saml.saml2.core.Attribute;
-import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +51,8 @@ public final class SubjectUtils {
 
   public static final String EMAIL_ADDRESS_CLAIM_URI =
       "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+
+  public static final String EMAIL_ADDRESS_CLAIM_ALTERNATE = "email";
 
   /** Street address */
   public static final String STREET_ADDRESS_CLAIM_URI =
@@ -72,6 +73,8 @@ public final class SubjectUtils {
   /** Username */
   public static final String NAME_IDENTIFIER_CLAIM_URI =
       "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+
+  public static final String NAME_IDENTIFIER_CLAIM_ALTERNATE = "name";
 
   /** Full name */
   public static final String NAME_CLAIM_URI =
@@ -233,7 +236,10 @@ public final class SubjectUtils {
     List<String> values = getAttribute(subject, EMAIL_ADDRESS_CLAIM_URI);
 
     if (values.isEmpty()) {
-      return null;
+      values = getAttribute(subject, EMAIL_ADDRESS_CLAIM_ALTERNATE);
+      if (values.isEmpty()) {
+        return null;
+      }
     }
 
     return values.get(0);
@@ -271,10 +277,7 @@ public final class SubjectUtils {
         .stream()
         .flatMap(as -> as.getAttributes().stream())
         .filter(a -> a.getName().equals(key))
-        .flatMap(a -> a.getAttributeValues().stream())
-        .filter(o -> o instanceof XSString)
-        .map(o -> (XSString) o)
-        .map(XSString::getValue)
+        .flatMap(a -> a.getValues().stream())
         .collect(Collectors.toList());
   }
 
@@ -307,14 +310,7 @@ public final class SubjectUtils {
                 }));
   }
 
-  private static SortedSet<String> getAttributeValues(
-      org.opensaml.saml.saml2.core.Attribute attribute) {
-    return attribute
-        .getAttributeValues()
-        .stream()
-        .filter(XSString.class::isInstance)
-        .map(XSString.class::cast)
-        .map(XSString::getValue)
-        .collect(Collectors.toCollection(TreeSet::new));
+  private static SortedSet<String> getAttributeValues(Attribute attribute) {
+    return new TreeSet<>(attribute.getValues());
   }
 }

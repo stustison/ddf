@@ -13,12 +13,20 @@
  */
 package org.codice.ddf.security.idp.client;
 
+import com.google.common.hash.Hashing;
+import ddf.security.Subject;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
+import ddf.security.common.SecurityTokenHolder;
+import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
 import ddf.security.samlp.SamlProtocol;
 import ddf.security.samlp.SimpleSign;
 import ddf.security.samlp.SystemCrypto;
 import ddf.security.samlp.ValidationException;
 import ddf.security.samlp.impl.RelayStates;
+import ddf.security.service.SecurityManager;
+import ddf.security.service.SecurityServiceException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +45,7 @@ import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -55,6 +64,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.staxutils.StaxUtils;
+import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.CryptoType;
 import org.apache.wss4j.common.ext.WSSecurityException;
@@ -62,7 +72,6 @@ import org.apache.wss4j.common.saml.OpenSAMLUtil;
 import org.apache.wss4j.common.saml.builder.SAML2Constants;
 import org.apache.wss4j.common.util.DOM2Writer;
 import org.codice.ddf.configuration.SystemBaseUrl;
-import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
@@ -80,6 +89,8 @@ import org.w3c.dom.Document;
 public class AssertionConsumerService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IdpHandler.class);
+
+  private static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
 
   private static final String SAML_RESPONSE = "SAMLResponse";
 
@@ -106,6 +117,8 @@ public class AssertionConsumerService {
 
   private SessionFactory sessionFactory;
 
+  private SecurityManager securityManager;
+
   static {
     OpenSAMLUtil.initSamlEngine();
   }
@@ -114,11 +127,13 @@ public class AssertionConsumerService {
       SimpleSign simpleSign,
       IdpMetadata metadata,
       SystemCrypto crypto,
-      RelayStates<String> relayStates) {
+      RelayStates<String> relayStates,
+      SecurityManager securityManager) {
     this.simpleSign = simpleSign;
     idpMetadata = metadata;
     systemCrypto = crypto;
     this.relayStates = relayStates;
+    this.securityManager = securityManager;
   }
 
   @POST
@@ -318,6 +333,71 @@ public class AssertionConsumerService {
     return Response.temporaryRedirect(relayUri).build();
   }
 
+  //
+  //
+  // THIS IS A HACK AND SHOULD BE DONE RIGHT
+  //
+  //
+  //
+
+  private void addSamlToSession(
+      HttpServletRequest httpRequest, String realm, SecurityToken securityToken) {
+    if (securityToken == null) {
+      LOGGER.debug("Cannot add null security token to session.");
+      return;
+    }
+
+    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
+    Object sessionToken = getSecurityToken(session, realm);
+    if (sessionToken == null) {
+      addSecurityToken(session, realm, securityToken);
+    }
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
+    SecurityLogger.audit(
+        "Added SAML for user [{}] to session [{}]",
+        securityAssertion.getPrincipal().getName(),
+        Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
+    int minutes = 60;
+
+    session.setMaxInactiveInterval(minutes * 60);
+  }
+
+  private void addSecurityToken(HttpSession session, String realm, SecurityToken token) {
+    SecurityTokenHolder holder = (SecurityTokenHolder) session.getAttribute(SAML_PROPERTY_KEY);
+
+    holder.addSecurityToken(realm, token);
+  }
+
+  private Object getSecurityToken(HttpSession session, String realm) {
+    if (session.getAttribute(SAML_PROPERTY_KEY) == null) {
+      LOGGER.debug("Security token holder missing from session. New session created improperly.");
+      return null;
+    }
+
+    SecurityTokenHolder tokenHolder =
+        ((SecurityTokenHolder) session.getAttribute(SAML_PROPERTY_KEY));
+
+    SecurityToken token = (SecurityToken) tokenHolder.getSecurityToken(realm);
+
+    if (token != null) {
+      SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
+      if (!assertion.isPresentlyValid()) {
+        LOGGER.debug("Session SAML token is invalid.  Removing from session.");
+        tokenHolder.remove(realm);
+        return null;
+      }
+    }
+
+    return token;
+  }
+
+  //
+  //
+  // THIS IS A HACK AND SHOULD BE DONE RIGHT
+  //
+  //
+  //
+
   public Response processSamlResponse(
       String authnResponse, String relayState, boolean wasRedirectSigned) {
     LOGGER.trace(authnResponse);
@@ -397,13 +477,37 @@ public class AssertionConsumerService {
     request.setAttribute(WebSSOFilter.DDF_AUTHENTICATION_TOKEN, samlResult);
     request.removeAttribute(ContextPolicy.NO_AUTH_POLICY);
 
+    //
+    //
+    // THIS IS A HACK AND SHOULD BE DONE RIGHT
+    //
+    //
+    //
+
+    Subject subject;
     try {
       LOGGER.trace("Trying to login with provided SAML assertion.");
-      loginFilter.doFilter(wrappedRequest, null, (servletRequest, servletResponse) -> {});
-    } catch (IOException | AuthenticationException e) {
+      //      loginFilter.doFilter(wrappedRequest, null, (servletRequest, servletResponse) -> {});
+      subject = securityManager.getSubject(samlResult.getToken());
+    } catch (SecurityServiceException e) {
       LOGGER.debug("Failed to apply login filter to SAML assertion", e);
       return false;
     }
+
+    for (Object principal : subject.getPrincipals().asList()) {
+      if (principal instanceof SecurityAssertion
+          && ((SecurityAssertion) principal).getToken() instanceof SecurityToken) {
+        SecurityToken securityToken = (SecurityToken) ((SecurityAssertion) principal).getToken();
+        addSamlToSession(wrappedRequest, "idp", securityToken);
+      }
+    }
+
+    //
+    //
+    // THIS IS A HACK AND SHOULD BE DONE RIGHT
+    //
+    //
+    //
 
     return true;
   }

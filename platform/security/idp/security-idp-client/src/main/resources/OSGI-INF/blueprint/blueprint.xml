@@ -82,6 +82,7 @@
         <argument ref="idpMetadata"/>
         <argument ref="crypto"/>
         <argument ref="relayStates"/>
+        <argument ref="securityManager"/>
         <property name="loginFilter">
             <reference interface="org.codice.ddf.platform.filter.SecurityFilter"
                        filter="(osgi.http.whiteboard.filter.name=login-filter)"/>
