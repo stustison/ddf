@@ -17,7 +17,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import ddf.action.Action;
+import ddf.security.SecurityConstants;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.encryption.EncryptionService;
 import java.net.URLEncoder;
@@ -61,7 +63,9 @@ public class IdpLogoutActionProviderTest {
     Subject subject = mock(Subject.class);
     when(subject.getPrincipals()).thenReturn(principalCollection);
 
-    Action action = idpLogoutActionProvider.getAction(subject);
+    Action action =
+        idpLogoutActionProvider.getAction(
+            ImmutableMap.of(SecurityConstants.SECURITY_SUBJECT, subject));
     Assert.assertTrue(
         "Expected the encrypted nameId and time",
         action.getUrl().getQuery().contains(URLEncoder.encode(nameIdTime)));

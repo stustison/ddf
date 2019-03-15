@@ -143,7 +143,7 @@ public class LogoutRequestServiceTest {
     when(securityTokenHolder.getSecurityToken()).thenReturn(token);
     initializeLogutRequestService();
     when(sessionFactory.getOrCreateSession(request)).thenReturn(session);
-    when(session.getAttribute(eq(SecurityConstants.SAML_ASSERTION)))
+    when(session.getAttribute(eq(SecurityConstants.SECURITY_TOKEN_KEY)))
         .thenReturn(securityTokenHolder);
     when(request.getRequestURL()).thenReturn(new StringBuffer("www.url.com/url"));
     when(idpMetadata.getSigningCertificate()).thenReturn("signingCertificate");

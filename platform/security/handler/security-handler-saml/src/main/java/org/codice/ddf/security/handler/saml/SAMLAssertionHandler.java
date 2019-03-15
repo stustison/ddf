@@ -15,7 +15,7 @@ package org.codice.ddf.security.handler.saml;
 
 import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -136,9 +136,12 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
       // Check if there is a SAML Assertion in the session
       // If so, create a SAMLAuthenticationToken using the sessionId
       SecurityTokenHolder savedToken =
-          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION);
-      if (savedToken != null && savedToken.getSecurityToken() != null) {
-        SecurityAssertionImpl assertion = new SecurityAssertionImpl(savedToken.getSecurityToken());
+          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+      if (savedToken != null
+          && savedToken.getSecurityToken() != null
+          && savedToken.getSecurityToken() instanceof SecurityToken) {
+        SecurityAssertionSaml assertion =
+            new SecurityAssertionSaml((SecurityToken) savedToken.getSecurityToken());
         if (assertion.isPresentlyValid()) {
           LOGGER.trace("Creating SAML authentication token with session.");
           SAMLAuthenticationToken samlToken = new SAMLAuthenticationToken(null, session.getId());
