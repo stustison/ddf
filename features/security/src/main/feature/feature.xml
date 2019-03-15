@@ -347,6 +347,23 @@
         <bundle>mvn:ddf.security.handler/security-handler-basic/${project.version}</bundle>
     </feature>
 
+    <feature name="security-handler-oidc" version="${project.version}"
+             description="OIDC Authentication Handler for web applications.">
+        <feature>jackson</feature>
+        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
+        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/6.5</bundle>
+        <bundle>mvn:ddf.security.handler/security-handler-oidc/${project.version}</bundle>
+    </feature>
+
+    <feature name="jackson" version="${project.version}">
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
+    </feature>
+
     <feature name="security-filter-login" version="${project.version}"
              description="Login Filter for web applications.">
         <feature>security-core</feature>
@@ -609,6 +626,7 @@
         <feature>security-filter-login</feature>
         <feature>security-handler-saml</feature>
         <feature>security-handler-basic</feature>
+        <feature>security-handler-oidc</feature>
         <feature>security-filter-authz</feature>
         <feature>security-pdp-authz</feature>
         <feature>security-servlet-logout</feature>

@@ -13,9 +13,11 @@
  */
 package ddf.security.service.impl;
 
+import com.nimbusds.jwt.JWT;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.impl.SecurityAssertionJwt;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
@@ -32,6 +34,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SimpleSession;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +71,9 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   public Subject getSubject(Object token) throws SecurityServiceException {
-    if (token instanceof AuthenticationToken) {
+    if (token instanceof OidcAuthenticationToken) {
+      return getSubject((OidcAuthenticationToken) token);
+    } else if (token instanceof AuthenticationToken) {
       return getSubject((AuthenticationToken) token);
     } else if (token instanceof SecurityToken) {
       return getSubject((SecurityToken) token);
@@ -96,6 +101,20 @@ public class SecurityManagerImpl implements SecurityManager {
     try {
       return new SubjectImpl(
           info.getPrincipals(),
+          true,
+          new SimpleSession(UUID.randomUUID().toString()),
+          internalManager);
+    } catch (Exception e) {
+      throw new SecurityServiceException("Could not create a new subject", e);
+    }
+  }
+
+  private Subject getSubject(OidcAuthenticationToken oidcAuthenticationToken)
+      throws SecurityServiceException {
+    try {
+      // return the newly created subject
+      return new SubjectImpl(
+          createPrincipalFromJwt(oidcAuthenticationToken),
           true,
           new SimpleSession(UUID.randomUUID().toString()),
           internalManager);
@@ -146,6 +165,40 @@ public class SecurityManagerImpl implements SecurityManager {
       SecurityAssertion securityAssertion = null;
       try {
         securityAssertion = new SecurityAssertionImpl(token, usernameAttributeList);
+        Principal principal = securityAssertion.getPrincipal();
+        if (principal != null) {
+          principals.add(principal.getName(), curRealm.getName());
+        }
+      } catch (Exception e) {
+        LOGGER.warn(
+            "Encountered error while trying to get the Principal for the SecurityToken. Security functions may not work properly.",
+            e);
+      }
+      if (securityAssertion != null) {
+        principals.add(securityAssertion, curRealm.getName());
+      }
+    }
+    return principals;
+  }
+
+  private SimplePrincipalCollection createPrincipalFromJwt(
+      OidcAuthenticationToken oidcAuthenticationToken) {
+    SimplePrincipalCollection principals = new SimplePrincipalCollection();
+    JWT token = (JWT) oidcAuthenticationToken.getPrincipal();
+    for (Realm curRealm : realms) {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(
+            "Configuring settings for realm name: {} type: {}",
+            curRealm.getName(),
+            curRealm.getClass().toString());
+        LOGGER.debug(
+            "Is authorizer: {}, is AuthorizingRealm: {}",
+            curRealm instanceof Authorizer,
+            curRealm instanceof AuthorizingRealm);
+      }
+      SecurityAssertion securityAssertion = null;
+      try {
+        securityAssertion = new SecurityAssertionJwt(token, usernameAttributeList);
         Principal principal = securityAssertion.getPrincipal();
         if (principal != null) {
           principals.add(principal.getName(), curRealm.getName());
