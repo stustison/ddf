@@ -387,6 +387,38 @@
         <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
     </feature>
 
+    <feature name="security-oidc-realm" version="${project.version}"
+             description="OIDC Authentication Handler for web applications.">
+        <feature>jackson</feature>
+        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
+        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
+        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
+        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
+        <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
+    </feature>
+
+    <feature name="security-handler-oidc" version="${project.version}"
+             description="OIDC Authentication Handler for web applications.">
+        <feature>jackson</feature>
+        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
+        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
+        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
+        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
+        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
+        <bundle>mvn:ddf.security.handler/security-handler-oidc/${project.version}</bundle>
+    </feature>
+
+    <feature name="jackson" version="${project.version}">
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson.version}</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
+    </feature>
+
     <feature name="security-filter-login" version="${project.version}"
              description="Login Filter for web applications.">
         <feature>security-core</feature>
@@ -566,6 +598,13 @@
         <bundle>mvn:ddf.security.expansion/security-expansion-api/${project.version}</bundle>
         <bundle>mvn:ddf.security.idp/security-idp-server/${project.version}</bundle>
         <bundle>mvn:com.google.code.gson/gson/${gson.version}</bundle>
+        <feature>saml-validator</feature>
+    </feature>
+
+    <feature name="saml-validator" version="${project.version}"
+             description="TODO">
+        <bundle>mvn:ddf.security.saml/saml-assertion-validator/${project.version}</bundle>
+        <bundle>mvn:ddf.security.saml/saml-assertion-validator-impl/${project.version}</bundle>
     </feature>
 
     <feature name="saml-validator" version="${project.version}"
