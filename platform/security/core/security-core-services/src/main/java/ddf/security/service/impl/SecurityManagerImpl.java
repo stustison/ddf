@@ -14,24 +14,20 @@
 package ddf.security.service.impl;
 
 import ddf.security.Subject;
-import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
-import java.security.Principal;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authz.Authorizer;
 import org.apache.shiro.mgt.DefaultSecurityManager;
-import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SimpleSession;
-import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
+import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
+import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +37,6 @@ public class SecurityManagerImpl implements SecurityManager {
 
   private DefaultSecurityManager internalManager;
 
-  private Collection<Realm> realms;
-
-  private List<String> usernameAttributeList;
-
   /** Creates a new security manager with the collection of given realms. */
   public SecurityManagerImpl() {
     // create the new security manager
@@ -53,25 +45,23 @@ public class SecurityManagerImpl implements SecurityManager {
 
   /** @param realms The realms used for the backing authZ and authN operations. */
   public void setRealms(Collection<Realm> realms) {
-    this.realms = realms;
     // update the default manager with current realm list
     LOGGER.debug("Updating manager with {} realms.", realms.size());
     internalManager.setRealms(realms);
   }
 
-  public List<String> getUsernameAttributeList() {
-    return usernameAttributeList;
-  }
-
-  public void setUsernameAttributeList(List<String> usernameAttributeList) {
-    this.usernameAttributeList = usernameAttributeList;
-  }
-
   public Subject getSubject(Object token) throws SecurityServiceException {
+    AuthenticationToken authenticationToken = null;
     if (token instanceof AuthenticationToken) {
-      return getSubject((AuthenticationToken) token);
+      authenticationToken = (AuthenticationToken) token;
     } else if (token instanceof SecurityToken) {
-      return getSubject((SecurityToken) token);
+      authenticationToken = new SAMLAuthenticationToken(null, (SecurityToken) token);
+    } else if (token instanceof OidcCredentials) {
+      authenticationToken = new OidcAuthenticationToken(null, token);
+    }
+
+    if (authenticationToken != null) {
+      return getSubject(authenticationToken);
     } else {
       throw new SecurityServiceException(
           "Incoming token object NOT supported by security manager implementation. Currently supported types are AuthenticationToken and SecurityToken");
@@ -102,63 +92,5 @@ public class SecurityManagerImpl implements SecurityManager {
     } catch (Exception e) {
       throw new SecurityServiceException("Could not create a new subject", e);
     }
-  }
-
-  /**
-   * Creates a new subject using an incoming SecurityToken.
-   *
-   * @param token Security token that the subject should be populated with
-   * @return new subject
-   * @throws SecurityServiceException
-   */
-  private Subject getSubject(SecurityToken token) throws SecurityServiceException {
-    try {
-      // return the newly created subject
-      return new SubjectImpl(
-          createPrincipalFromToken(token),
-          true,
-          new SimpleSession(UUID.randomUUID().toString()),
-          internalManager);
-    } catch (Exception e) {
-      throw new SecurityServiceException("Could not create a new subject", e);
-    }
-  }
-
-  /**
-   * Creates a new principal object from an incoming security token.
-   *
-   * @param token SecurityToken that contains the principals.
-   * @return new SimplePrincipalCollection
-   */
-  private SimplePrincipalCollection createPrincipalFromToken(SecurityToken token) {
-    SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    for (Realm curRealm : realms) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(
-            "Configuring settings for realm name: {} type: {}",
-            curRealm.getName(),
-            curRealm.getClass().toString());
-        LOGGER.debug(
-            "Is authorizer: {}, is AuthorizingRealm: {}",
-            curRealm instanceof Authorizer,
-            curRealm instanceof AuthorizingRealm);
-      }
-      SecurityAssertion securityAssertion = null;
-      try {
-        securityAssertion = new SecurityAssertionImpl(token, usernameAttributeList);
-        Principal principal = securityAssertion.getPrincipal();
-        if (principal != null) {
-          principals.add(principal.getName(), curRealm.getName());
-        }
-      } catch (Exception e) {
-        LOGGER.warn(
-            "Encountered error while trying to get the Principal for the SecurityToken. Security functions may not work properly.",
-            e);
-      }
-      if (securityAssertion != null) {
-        principals.add(securityAssertion, curRealm.getName());
-      }
-    }
-    return principals;
   }
 }

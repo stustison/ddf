@@ -29,7 +29,7 @@ import org.apache.wss4j.dom.WSConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BSTAuthenticationToken extends BaseAuthenticationToken {
+public abstract class BSTAuthenticationToken extends STSAuthenticationToken {
 
   public static final String BASE64_ENCODING = WSConstants.SOAPMESSAGE_NS + "#Base64Binary";
 
@@ -91,7 +91,7 @@ public abstract class BSTAuthenticationToken extends BaseAuthenticationToken {
         String p = parseComponent(components[0], BST_PRINCIPAL);
         String c = parseComponent(components[1], BST_CREDENTIALS);
 
-        baseAuthenticationToken = new BaseAuthenticationToken(p, c);
+        baseAuthenticationToken = new STSAuthenticationToken(p, c);
       }
     }
 
@@ -109,7 +109,7 @@ public abstract class BSTAuthenticationToken extends BaseAuthenticationToken {
   }
 
   @Override
-  public String getCredentialsAsXMLString() {
+  public String getCredentialsAsString() {
     return getBinarySecurityToken();
   }
 

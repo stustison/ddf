@@ -16,6 +16,7 @@ package org.codice.ddf.security.servlet.whoami;
 import static org.apache.commons.lang.Validate.notNull;
 
 import ddf.security.SubjectUtils;
+import ddf.security.assertion.AuthenticationStatement;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.principal.GuestPrincipal;
 import java.util.Collections;
@@ -30,9 +31,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
-import org.opensaml.saml.saml2.core.AuthnContext;
-import org.opensaml.saml.saml2.core.AuthnContextClassRef;
-import org.opensaml.saml.saml2.core.AuthnStatement;
 
 public class WhoAmI {
 
@@ -151,16 +149,12 @@ public class WhoAmI {
         new Period(expiration.getTime() - DateTime.now().getMillis()).normalizedStandard());
   }
 
-  private List<String> extractAuthnContextClasses(List<AuthnStatement> authnStatements) {
+  private List<String> extractAuthnContextClasses(List<AuthenticationStatement> authnStatements) {
     return Collections.unmodifiableList(
         authnStatements
             .stream()
             .filter(Objects::nonNull)
-            .map(AuthnStatement::getAuthnContext)
-            .filter(Objects::nonNull)
-            .map(AuthnContext::getAuthnContextClassRef)
-            .filter(Objects::nonNull)
-            .map(AuthnContextClassRef::getAuthnContextClassRef)
+            .map(AuthenticationStatement::getAuthnContextClassRef)
             .collect(Collectors.toList()));
   }
 }

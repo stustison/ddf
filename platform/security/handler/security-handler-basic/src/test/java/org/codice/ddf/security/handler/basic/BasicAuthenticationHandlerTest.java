@@ -217,7 +217,7 @@ public class BasicAuthenticationHandlerTest {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
     ByteArrayInputStream input =
-        new ByteArrayInputStream(token.getCredentialsAsXMLString().getBytes("UTF-8"));
+        new ByteArrayInputStream(token.getCredentialsAsString().getBytes("UTF-8"));
     Document doc = builder.parse(input);
     NodeList children = doc.getDocumentElement().getChildNodes();
 

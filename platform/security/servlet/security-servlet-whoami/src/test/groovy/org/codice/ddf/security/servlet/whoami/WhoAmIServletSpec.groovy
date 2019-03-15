@@ -24,8 +24,6 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 
-import static org.mockito.Mockito.mock
-
 class WhoAmIServletSpec extends SubjectSpec {
 
     WhoAmIServlet whoAmIServlet
@@ -33,19 +31,21 @@ class WhoAmIServletSpec extends SubjectSpec {
     def setup() {
         whoAmIServlet = new WhoAmIServlet()
 
-        def sessionFactory = Mock(SessionFactory)
-        def httpSession = Mock(HttpSession)
+        def securityToken = Mock(SecurityToken)
+
         def securityTokenHolder = Mock(SecurityTokenHolder)
+        securityTokenHolder.getRealmTokenMap() >> ["test": securityToken]
 
+        def httpSession = Mock(HttpSession)
+        httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY) >> securityTokenHolder
+
+        def sessionFactory = Mock(SessionFactory)
         sessionFactory.getOrCreateSession(_ as HttpServletRequest) >> httpSession
-        httpSession.getAttribute(SecurityConstants.SAML_ASSERTION) >> securityTokenHolder
-        securityTokenHolder.getSecurityToken() >> mock(SecurityToken)
-
-        whoAmIServlet.setHttpSessionFactory(sessionFactory)
 
         def securityManager = Mock(SecurityManager)
         securityManager.getSubject(_) >> mockSubject()
 
+        whoAmIServlet.setHttpSessionFactory(sessionFactory)
         whoAmIServlet.setSecurityManager(securityManager)
     }
 
