@@ -72,7 +72,7 @@ public class LogoutServletTest {
         .thenReturn(new X509Certificate[] {mock(X509Certificate.class)});
 
     SecurityTokenHolder securityTokenHolder = mock(SecurityTokenHolder.class);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     try {
       localLogoutServlet.doGet(request, response);
@@ -94,7 +94,7 @@ public class LogoutServletTest {
         .thenReturn(new X509Certificate[] {mock(X509Certificate.class)});
 
     SecurityTokenHolder securityTokenHolder = mock(SecurityTokenHolder.class);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     try {
       localLogoutServlet.doGet(request, response);
@@ -116,7 +116,7 @@ public class LogoutServletTest {
         .thenReturn(new X509Certificate[] {mock(X509Certificate.class)});
 
     SecurityTokenHolder securityTokenHolder = mock(SecurityTokenHolder.class);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     try {
       localLogoutServlet.doGet(request, response);

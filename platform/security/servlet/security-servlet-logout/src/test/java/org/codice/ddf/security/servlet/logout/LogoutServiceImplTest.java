@@ -44,7 +44,7 @@ public class LogoutServiceImplTest {
   @BeforeClass
   public static void initialize() {
 
-    Map<String, SecurityToken> realmTokenMap = new HashMap<>();
+    Map<String, Object> realmTokenMap = new HashMap<>();
     realmTokenMap.put("karaf", new SecurityToken());
     realmTokenMap.put("ldap", new SecurityToken());
 
@@ -54,7 +54,7 @@ public class LogoutServiceImplTest {
     sm = mock(SecurityManager.class);
 
     when(sessionFactory.getOrCreateSession(null)).thenReturn(httpSession);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     when(securityTokenHolder.getRealmTokenMap()).thenReturn(realmTokenMap);
   }

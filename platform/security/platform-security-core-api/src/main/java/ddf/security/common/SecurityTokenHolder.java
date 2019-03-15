@@ -17,23 +17,22 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 
 public class SecurityTokenHolder implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private final Map<String, SecurityToken> realmTokenMap = new ConcurrentHashMap<>();
+  private final Map<String, Object> realmTokenMap = new ConcurrentHashMap<String, Object>();
 
-  public SecurityToken getSecurityToken(String realm) {
+  public Object getSecurityToken(String realm) {
     return realmTokenMap.get(realm);
   }
 
-  public void addSecurityToken(String realm, SecurityToken securityToken) {
+  public void addSecurityToken(String realm, Object securityToken) {
     realmTokenMap.put(realm, securityToken);
   }
 
-  public Map<String, SecurityToken> getRealmTokenMap() {
+  public Map<String, Object> getRealmTokenMap() {
     return Collections.unmodifiableMap(realmTokenMap);
   }
 

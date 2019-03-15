@@ -264,12 +264,14 @@ public class LogoutRequestService {
   }
 
   private String extractSubject(Map<String, Object> sessionAttributes) {
-    return Stream.of(sessionAttributes.get(SecurityConstants.SAML_ASSERTION))
+    return Stream.of(sessionAttributes.get(SecurityConstants.SECURITY_TOKEN_KEY))
         .filter(SecurityTokenHolder.class::isInstance)
         .map(SecurityTokenHolder.class::cast)
         .map(SecurityTokenHolder::getRealmTokenMap)
         .map(Map::values)
         .flatMap(Collection::stream)
+        .filter(SecurityToken.class::isInstance)
+        .map(SecurityToken.class::cast)
         .map(this::extractSubject)
         .filter(Objects::nonNull)
         .map(SubjectUtils::getName)
@@ -517,7 +519,7 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return getTokenHolder().getSecurityToken(IDP_REALM_NAME);
+    return (SecurityToken) getTokenHolder().getSecurityToken(IDP_REALM_NAME);
   }
 
   private void logout() {
@@ -547,7 +549,9 @@ public class LogoutRequestService {
 
   private SecurityTokenHolder getTokenHolder() {
     return (SecurityTokenHolder)
-        sessionFactory.getOrCreateSession(request).getAttribute(SecurityConstants.SAML_ASSERTION);
+        sessionFactory
+            .getOrCreateSession(request)
+            .getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
   }
 
   private Response getLogoutResponse(String relayState, LogoutResponse samlResponse) {

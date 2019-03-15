@@ -38,7 +38,7 @@ class WhoAmIServletSpec extends SubjectSpec {
         def securityTokenHolder = Mock(SecurityTokenHolder)
 
         sessionFactory.getOrCreateSession(_ as HttpServletRequest) >> httpSession
-        httpSession.getAttribute(SecurityConstants.SAML_ASSERTION) >> securityTokenHolder
+        httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY) >> securityTokenHolder
         securityTokenHolder.getRealmTokenMap() >> ["test": mock(SecurityToken)]
 
         whoAmIServlet.setHttpSessionFactory(sessionFactory)

@@ -21,10 +21,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
 
-public class SAMLAuthenticationToken extends BaseAuthenticationToken {
+public class SAMLAuthenticationToken extends STSAuthenticationToken {
   private static final Logger LOGGER = LoggerFactory.getLogger(SAMLAuthenticationToken.class);
-
-  boolean reference = true;
 
   /**
    * Constructor that only allows SecurityToken objects to be used as the credentials.
@@ -47,7 +45,7 @@ public class SAMLAuthenticationToken extends BaseAuthenticationToken {
     return reference;
   }
 
-  public void replaceReferenece(SecurityToken token) {
+  public void replaceReference(SecurityToken token) {
     if (reference) {
       credentials = token;
       reference = false;
@@ -75,7 +73,7 @@ public class SAMLAuthenticationToken extends BaseAuthenticationToken {
   }
 
   @Override
-  public String getCredentialsAsXMLString() {
+  public String getCredentialsAsString() {
     String creds = "";
     Element element = getSAMLTokenAsElement();
     if (element != null) {

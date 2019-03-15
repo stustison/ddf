@@ -101,7 +101,7 @@ public class LocalLogoutServlet extends HttpServlet {
     HttpSession session = request.getSession();
     if (session != null) {
       SecurityTokenHolder savedToken =
-          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION);
+          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (savedToken != null) {
         Subject subject = ThreadContext.getSubject();
 

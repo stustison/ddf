@@ -93,7 +93,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Create a session and add the security token
         session = sessionFactory.getOrCreateSession(request);
         SecurityTokenHolder holder =
-            (SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION);
+            (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
         holder.addSecurityToken(realm, securityToken);
       }
     }

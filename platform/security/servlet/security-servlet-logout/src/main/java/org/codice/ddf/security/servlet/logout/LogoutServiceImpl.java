@@ -30,7 +30,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.Subject;
 import org.codice.ddf.security.logout.service.LogoutService;
 import org.codice.gsonsupport.GsonTypeAdapters.LongDoubleTypeAdapter;
@@ -53,12 +52,12 @@ public class LogoutServiceImpl implements LogoutService {
   public String getActionProviders(HttpServletRequest request) throws SecurityServiceException {
 
     HttpSession session = httpSessionFactory.getOrCreateSession(request);
-    Map<String, SecurityToken> realmTokenMap =
-        ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SAML_ASSERTION))
+    Map<String, Object> realmTokenMap =
+        ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
             .getRealmTokenMap();
     Map<String, Subject> realmSubjectMap = new HashMap<>();
 
-    for (Map.Entry<String, SecurityToken> entry : realmTokenMap.entrySet()) {
+    for (Map.Entry<String, Object> entry : realmTokenMap.entrySet()) {
       realmSubjectMap.put(entry.getKey(), securityManager.getSubject(entry.getValue()));
     }
 

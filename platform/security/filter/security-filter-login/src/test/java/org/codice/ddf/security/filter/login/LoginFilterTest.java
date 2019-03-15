@@ -188,7 +188,7 @@ public class LoginFilterTest {
 
     HttpSession session = mock(HttpSession.class);
     when(servletRequest.getSession(true)).thenReturn(session);
-    when(session.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(new SecurityTokenHolder());
     when(session.getId()).thenReturn("sessionId");
     when(sessionFactory.getOrCreateSession(servletRequest)).thenReturn(session);
@@ -212,7 +212,7 @@ public class LoginFilterTest {
     ddf.security.service.SecurityManager securityManager =
         mock(ddf.security.service.SecurityManager.class);
     loginFilter.setSecurityManager(securityManager);
-    loginFilter.setSignaturePropertiesFile("signature.properties");
+    // loginFilter.setSignaturePropertiesFile("signature.properties");
     loginFilter.init();
     HttpServletRequest servletRequest = new TestHttpServletRequest();
     HttpServletResponse servletResponse = mock(HttpServletResponse.class);
@@ -234,7 +234,7 @@ public class LoginFilterTest {
     loginFilter.setSessionFactory(sessionFactory);
     ddf.security.service.SecurityManager securityManager = mock(SecurityManager.class);
     loginFilter.setSecurityManager(securityManager);
-    loginFilter.setSignaturePropertiesFile("signature.properties");
+    // loginFilter.setSignaturePropertiesFile("signature.properties");
     loginFilter.init();
     HttpServletRequest servletRequest = new TestHttpServletRequest();
     HttpServletResponse servletResponse = mock(HttpServletResponse.class);

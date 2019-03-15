@@ -37,8 +37,8 @@ public final class SecurityConstants {
    */
   public static final String SECURITY_JAVA_SUBJECT = "ddf.security.java.subject";
 
-  /** Property key to obtain the saml assertion from a query request / response. */
-  public static final String SAML_ASSERTION = "saml.assertion";
+  /** Property key to obtain the security token from a query request / response. */
+  public static final String SECURITY_TOKEN_KEY = "security.assertion";
 
   /** Property key to obtain the legacy saml cookie from an incoming HTTP Request */
   public static final String SAML_COOKIE_NAME = "org.codice.websso.saml.token";
