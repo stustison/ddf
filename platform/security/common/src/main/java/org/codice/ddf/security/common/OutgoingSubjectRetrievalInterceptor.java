@@ -31,7 +31,7 @@ import org.apache.cxf.transport.http.URLConnectionInfo;
 import org.apache.cxf.transport.http.UntrustedURLConnectionIOException;
 import org.apache.cxf.transport.https.HttpsURLConnectionInfo;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
-import org.codice.ddf.security.handler.api.BaseAuthenticationTokenFactory;
+import org.codice.ddf.security.handler.api.STSAuthenticationTokenFactory;
 
 /**
  * OutgoingSubjectRetrievalInterceptor provides a implementation of {@link AbstractPhaseInterceptor}
@@ -43,13 +43,13 @@ public class OutgoingSubjectRetrievalInterceptor extends AbstractPhaseIntercepto
 
   private final SecurityManager securityManager;
 
-  private final BaseAuthenticationTokenFactory tokenFactory;
+  private final STSAuthenticationTokenFactory tokenFactory;
 
   private EventSecurityEndingInterceptor ending = new EventSecurityEndingInterceptor();
 
   public OutgoingSubjectRetrievalInterceptor() {
     super(Phase.PRE_STREAM);
-    tokenFactory = new BaseAuthenticationTokenFactory();
+    tokenFactory = new STSAuthenticationTokenFactory();
     tokenFactory.init();
     securityManager = Security.getInstance().getSecurityManager();
   }

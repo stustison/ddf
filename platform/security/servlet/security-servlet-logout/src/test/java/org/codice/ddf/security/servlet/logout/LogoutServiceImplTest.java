@@ -51,7 +51,7 @@ public class LogoutServiceImplTest {
     sm = mock(SecurityManager.class);
 
     when(sessionFactory.getOrCreateSession(null)).thenReturn(httpSession);
-    when(httpSession.getAttribute(SecurityConstants.SAML_ASSERTION))
+    when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
     when(securityTokenHolder.getSecurityToken()).thenReturn(new SecurityToken());
   }
@@ -66,7 +66,7 @@ public class LogoutServiceImplTest {
     logoutServiceImpl.setSecurityManager(sm);
     logoutServiceImpl.setLogoutActionProviders(ImmutableList.of(mockLogoutActionProvider));
 
-    String responseMessage = logoutServiceImpl.getActionProviders(null);
+    String responseMessage = logoutServiceImpl.getActionProviders(null, null);
 
     JSONArray actionProperties = (JSONArray) new JSONParser().parse(responseMessage);
     assertEquals(1, actionProperties.size());
@@ -80,7 +80,7 @@ public class LogoutServiceImplTest {
   public class MockLogoutAction implements ActionProvider {
 
     @Override
-    public <T> Action getAction(T subject) {
+    public <T> Action getAction(T subjectMap) {
       try {
         return new ActionImpl(
             "security.logout.test",

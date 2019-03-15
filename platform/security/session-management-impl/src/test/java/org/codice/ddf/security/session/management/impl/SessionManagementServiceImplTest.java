@@ -78,7 +78,7 @@ public class SessionManagementServiceImplTest {
     Subject subject = mock(Subject.class);
     manager = mock(SecurityManager.class);
 
-    when(principal.getSecurityToken()).thenReturn(securityToken);
+    when(principal.getToken()).thenReturn(securityToken);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(principal));
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(manager.getSubject(isA(SAMLAuthenticationToken.class))).thenReturn(subject);
@@ -88,7 +88,7 @@ public class SessionManagementServiceImplTest {
                 .getDocumentElement());
     when(tokenHolder.getSecurityToken()).thenReturn(token);
     when(request.getSession(false)).thenReturn(session);
-    when(session.getAttribute(SecurityConstants.SAML_ASSERTION)).thenReturn(tokenHolder);
+    when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     sessionManagementServiceImpl = new SessionManagementServiceImpl();
     sessionManagementServiceImpl.setSecurityManager(manager);
   }

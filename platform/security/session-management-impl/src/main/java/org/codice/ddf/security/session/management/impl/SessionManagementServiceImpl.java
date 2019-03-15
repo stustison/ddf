@@ -16,7 +16,8 @@ package org.codice.ddf.security.session.management.impl;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
@@ -28,6 +29,7 @@ import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.session.management.service.SessionManagementService;
+import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     HttpSession session = request.getSession(false);
     long timeLeft = 0;
     if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SAML_ASSERTION);
+      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (securityToken instanceof SecurityTokenHolder) {
         timeLeft = getTimeLeft((SecurityTokenHolder) securityToken);
       }
@@ -58,10 +60,10 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
     String timeLeft = null;
     if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SAML_ASSERTION);
+      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (securityToken instanceof SecurityTokenHolder) {
         SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
-        SecurityToken token = tokenHolder.getSecurityToken();
+        Object token = tokenHolder.getSecurityToken();
 
         try {
           doRenew(token, tokenHolder);
@@ -86,20 +88,34 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   }
 
   private long getTimeLeft(SecurityTokenHolder securityToken) {
-    SecurityAssertionImpl securityAssertion =
-        new SecurityAssertionImpl(securityToken.getSecurityToken());
-    long time = securityAssertion.getNotOnOrAfter().getTime();
-    return Math.max(time - clock.millis(), 0);
+    Object token = securityToken.getSecurityToken();
+
+    if (token instanceof SecurityToken) {
+      SecurityAssertionSaml securityAssertion = new SecurityAssertionSaml((SecurityToken) token);
+      long time = securityAssertion.getNotOnOrAfter().getTime();
+      return Math.max(time - clock.millis(), 0);
+
+    } else if (token instanceof OidcCredentials) {
+      OidcCredentials oidcCredentials = (OidcCredentials) token;
+      SecurityAssertionJwt securityAssertion =
+          new SecurityAssertionJwt(oidcCredentials.getIdToken());
+      long time = securityAssertion.getNotOnOrAfter().getTime();
+      return Math.max(time - clock.millis(), 0);
+    }
+    return 0L;
   }
 
-  private void doRenew(SecurityToken securityToken, SecurityTokenHolder tokenHolder)
+  private void doRenew(Object securityToken, SecurityTokenHolder tokenHolder)
       throws SecurityServiceException {
-    SAMLAuthenticationToken samlToken =
-        new SAMLAuthenticationToken(securityToken.getPrincipal(), securityToken);
-    Subject subject = securityManager.getSubject(samlToken);
-    for (Object principal : subject.getPrincipals().asList()) {
-      if (principal instanceof SecurityAssertion) {
-        tokenHolder.setSecurityToken(((SecurityAssertion) principal).getSecurityToken());
+    if (securityToken instanceof SecurityToken) {
+      SAMLAuthenticationToken samlToken =
+          new SAMLAuthenticationToken(
+              ((SecurityToken) securityToken).getPrincipal(), (SecurityToken) securityToken);
+      Subject subject = securityManager.getSubject(samlToken);
+      for (Object principal : subject.getPrincipals().asList()) {
+        if (principal instanceof SecurityAssertion) {
+          tokenHolder.setSecurityToken(((SecurityAssertion) principal).getToken());
+        }
       }
     }
   }

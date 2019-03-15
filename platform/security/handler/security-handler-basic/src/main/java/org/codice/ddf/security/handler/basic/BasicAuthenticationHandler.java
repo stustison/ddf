@@ -25,8 +25,8 @@ import org.apache.commons.lang.StringUtils;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
-import org.codice.ddf.security.handler.api.BaseAuthenticationTokenFactory;
 import org.codice.ddf.security.handler.api.HandlerResult;
+import org.codice.ddf.security.handler.api.STSAuthenticationTokenFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +40,10 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthenticationHandler.class);
 
-  private final BaseAuthenticationTokenFactory tokenFactory;
+  private final STSAuthenticationTokenFactory tokenFactory;
 
   public BasicAuthenticationHandler() {
-    tokenFactory = new BaseAuthenticationTokenFactory();
+    tokenFactory = new STSAuthenticationTokenFactory();
     LOGGER.debug("Creating basic username/token bst handler.");
   }
 

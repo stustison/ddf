@@ -13,12 +13,16 @@
  */
 package org.codice.ddf.security.idp.client;
 
+import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
+
+import com.google.common.annotations.VisibleForTesting;
 import ddf.security.http.SessionFactory;
 import ddf.security.samlp.SamlProtocol;
 import ddf.security.samlp.SimpleSign;
 import ddf.security.samlp.SystemCrypto;
 import ddf.security.samlp.ValidationException;
 import ddf.security.samlp.impl.RelayStates;
+import ddf.security.service.SecurityManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +70,6 @@ import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
-import org.codice.ddf.security.filter.websso.WebSSOFilter;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.saml.SAMLAssertionHandler;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -78,6 +81,9 @@ import org.w3c.dom.Document;
 
 @Path("sso")
 public class AssertionConsumerService {
+
+  @VisibleForTesting
+  static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IdpHandler.class);
 
@@ -106,6 +112,8 @@ public class AssertionConsumerService {
 
   private SessionFactory sessionFactory;
 
+  private SecurityManager securityManager;
+
   static {
     OpenSAMLUtil.initSamlEngine();
   }
@@ -114,11 +122,13 @@ public class AssertionConsumerService {
       SimpleSign simpleSign,
       IdpMetadata metadata,
       SystemCrypto crypto,
-      RelayStates<String> relayStates) {
+      RelayStates<String> relayStates,
+      SecurityManager securityManager) {
     this.simpleSign = simpleSign;
     idpMetadata = metadata;
     systemCrypto = crypto;
     this.relayStates = relayStates;
+    this.securityManager = securityManager;
   }
 
   @POST
@@ -386,7 +396,7 @@ public class AssertionConsumerService {
       return false;
     }
 
-    request.setAttribute(WebSSOFilter.DDF_AUTHENTICATION_TOKEN, samlResult);
+    request.setAttribute(AUTHENTICATION_TOKEN_KEY, samlResult);
     request.removeAttribute(ContextPolicy.NO_AUTH_POLICY);
 
     try {
