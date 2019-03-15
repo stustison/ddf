@@ -43,7 +43,6 @@ import org.apache.cxf.ws.addressing.EndpointReferenceType;
 import org.apache.cxf.ws.addressing.policy.MetadataConstants;
 import org.apache.cxf.ws.policy.AssertionInfoMap;
 import org.apache.cxf.ws.security.SecurityConstants;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.cxf.ws.security.wss4j.AbstractWSS4JInterceptor;
 import org.apache.cxf.ws.security.wss4j.PolicyBasedWSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.PolicyBasedWSS4JOutInterceptor;
@@ -172,7 +171,7 @@ public class GuestInterceptor extends AbstractWSS4JInterceptor {
     LOGGER.debug("Creating guest security token.");
     HttpServletRequest request =
         (HttpServletRequest) message.get(AbstractHTTPDestination.HTTP_REQUEST);
-    SecurityToken securityToken = createSecurityToken(request.getRemoteAddr());
+    Object securityToken = createSecurityToken(request.getRemoteAddr());
     message.put(SecurityConstants.TOKEN, securityToken);
     if (!MessageUtils.isRequestor(message)) {
       try {
@@ -186,8 +185,8 @@ public class GuestInterceptor extends AbstractWSS4JInterceptor {
     }
   }
 
-  private SecurityToken createSecurityToken(String ipAddress) {
-    SecurityToken securityToken = null;
+  private Object createSecurityToken(String ipAddress) {
+    Object securityToken = null;
     Subject subject = getSubject(ipAddress);
 
     LOGGER.trace("Attempting to create Security token.");
@@ -196,7 +195,7 @@ public class GuestInterceptor extends AbstractWSS4JInterceptor {
       if (principals != null) {
         SecurityAssertion securityAssertion = principals.oneByType(SecurityAssertion.class);
         if (securityAssertion != null) {
-          securityToken = securityAssertion.getSecurityToken();
+          securityToken = securityAssertion.getToken();
         } else {
           LOGGER.info(
               "Subject did not contain a security assertion, could not add assertion to the security header.");

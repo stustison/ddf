@@ -16,7 +16,8 @@ package org.codice.ddf.security.idp.client;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.SubjectUtils;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.AuthenticationStatement;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.encryption.EncryptionService;
@@ -71,7 +72,6 @@ import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.platform.session.api.HttpSessionInvalidator;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
 import org.opensaml.core.xml.XMLObject;
-import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.LogoutResponse;
 import org.opensaml.saml.saml2.core.StatusCode;
@@ -185,11 +185,11 @@ public class LogoutRequestService {
         // Logout removes the SAML assertion. This statement must be called before the SAML
         // assertion is removed.
         List<String> sessionIndexes =
-            new SecurityAssertionImpl(idpSecToken)
+            new SecurityAssertionSaml(idpSecToken)
                 .getAuthnStatements()
                 .stream()
                 .filter(Objects::nonNull)
-                .map(AuthnStatement::getSessionIndex)
+                .map(AuthenticationStatement::getSessionIndex)
                 .collect(Collectors.toList());
 
         logout();
@@ -262,10 +262,12 @@ public class LogoutRequestService {
   }
 
   private String extractSubject(Map<String, Object> sessionAttributes) {
-    return Stream.of(sessionAttributes.get(SecurityConstants.SAML_ASSERTION))
+    return Stream.of(sessionAttributes.get(SecurityConstants.SECURITY_TOKEN_KEY))
         .filter(SecurityTokenHolder.class::isInstance)
         .map(SecurityTokenHolder.class::cast)
         .map(SecurityTokenHolder::getSecurityToken)
+        .filter(SecurityToken.class::isInstance)
+        .map(SecurityToken.class::cast)
         .map(this::extractSubject)
         .filter(Objects::nonNull)
         .map(SubjectUtils::getName)
@@ -513,7 +515,7 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return getTokenHolder().getSecurityToken();
+    return (SecurityToken) getTokenHolder().getSecurityToken();
   }
 
   private void logout() {
@@ -527,7 +529,7 @@ public class LogoutRequestService {
       if (shouldAuditSubject(idpSecToken)) {
         SecurityLogger.audit(
             "Subject with admin privileges has logged out: {}",
-            new SecurityAssertionImpl(idpSecToken).getPrincipal().getName());
+            new SecurityAssertionSaml(idpSecToken).getPrincipal().getName());
       }
     }
   }
@@ -536,14 +538,16 @@ public class LogoutRequestService {
     return Arrays.stream(System.getProperty(SECURITY_AUDIT_ROLES).split(","))
         .anyMatch(
             role ->
-                new SecurityAssertionImpl(idpSecToken)
+                new SecurityAssertionSaml(idpSecToken)
                     .getPrincipals()
                     .contains(new RolePrincipal(role)));
   }
 
   private SecurityTokenHolder getTokenHolder() {
     return (SecurityTokenHolder)
-        sessionFactory.getOrCreateSession(request).getAttribute(SecurityConstants.SAML_ASSERTION);
+        sessionFactory
+            .getOrCreateSession(request)
+            .getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
   }
 
   private Response getLogoutResponse(String relayState, LogoutResponse samlResponse) {

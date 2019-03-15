@@ -39,6 +39,7 @@ import java.security.PrivilegedExceptionAction;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -52,8 +53,8 @@ import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.subject.ExecutionException;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
-import org.codice.ddf.security.handler.api.BaseAuthenticationTokenFactory;
 import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
+import org.codice.ddf.security.handler.api.STSAuthenticationTokenFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -102,7 +103,7 @@ public class Security {
    * @return {@link Subject} associated with the user name and password provided
    */
   public Subject getSubject(String username, String password) {
-    BaseAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
+    STSAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
     BaseAuthenticationToken token = tokenFactory.fromUsernamePassword(username, password);
     SecurityManager securityManager = getSecurityManager();
 
@@ -236,7 +237,7 @@ public class Security {
       return null;
     }
 
-    BaseAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
+    STSAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
     BaseAuthenticationToken token =
         tokenFactory.fromCertificates(new X509Certificate[] {(X509Certificate) cert});
     if (token != null) {
@@ -284,11 +285,21 @@ public class Security {
     return !((null != subject)
         && (null != subject.getPrincipals())
         && (null != subject.getPrincipals().oneByType(SecurityAssertion.class))
-        && (!subject
-            .getPrincipals()
-            .oneByType(SecurityAssertion.class)
-            .getSecurityToken()
-            .isAboutToExpire(TimeUnit.MINUTES.toSeconds(1))));
+        && (!isAboutToExpire(
+            subject
+                .getPrincipals()
+                .oneByType(SecurityAssertion.class)
+                .getNotOnOrAfter()
+                .toInstant(),
+            TimeUnit.MINUTES.toSeconds(1))));
+  }
+
+  public boolean isAboutToExpire(Instant expires, long secondsToExpiry) {
+    if (expires != null && secondsToExpiry > 0) {
+      Instant now = Instant.now().plusSeconds(secondsToExpiry);
+      return expires.isBefore(now);
+    }
+    return false;
   }
 
   /**
@@ -301,12 +312,7 @@ public class Security {
     return ((null != subject)
             && (null != subject.getPrincipals())
             && (null != subject.getPrincipals().oneByType(SecurityAssertion.class)))
-        ? Date.from(
-            subject
-                .getPrincipals()
-                .oneByType(SecurityAssertion.class)
-                .getSecurityToken()
-                .getExpires())
+        ? subject.getPrincipals().oneByType(SecurityAssertion.class).getNotOnOrAfter()
         : null;
   }
 
@@ -389,8 +395,8 @@ public class Security {
     SecurityLogger.audit("Attempting to get System Subject");
   }
 
-  private BaseAuthenticationTokenFactory createBasicTokenFactory() {
-    BaseAuthenticationTokenFactory tokenFactory = new BaseAuthenticationTokenFactory();
+  private STSAuthenticationTokenFactory createBasicTokenFactory() {
+    STSAuthenticationTokenFactory tokenFactory = new STSAuthenticationTokenFactory();
     tokenFactory.init();
     return tokenFactory;
   }

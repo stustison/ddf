@@ -13,11 +13,20 @@
  */
 package org.codice.ddf.security.handler.api;
 
+import java.security.cert.X509Certificate;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BaseAuthenticationToken implements AuthenticationToken {
+
+  boolean reference = false;
+
+  private boolean retrievedFromReference = false;
+
+  private X509Certificate[] x509Certs;
+
+  private String requestURI;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BaseAuthenticationToken.class);
 
@@ -72,21 +81,44 @@ public class BaseAuthenticationToken implements AuthenticationToken {
     this.credentials = o;
   }
 
-  /**
-   * Returns the credentials as an XML string suitable for injecting into a STS request. This
-   * default behavior assumes that the credentials actually are stored in their XML representation.
-   * If a subclass stores them differently, it is up to them to override this method.
-   *
-   * @return String containing the XML representation of this token's credentials
-   */
-  public String getCredentialsAsXMLString() {
-    String retVal = "";
-    if (getCredentials() != null) {
-      retVal = getCredentials().toString();
-    } else {
-      LOGGER.debug("Credentials are null - unable to create XML representation.");
-    }
+  public void setX509Certs(X509Certificate[] x509Certs) {
+    this.x509Certs = x509Certs;
+  }
 
-    return retVal;
+  public X509Certificate[] getX509Certs() {
+    return x509Certs;
+  }
+
+  public String getRequestURI() {
+    return requestURI;
+  }
+
+  public void setRequestURI(String requestURI) {
+    this.requestURI = requestURI;
+  }
+
+  public boolean wasRetrievedFromReference() {
+    return retrievedFromReference;
+  }
+
+  public void setRetrievedFromReference(boolean retrievedFromReference) {
+    this.retrievedFromReference = retrievedFromReference;
+  }
+
+  public String getCredentialsAsString() {
+    return credentials.toString();
+  }
+
+  public boolean isReference() {
+    return reference;
+  }
+
+  public void replaceReference(Object token) {
+    if (reference) {
+      credentials = token;
+      reference = false;
+    } else {
+      LOGGER.debug("Current token is not a reference - call to replace is ignored.");
+    }
   }
 }

@@ -33,7 +33,7 @@ import org.apache.ftpserver.usermanager.impl.ConcurrentLoginPermission;
 import org.apache.ftpserver.usermanager.impl.TransferRatePermission;
 import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
-import org.codice.ddf.security.handler.api.BaseAuthenticationTokenFactory;
+import org.codice.ddf.security.handler.api.STSAuthenticationTokenFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +98,7 @@ public class UserManagerImpl implements UserManager {
     if (authentication instanceof UsernamePasswordAuthentication) {
       username = ((UsernamePasswordAuthentication) authentication).getUsername();
       authenticationToken =
-          new BaseAuthenticationTokenFactory()
+          new STSAuthenticationTokenFactory()
               .fromUsernamePassword(
                   username, ((UsernamePasswordAuthentication) authentication).getPassword());
 

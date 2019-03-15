@@ -14,7 +14,7 @@
 package ddf.security.service.impl;
 
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
@@ -103,10 +103,10 @@ public final class SecurityAssertionStore {
           tokenStore.add(token);
         }
 
-        return new SecurityAssertionImpl(token);
+        return new SecurityAssertionSaml(token);
       }
     }
-    return new SecurityAssertionImpl();
+    return new SecurityAssertionSaml();
   }
 
   /**

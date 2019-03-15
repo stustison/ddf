@@ -48,5 +48,6 @@
         <module>security-handler-basic</module>
         <module>security-handler-saml</module>
         <module>security-handler-pki</module>
+        <module>security-handler-oidc</module>
     </modules>
 </project>

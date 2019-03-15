@@ -13,6 +13,8 @@
  */
 package ddf.security.service.impl;
 
+import ddf.security.assertion.Attribute;
+import ddf.security.assertion.AttributeStatement;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.expansion.Expansion;
 import ddf.security.permission.KeyValueCollectionPermission;
@@ -33,10 +35,6 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.CollectionUtils;
-import org.opensaml.core.xml.XMLObject;
-import org.opensaml.core.xml.schema.XSString;
-import org.opensaml.saml.saml2.core.Attribute;
-import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -185,15 +183,7 @@ public abstract class AbstractAuthorizingRealm extends AuthorizingRealm {
   private Set<String> expandAttributes(Attribute attribute, Collection<Expansion> expansions) {
     Set<String> attributeSet = new HashSet<>();
     String attributeName = attribute.getName();
-    for (XMLObject curValue : attribute.getAttributeValues()) {
-      if (curValue instanceof XSString) {
-        attributeSet.add(((XSString) curValue).getValue());
-      } else {
-        LOGGER.debug(
-            "Unexpected attribute type (non-string) for attribute named {} - ignored",
-            attributeName);
-      }
-    }
+    attributeSet.addAll(attribute.getValues());
     for (Expansion expansionService : expansions) {
       LOGGER.debug(
           "Expanding attributes for {} - original values: {}", attributeName, attributeSet);
