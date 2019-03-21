@@ -116,7 +116,8 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   private void doRenew(String realm, Object securityToken, SecurityTokenHolder tokenHolder)
       throws SecurityServiceException {
     SAMLAuthenticationToken samlToken =
-        new SAMLAuthenticationToken(securityToken.getPrincipal(), securityToken, realm);
+        new SAMLAuthenticationToken(
+            ((SecurityToken) securityToken).getPrincipal(), (SecurityToken) securityToken, realm);
     Subject subject = securityManager.getSubject(samlToken);
     for (Object principal : subject.getPrincipals().asList()) {
       if (principal instanceof SecurityAssertion) {

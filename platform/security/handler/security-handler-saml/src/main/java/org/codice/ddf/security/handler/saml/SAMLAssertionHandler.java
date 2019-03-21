@@ -155,7 +155,7 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
         if (assertion.isPresentlyValid()) {
           LOGGER.trace("Creating SAML authentication token with session.");
           SAMLAuthenticationToken samlToken =
-              new SAMLAuthenticationToken(null, session.getId(), realm, httpRequest);
+              new SAMLAuthenticationToken(null, session.getId(), realm);
           handlerResult.setToken(samlToken);
           handlerResult.setStatus(HandlerResult.Status.COMPLETED);
           return handlerResult;
