@@ -31,6 +31,7 @@ import ddf.security.http.SessionFactory;
 import ddf.security.samlp.SimpleSign;
 import ddf.security.samlp.SystemCrypto;
 import ddf.security.samlp.impl.RelayStates;
+import ddf.security.service.SecurityManager;
 import java.io.ByteArrayInputStream;
 import java.util.Base64;
 import javax.servlet.ServletRequest;
@@ -98,9 +99,10 @@ public class AssertionConsumerServiceTest {
     when(httpRequest.getRequestURL()).thenReturn(new StringBuffer("fubar"));
     when(httpRequest.isSecure()).thenReturn(true);
     idpMetadata = new IdpMetadata();
-
+    SecurityManager securityManager = mock(SecurityManager.class);
     assertionConsumerService =
-        new AssertionConsumerService(simpleSign, idpMetadata, systemCrypto, relayStates);
+        new AssertionConsumerService(
+            simpleSign, idpMetadata, systemCrypto, relayStates, securityManager);
     assertionConsumerService.setRequest(httpRequest);
     assertionConsumerService.setLoginFilter(loginFilter);
     assertionConsumerService.setSessionFactory(sessionFactory);

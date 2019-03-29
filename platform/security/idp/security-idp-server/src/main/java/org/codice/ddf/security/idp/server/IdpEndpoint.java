@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.encryption.EncryptionService;
 import ddf.security.liberty.paos.Request;
@@ -968,8 +968,10 @@ public class IdpEndpoint implements Idp, SessionHandler {
         statusCode = StatusCode.AUTHN_FAILED;
         Subject subject = securityManager.getSubject(token);
         for (Object principal : subject.getPrincipals().asList()) {
-          if (principal instanceof SecurityAssertion) {
-            SecurityToken securityToken = ((SecurityAssertion) principal).getSecurityToken();
+          if (principal instanceof SecurityAssertion
+              && ((SecurityAssertion) principal).getToken() instanceof SecurityToken) {
+            SecurityToken securityToken =
+                (SecurityToken) ((SecurityAssertion) principal).getToken();
             samlToken = securityToken.getToken();
           }
         }
@@ -1026,7 +1028,7 @@ public class IdpEndpoint implements Idp, SessionHandler {
       if (samlToken != null) {
         String assertionId = samlToken.getAttribute("ID");
         SecurityToken securityToken = new SecurityToken(assertionId, samlToken, null);
-        SecurityAssertionImpl assertion = new SecurityAssertionImpl(securityToken);
+        SecurityAssertionSaml assertion = new SecurityAssertionSaml(securityToken);
 
         if (forceAuthn) {
           cookieCache.removeSamlAssertion(key);
@@ -1037,8 +1039,10 @@ public class IdpEndpoint implements Idp, SessionHandler {
           try {
             Subject subject = securityManager.getSubject(samlAuthenticationToken);
             for (Object principal : subject.getPrincipals().asList()) {
-              if (principal instanceof SecurityAssertion) {
-                SecurityToken newSecurityToken = ((SecurityAssertion) principal).getSecurityToken();
+              if (principal instanceof SecurityAssertion
+                  && ((SecurityAssertion) principal).getToken() instanceof SecurityToken) {
+                SecurityToken newSecurityToken =
+                    (SecurityToken) ((SecurityAssertion) principal).getToken();
                 samlToken = newSecurityToken.getToken();
                 cookieCache.cacheSamlAssertion(key, samlToken);
               }

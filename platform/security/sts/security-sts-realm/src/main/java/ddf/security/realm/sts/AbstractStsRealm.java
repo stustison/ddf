@@ -20,7 +20,7 @@ import com.google.common.hash.Hashing;
 import ddf.security.PropertiesLoader;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -265,7 +265,7 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     LOGGER.debug("Creating token authentication information with SAML.");
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    SecurityAssertion assertion = new SecurityAssertionImpl(securityToken);
+    SecurityAssertion assertion = new SecurityAssertionSaml(securityToken);
     principals.add(assertion.getPrincipal(), NAME);
     principals.add(assertion, NAME);
     simpleAuthenticationInfo.setPrincipals(principals);
@@ -365,11 +365,13 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
         for (Object principal : subject.getPrincipals().asList()) {
           if (principal instanceof SecurityAssertion) {
             if (LOGGER.isTraceEnabled()) {
-              Element samlToken = ((SecurityAssertion) principal).getSecurityToken().getToken();
+              Element samlToken =
+                  ((SecurityToken) ((SecurityAssertion) principal).getToken()).getToken();
 
               LOGGER.trace("SAML Assertion returned: {}", XML_UTILS.prettyFormat(samlToken));
             }
-            SecurityToken securityToken = ((SecurityAssertion) principal).getSecurityToken();
+            SecurityToken securityToken =
+                ((SecurityToken) ((SecurityAssertion) principal).getToken());
             addSamlToSession(httpRequest, token.getRealm(), securityToken);
           }
         }
@@ -616,7 +618,7 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     if (sessionToken == null) {
       addSecurityToken(session, realm, securityToken);
     }
-    SecurityAssertion securityAssertion = new SecurityAssertionImpl(securityToken);
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
     SecurityLogger.audit(
         "Added SAML for user [{}] to session [{}]",
         securityAssertion.getPrincipal().getName(),
@@ -644,7 +646,7 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     SecurityToken token = (SecurityToken) tokenHolder.getSecurityToken(realm);
 
     if (token != null) {
-      SecurityAssertionImpl assertion = new SecurityAssertionImpl(token);
+      SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
       if (!assertion.isPresentlyValid()) {
         LOGGER.debug("Session SAML token is invalid.  Removing from session.");
         tokenHolder.remove(realm);

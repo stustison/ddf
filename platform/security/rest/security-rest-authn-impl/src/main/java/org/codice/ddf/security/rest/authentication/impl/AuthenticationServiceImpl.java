@@ -22,7 +22,6 @@ import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.UPAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -83,9 +82,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     for (Object principal : subject.getPrincipals()) {
       if (principal instanceof SecurityAssertion) {
-        SecurityToken securityToken = ((SecurityAssertion) principal).getSecurityToken();
-
-        if (securityToken == null) {
+        if (((SecurityAssertion) principal).getToken() == null) {
           LOGGER.debug("Cannot add null security token to session");
           continue;
         }
@@ -94,7 +91,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         session = sessionFactory.getOrCreateSession(request);
         SecurityTokenHolder holder =
             (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-        holder.addSecurityToken(realm, securityToken);
+        holder.addSecurityToken(realm, ((SecurityAssertion) principal).getToken());
       }
     }
   }

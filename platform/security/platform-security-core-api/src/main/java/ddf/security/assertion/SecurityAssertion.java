@@ -18,10 +18,6 @@ import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
-import org.opensaml.saml.saml2.core.AttributeStatement;
-import org.opensaml.saml.saml2.core.AuthnStatement;
-import org.opensaml.saml.saml2.core.AuthzDecisionStatement;
 
 /**
  * This class serves as a wrapper for a CXF SecurityToken
@@ -55,14 +51,7 @@ public interface SecurityAssertion extends Serializable {
    *
    * @return List<AuthnStatement>
    */
-  List<AuthnStatement> getAuthnStatements();
-
-  /**
-   * Returns the list of authz statements contained in the SecurityToken
-   *
-   * @return List<AuthzDecisionStatement>
-   */
-  List<AuthzDecisionStatement> getAuthzDecisionStatements();
+  List<AuthenticationStatement> getAuthnStatements();
 
   /**
    * Returns the list of subject confirmations contained in the SecurityToken
@@ -87,11 +76,11 @@ public interface SecurityAssertion extends Serializable {
   String getTokenType();
 
   /**
-   * Returns the underlying SecurityToken that this object wraps
+   * Returns the underlying token that this object wraps
    *
    * @return SecurityToken
    */
-  SecurityToken getSecurityToken();
+  Object getToken();
 
   /**
    * Returns the earliest date that the assertion is valid

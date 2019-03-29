@@ -16,8 +16,8 @@ package ddf.security.service.impl;
 import com.nimbusds.jwt.JWT;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
-import ddf.security.assertion.impl.SecurityAssertionJwt;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
@@ -164,7 +164,7 @@ public class SecurityManagerImpl implements SecurityManager {
       }
       SecurityAssertion securityAssertion = null;
       try {
-        securityAssertion = new SecurityAssertionImpl(token, usernameAttributeList);
+        securityAssertion = new SecurityAssertionSaml(token, usernameAttributeList);
         Principal principal = securityAssertion.getPrincipal();
         if (principal != null) {
           principals.add(principal.getName(), curRealm.getName());

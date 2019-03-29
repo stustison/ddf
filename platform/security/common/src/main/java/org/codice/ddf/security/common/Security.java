@@ -39,6 +39,7 @@ import java.security.PrivilegedExceptionAction;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -285,11 +286,21 @@ public class Security {
     return !((null != subject)
         && (null != subject.getPrincipals())
         && (null != subject.getPrincipals().oneByType(SecurityAssertion.class))
-        && (!subject
-            .getPrincipals()
-            .oneByType(SecurityAssertion.class)
-            .getSecurityToken()
-            .isAboutToExpire(TimeUnit.MINUTES.toSeconds(1))));
+        && (!isAboutToExpire(
+            subject
+                .getPrincipals()
+                .oneByType(SecurityAssertion.class)
+                .getNotOnOrAfter()
+                .toInstant(),
+            TimeUnit.MINUTES.toSeconds(1))));
+  }
+
+  public boolean isAboutToExpire(Instant expires, long secondsToExpiry) {
+    if (expires != null && secondsToExpiry > 0) {
+      Instant now = Instant.now().plusSeconds(secondsToExpiry);
+      return expires.isBefore(now);
+    }
+    return false;
   }
 
   /**
@@ -302,12 +313,7 @@ public class Security {
     return ((null != subject)
             && (null != subject.getPrincipals())
             && (null != subject.getPrincipals().oneByType(SecurityAssertion.class)))
-        ? Date.from(
-            subject
-                .getPrincipals()
-                .oneByType(SecurityAssertion.class)
-                .getSecurityToken()
-                .getExpires())
+        ? subject.getPrincipals().oneByType(SecurityAssertion.class).getNotOnOrAfter()
         : null;
   }
 

@@ -13,6 +13,8 @@
  */
 package ddf.security;
 
+import ddf.security.assertion.Attribute;
+import ddf.security.assertion.AttributeStatement;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.principal.GuestPrincipal;
 import java.security.Principal;
@@ -37,9 +39,6 @@ import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.opensaml.core.xml.schema.XSString;
-import org.opensaml.saml.saml2.core.Attribute;
-import org.opensaml.saml.saml2.core.AttributeStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,10 +270,7 @@ public final class SubjectUtils {
         .stream()
         .flatMap(as -> as.getAttributes().stream())
         .filter(a -> a.getName().equals(key))
-        .flatMap(a -> a.getAttributeValues().stream())
-        .filter(o -> o instanceof XSString)
-        .map(o -> (XSString) o)
-        .map(XSString::getValue)
+        .flatMap(a -> a.getValues().stream())
         .collect(Collectors.toList());
   }
 
@@ -307,14 +303,7 @@ public final class SubjectUtils {
                 }));
   }
 
-  private static SortedSet<String> getAttributeValues(
-      org.opensaml.saml.saml2.core.Attribute attribute) {
-    return attribute
-        .getAttributeValues()
-        .stream()
-        .filter(XSString.class::isInstance)
-        .map(XSString.class::cast)
-        .map(XSString::getValue)
-        .collect(Collectors.toCollection(TreeSet::new));
+  private static SortedSet<String> getAttributeValues(Attribute attribute) {
+    return new TreeSet<>(attribute.getValues());
   }
 }

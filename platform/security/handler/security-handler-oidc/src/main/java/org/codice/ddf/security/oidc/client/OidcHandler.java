@@ -13,12 +13,21 @@
  */
 package org.codice.ddf.security.oidc.client;
 
+import com.google.common.hash.Hashing;
+import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
+import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
+import ddf.security.http.SessionFactory;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
@@ -48,6 +57,8 @@ public class OidcHandler implements AuthenticationHandler {
   private boolean userAgentCheck = true;
 
   private HandlerConfiguration handlerConfiguration;
+
+  private SessionFactory sessionFactory;
 
   public OidcHandler(HandlerConfiguration handlerConfiguration) {
     buildConfiguration(handlerConfiguration);
@@ -118,47 +129,138 @@ public class OidcHandler implements AuthenticationHandler {
     String path = httpRequest.getServletPath();
     LOGGER.debug("Doing OIDC authentication and authorization for path {}", path);
 
-    J2ESessionStore sessionStore = new J2ESessionStore();
-
-    J2EContext j2EContext =
-        new J2EContext(httpRequest, ((HttpServletResponse) response), sessionStore);
-
-    // haven't seen this request, so redirect
-    StringBuffer requestURL = httpRequest.getRequestURL();
-    requestURL.append(
-        httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
-    OidcCredentials credentials = null;
-    try {
-      handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
-      handlerConfiguration
-          .getOidcClient()
-          .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
-      handlerConfiguration.getOidcClient().init();
-
-      OidcExtractor oidcExtractor =
-          new OidcExtractor(
-              handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
-      credentials = oidcExtractor.extract(j2EContext);
-    } catch (TechnicalException e) {
-      // ignore
+    HttpSession session = httpRequest.getSession(false);
+    if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()) {
+      SecurityLogger.audit(
+          "Incoming HTTP Request contained possible unknown session ID [{}] for this server.",
+          Hashing.sha256()
+              .hashString(httpRequest.getRequestedSessionId(), StandardCharsets.UTF_8)
+              .toString());
     }
-
-    if (credentials != null) {
-      // we've seen this request before, so process it
+    if (session == null && httpRequest.getRequestedSessionId() != null) {
+      session = sessionFactory.getOrCreateSession(httpRequest);
+    }
+    SecurityTokenHolder savedToken = null;
+    if (session != null) {
+      savedToken = (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+    }
+    if (savedToken != null) {
+      OidcCredentials credentials = (OidcCredentials) savedToken.getSecurityToken("oidc");
       OidcAuthenticationToken oidcAuthenticationToken =
           new OidcAuthenticationToken(credentials.getIdToken(), "oidc", credentials);
       handlerResult.setToken(oidcAuthenticationToken);
       handlerResult.setStatus(HandlerResult.Status.COMPLETED);
     } else {
-      j2EContext
-          .getSessionStore()
-          .set(j2EContext, Pac4jConstants.REQUESTED_URL, requestURL.toString());
 
-      HttpAction redirect = handlerConfiguration.getOidcClient().redirect(j2EContext);
+      J2ESessionStore sessionStore = new J2ESessionStore();
+
+      J2EContext j2EContext =
+          new J2EContext(httpRequest, ((HttpServletResponse) response), sessionStore);
+
+      // haven't seen this request, so redirect
+      StringBuffer requestURL = httpRequest.getRequestURL();
+      requestURL.append(
+          httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
+      OidcCredentials credentials = null;
+      try {
+        handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
+        handlerConfiguration
+            .getOidcClient()
+            .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
+        handlerConfiguration.getOidcClient().init();
+
+        OidcExtractor oidcExtractor =
+            new OidcExtractor(
+                handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
+        credentials = oidcExtractor.extract(j2EContext);
+      } catch (TechnicalException e) {
+        // ignore
+      }
+
+      if (credentials != null) {
+        // we've seen this request before, so process it
+        OidcAuthenticationToken oidcAuthenticationToken =
+            new OidcAuthenticationToken(credentials.getIdToken(), "oidc", credentials);
+        handlerResult.setToken(oidcAuthenticationToken);
+        handlerResult.setStatus(HandlerResult.Status.COMPLETED);
+        addJwtToSession(httpRequest, "oidc", credentials);
+        String requestedUrl =
+            (String) j2EContext.getSessionStore().get(j2EContext, Pac4jConstants.REQUESTED_URL);
+        try {
+          ((HttpServletResponse) response).sendRedirect(requestedUrl);
+        } catch (IOException e) {
+          // ignore
+        }
+      } else {
+        j2EContext
+            .getSessionStore()
+            .set(j2EContext, Pac4jConstants.REQUESTED_URL, requestURL.toString());
+
+        HttpAction redirect = handlerConfiguration.getOidcClient().redirect(j2EContext);
+      }
     }
 
     return handlerResult;
   }
+
+  // hack
+
+  private void addJwtToSession(
+      HttpServletRequest httpRequest, String realm, OidcCredentials credentials) {
+    if (credentials == null) {
+      LOGGER.debug("Cannot add null security token to session.");
+      return;
+    }
+
+    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
+    Object sessionToken = getSecurityToken(session, realm);
+    if (sessionToken == null) {
+      addSecurityToken(session, realm, credentials);
+    }
+    SecurityAssertion securityAssertion =
+        new SecurityAssertionJwt(credentials.getIdToken(), new ArrayList<>());
+    SecurityLogger.audit(
+        "Added SAML for user [{}] to session [{}]",
+        securityAssertion.getPrincipal().getName(),
+        Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
+    int minutes = 60;
+
+    session.setMaxInactiveInterval(minutes * 60);
+  }
+
+  private void addSecurityToken(HttpSession session, String realm, OidcCredentials token) {
+    SecurityTokenHolder holder =
+        (SecurityTokenHolder)
+            session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY);
+
+    holder.addSecurityToken(realm, token);
+  }
+
+  private Object getSecurityToken(HttpSession session, String realm) {
+    if (session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY) == null) {
+      LOGGER.debug("Security token holder missing from session. New session created improperly.");
+      return null;
+    }
+
+    SecurityTokenHolder tokenHolder =
+        ((SecurityTokenHolder)
+            session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY));
+
+    OidcCredentials token = (OidcCredentials) tokenHolder.getSecurityToken(realm);
+
+    if (token != null) {
+      SecurityAssertion assertion = new SecurityAssertionJwt(token.getIdToken(), new ArrayList<>());
+      if (!assertion.isPresentlyValid()) {
+        LOGGER.debug("Session SAML token is invalid.  Removing from session.");
+        tokenHolder.remove(realm);
+        return null;
+      }
+    }
+
+    return token;
+  }
+
+  // end hack
 
   private boolean userAgentIsNotBrowser(HttpServletRequest httpRequest) {
     String userAgentHeader = httpRequest.getHeader("User-Agent");
@@ -183,5 +285,9 @@ public class OidcHandler implements AuthenticationHandler {
     result.setSource(realm + "-" + SOURCE);
     LOGGER.debug("In error handler for oidc - no action taken.");
     return result;
+  }
+
+  public void setSessionFactory(SessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
   }
 }

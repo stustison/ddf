@@ -231,7 +231,7 @@ public class IdpEndpointTest {
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(securityAssertion));
     when(principalCollection.getPrimaryPrincipal()).thenReturn("testuser");
-    when(securityAssertion.getSecurityToken()).thenReturn(securityToken);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
     when(securityToken.getToken()).thenReturn(readDocument("/saml.xml").getDocumentElement());
     when(securityManager.getSubject(anyObject())).thenReturn(subject);
 
@@ -806,7 +806,7 @@ public class IdpEndpointTest {
 
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(securityAssertion));
-    when(securityAssertion.getSecurityToken()).thenReturn(securityToken);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
     // this mock element is what will cause the signature error
     when(securityToken.getToken()).thenReturn(mock(Element.class));
     when(securityManager.getSubject(anyObject())).thenReturn(subject);
@@ -844,7 +844,7 @@ public class IdpEndpointTest {
     SecurityManager securityManager = mock(SecurityManager.class);
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(securityAssertion));
-    when(securityAssertion.getSecurityToken()).thenReturn(securityToken);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
     // this mock element is what will cause the signature error
     when(securityToken.getToken()).thenReturn(mock(Element.class));
     when(securityManager.getSubject(anyObject())).thenReturn(subject);
@@ -883,7 +883,7 @@ public class IdpEndpointTest {
     SecurityManager securityManager = mock(SecurityManager.class);
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(principalCollection.asList()).thenReturn(Collections.singletonList(securityAssertion));
-    when(securityAssertion.getSecurityToken()).thenReturn(securityToken);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
     // this mock element is what will cause the signature error
     when(securityToken.getToken()).thenReturn(mock(Element.class));
     when(securityManager.getSubject(anyObject())).thenReturn(subject);

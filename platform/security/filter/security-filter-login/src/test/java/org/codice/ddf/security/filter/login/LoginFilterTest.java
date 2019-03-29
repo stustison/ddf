@@ -197,7 +197,7 @@ public class LoginFilterTest {
     when(securityManager.getSubject(token)).thenReturn(subject);
     SecurityAssertion assertion = mock(SecurityAssertion.class);
     SecurityToken securityToken = mock(SecurityToken.class);
-    when(assertion.getSecurityToken()).thenReturn(securityToken);
+    when(assertion.getToken()).thenReturn(securityToken);
     when(subject.getPrincipals().asList()).thenReturn(Arrays.asList(assertion));
     when(securityToken.getToken()).thenReturn(readDocument("/good_saml.xml").getDocumentElement());
 

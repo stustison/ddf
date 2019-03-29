@@ -16,7 +16,7 @@ package org.codice.ddf.security.idp.client;
 import com.google.common.hash.Hashing;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -352,7 +352,7 @@ public class AssertionConsumerService {
     if (sessionToken == null) {
       addSecurityToken(session, realm, securityToken);
     }
-    SecurityAssertion securityAssertion = new SecurityAssertionImpl(securityToken);
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
     SecurityLogger.audit(
         "Added SAML for user [{}] to session [{}]",
         securityAssertion.getPrincipal().getName(),
@@ -380,7 +380,7 @@ public class AssertionConsumerService {
     SecurityToken token = (SecurityToken) tokenHolder.getSecurityToken(realm);
 
     if (token != null) {
-      SecurityAssertionImpl assertion = new SecurityAssertionImpl(token);
+      SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
       if (!assertion.isPresentlyValid()) {
         LOGGER.debug("Session SAML token is invalid.  Removing from session.");
         tokenHolder.remove(realm);
@@ -495,8 +495,9 @@ public class AssertionConsumerService {
     }
 
     for (Object principal : subject.getPrincipals().asList()) {
-      if (principal instanceof SecurityAssertion) {
-        SecurityToken securityToken = ((SecurityAssertion) principal).getSecurityToken();
+      if (principal instanceof SecurityAssertion
+          && ((SecurityAssertion) principal).getToken() instanceof SecurityToken) {
+        SecurityToken securityToken = (SecurityToken) ((SecurityAssertion) principal).getToken();
         addSamlToSession(wrappedRequest, "idp", securityToken);
       }
     }

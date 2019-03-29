@@ -16,7 +16,7 @@ package org.codice.ddf.security.session.management.impl;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.impl.SecurityAssertionImpl;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
@@ -105,8 +105,8 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         .stream()
         .filter(SecurityToken.class::isInstance)
         .map(SecurityToken.class::cast)
-        .map(SecurityAssertionImpl::new)
-        .map(SecurityAssertionImpl::getNotOnOrAfter)
+        .map(SecurityAssertionSaml::new)
+        .map(SecurityAssertionSaml::getNotOnOrAfter)
         .map(Date::getTime)
         .min(Comparator.comparing(Long::valueOf))
         .map(m -> Math.max(m - clock.millis(), 0))
@@ -121,7 +121,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     Subject subject = securityManager.getSubject(samlToken);
     for (Object principal : subject.getPrincipals().asList()) {
       if (principal instanceof SecurityAssertion) {
-        tokenHolder.addSecurityToken(realm, ((SecurityAssertion) principal).getSecurityToken());
+        tokenHolder.addSecurityToken(realm, ((SecurityAssertion) principal).getToken());
       }
     }
   }

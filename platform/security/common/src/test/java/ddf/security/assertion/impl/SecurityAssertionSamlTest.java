@@ -19,6 +19,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import ddf.security.assertion.AuthenticationStatement;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -35,12 +37,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.junit.Test;
-import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public class SecurityAssertionImplTest {
+public class SecurityAssertionSamlTest {
 
   public static final String SAML_CONDITION_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -82,11 +83,10 @@ public class SecurityAssertionImplTest {
 
   @Test
   public void testEmptyAssertion() {
-    SecurityAssertionImpl assertion = new SecurityAssertionImpl();
+    SecurityAssertionSaml assertion = new SecurityAssertionSaml();
     assertNull(assertion.getIssuer());
     assertEquals(0, assertion.getAttributeStatements().size());
     assertEquals(0, assertion.getAuthnStatements().size());
-    assertEquals(0, assertion.getAuthzDecisionStatements().size());
     assertNull(assertion.getPrincipal());
     assertNull(assertion.getNotBefore());
     assertNull(assertion.getNotOnOrAfter());
@@ -98,19 +98,20 @@ public class SecurityAssertionImplTest {
     Element issuedAssertion = this.readDocument("/saml.xml").getDocumentElement();
     String assertionId = issuedAssertion.getAttributeNodeNS(null, "ID").getNodeValue();
     SecurityToken token = new SecurityToken(assertionId, issuedAssertion, null);
-    SecurityAssertionImpl assertion = new SecurityAssertionImpl(token);
-    assertNotNull(assertion.getSecurityToken());
-    assertEquals(token, assertion.getSecurityToken());
+    SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
+    assertNotNull(assertion.getToken());
+    assertEquals(token, assertion.getToken());
     assertEquals(ISSUER, assertion.getIssuer());
     assertEquals(PRINCIPAL, assertion.getPrincipal().getName());
     assertEquals(PRINCIPAL, assertion.getPrincipal().toString());
     assertEquals(NUM_ATTRIBUTES, assertion.getAttributeStatements().size());
-    List<AuthnStatement> authnStatements = assertion.getAuthnStatements();
+    List<AuthenticationStatement> authnStatements = assertion.getAuthnStatements();
     assertEquals(NUM_NAUTH, authnStatements.size());
     assertEquals(
-        (long) NUM_NAUTH, authnStatements.stream().map(AuthnStatement::getSessionIndex).count());
+        (long) NUM_NAUTH,
+        authnStatements.stream().map(AuthenticationStatement::getSessionIndex).count());
     Optional<String> sessionIndex =
-        authnStatements.stream().map(AuthnStatement::getSessionIndex).findFirst();
+        authnStatements.stream().map(AuthenticationStatement::getSessionIndex).findFirst();
     assertTrue(sessionIndex.isPresent());
     assertEquals(SESSION_INDEX, sessionIndex.get());
     assertEquals(
@@ -141,7 +142,7 @@ public class SecurityAssertionImplTest {
         .getAttributes()
         .removeNamedItem("NotOnOrAfter");
 
-    SecurityAssertionImpl assertion = getSecurityAssertion(issuedAssertion);
+    SecurityAssertionSaml assertion = getSecurityAssertion(issuedAssertion);
 
     assertTrue(assertion.isPresentlyValid());
   }
@@ -157,7 +158,7 @@ public class SecurityAssertionImplTest {
         .getAttributes()
         .removeNamedItem("NotBefore");
 
-    SecurityAssertionImpl assertion = getSecurityAssertion(issuedAssertion);
+    SecurityAssertionSaml assertion = getSecurityAssertion(issuedAssertion);
 
     assertTrue(assertion.isPresentlyValid());
   }
@@ -173,7 +174,7 @@ public class SecurityAssertionImplTest {
         .getAttributes()
         .removeNamedItem("NotOnOrAfter");
 
-    SecurityAssertionImpl assertion = getSecurityAssertion(issuedAssertion);
+    SecurityAssertionSaml assertion = getSecurityAssertion(issuedAssertion);
 
     assertTrue(assertion.isPresentlyValid());
   }
@@ -190,7 +191,7 @@ public class SecurityAssertionImplTest {
         .getNamedItem("NotBefore")
         .setNodeValue(getNowWithOffset(1));
 
-    SecurityAssertionImpl assertion = getSecurityAssertion(issuedAssertion);
+    SecurityAssertionSaml assertion = getSecurityAssertion(issuedAssertion);
 
     assertFalse(assertion.isPresentlyValid());
   }
@@ -207,7 +208,7 @@ public class SecurityAssertionImplTest {
         .getNamedItem("NotOnOrAfter")
         .setNodeValue(getNowWithOffset(-1));
 
-    SecurityAssertionImpl assertion = getSecurityAssertion(issuedAssertion);
+    SecurityAssertionSaml assertion = getSecurityAssertion(issuedAssertion);
 
     assertFalse(assertion.isPresentlyValid());
   }
@@ -223,10 +224,10 @@ public class SecurityAssertionImplTest {
     return readXml(inStream);
   }
 
-  private SecurityAssertionImpl getSecurityAssertion(Element issuedAssertion) {
+  private SecurityAssertionSaml getSecurityAssertion(Element issuedAssertion) {
     String assertionId = issuedAssertion.getAttributeNodeNS(null, "ID").getNodeValue();
     SecurityToken token = new SecurityToken(assertionId, issuedAssertion, null);
-    return new SecurityAssertionImpl(token);
+    return new SecurityAssertionSaml(token);
   }
 
   private String getNowWithOffset(int offset) {
