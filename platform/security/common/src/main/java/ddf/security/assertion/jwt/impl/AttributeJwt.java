@@ -14,6 +14,7 @@
 package ddf.security.assertion.jwt.impl;
 
 import ddf.security.assertion.Attribute;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class AttributeJwt implements Attribute {
 
   private String nameFormat;
 
-  private List<String> values;
+  private List<String> values = new ArrayList<>();
 
   @Override
   public String getName() {

@@ -15,12 +15,13 @@ package ddf.security.assertion.jwt.impl;
 
 import ddf.security.assertion.Attribute;
 import ddf.security.assertion.AttributeStatement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class AttributeStatementJwt implements AttributeStatement {
 
-  private List<Attribute> attributes;
+  private List<Attribute> attributes = new ArrayList<>();
 
   @Override
   public List<Attribute> getAttributes() {
