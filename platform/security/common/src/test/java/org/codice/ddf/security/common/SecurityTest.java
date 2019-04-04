@@ -37,6 +37,7 @@ import ddf.security.service.SecurityServiceException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.ExecutionException;
@@ -111,6 +112,7 @@ public class SecurityTest {
   public void testTokenAboutToExpire() throws Exception {
     Subject subject = mock(Subject.class);
     SecurityAssertion assertion = mock(SecurityAssertion.class);
+    when(assertion.getNotOnOrAfter()).thenReturn(new Date());
     PrincipalCollection pc = mock(PrincipalCollection.class);
     SecurityToken st = mock(SecurityToken.class);
     when(st.isAboutToExpire(anyLong())).thenReturn(true);
@@ -123,7 +125,7 @@ public class SecurityTest {
     when(assertion.getToken()).thenReturn(st);
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
     when(st.isAboutToExpire(anyLong())).thenReturn(false);
-    assertThat(security.tokenAboutToExpire(subject), equalTo(false));
+    assertThat(security.tokenAboutToExpire(subject), equalTo(true));
   }
 
   @Test
