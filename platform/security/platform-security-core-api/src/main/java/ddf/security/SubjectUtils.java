@@ -52,6 +52,8 @@ public final class SubjectUtils {
   public static final String EMAIL_ADDRESS_CLAIM_URI =
       "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
 
+  public static final String EMAIL_ADDRESS_CLAIM_ALTERNATE = "email";
+
   /** Street address */
   public static final String STREET_ADDRESS_CLAIM_URI =
       "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/streetaddress";
@@ -71,6 +73,8 @@ public final class SubjectUtils {
   /** Username */
   public static final String NAME_IDENTIFIER_CLAIM_URI =
       "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+
+  public static final String NAME_IDENTIFIER_CLAIM_ALTERNATE = "name";
 
   /** Full name */
   public static final String NAME_CLAIM_URI =
@@ -232,7 +236,10 @@ public final class SubjectUtils {
     List<String> values = getAttribute(subject, EMAIL_ADDRESS_CLAIM_URI);
 
     if (values.isEmpty()) {
-      return null;
+      values = getAttribute(subject, EMAIL_ADDRESS_CLAIM_ALTERNATE);
+      if (values.isEmpty()) {
+        return null;
+      }
     }
 
     return values.get(0);

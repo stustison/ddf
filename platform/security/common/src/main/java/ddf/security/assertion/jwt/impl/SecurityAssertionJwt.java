@@ -63,7 +63,7 @@ public class SecurityAssertionJwt implements SecurityAssertion {
             values.add(String.valueOf(next));
           }
         } else {
-          values.add(String.valueOf(entry.getKey()));
+          values.add(String.valueOf(entry.getValue()));
         }
         attribute.setValues(values);
         attributeStatement.addAttribute(attribute);

@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Principal;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -190,6 +191,8 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
 
   private int expirationTime = DEFAULT_EXPIRATION_TIME;
 
+  private List<String> usernameAttributeList;
+
   public AbstractStsRealm() {
     this.bus = getBus();
     setCredentialsMatcher(new STSCredentialsMatcher());
@@ -202,11 +205,8 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
   /** Determine if the supplied token is supported by this realm. */
   @Override
   public boolean supports(AuthenticationToken token) {
-    boolean supported = token != null && token.getCredentials() != null;
-    //    if (token instanceof STSAuthenticationToken) {
-    //      supported = supported && ((STSAuthenticationToken) token).isUseWssSts() ==
-    // shouldHandleWss();
-    //    }
+    boolean supported =
+        token != null && token.getCredentials() != null && token instanceof STSAuthenticationToken;
 
     if (supported) {
       LOGGER.debug(
@@ -264,14 +264,37 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
 
     LOGGER.debug("Creating token authentication information with SAML.");
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principals = new SimplePrincipalCollection();
-    SecurityAssertion assertion = new SecurityAssertionSaml(securityToken);
-    principals.add(assertion.getPrincipal(), NAME);
-    principals.add(assertion, NAME);
+    SimplePrincipalCollection principals = createPrincipalFromToken(securityToken);
     simpleAuthenticationInfo.setPrincipals(principals);
     simpleAuthenticationInfo.setCredentials(credential);
 
     return simpleAuthenticationInfo;
+  }
+
+  /**
+   * Creates a new principal object from an incoming security token.
+   *
+   * @param token SecurityToken that contains the principals.
+   * @return new SimplePrincipalCollection
+   */
+  private SimplePrincipalCollection createPrincipalFromToken(SecurityToken token) {
+    SimplePrincipalCollection principals = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = null;
+    try {
+      securityAssertion = new SecurityAssertionSaml(token, usernameAttributeList);
+      Principal principal = securityAssertion.getPrincipal();
+      if (principal != null) {
+        principals.add(principal.getName(), getName());
+      }
+    } catch (Exception e) {
+      LOGGER.warn(
+          "Encountered error while trying to get the Principal for the SecurityToken. Security functions may not work properly.",
+          e);
+    }
+    if (securityAssertion != null) {
+      principals.add(securityAssertion, getName());
+    }
+    return principals;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -994,6 +1017,14 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
     } else {
       return "";
     }
+  }
+
+  public List<String> getUsernameAttributeList() {
+    return usernameAttributeList;
+  }
+
+  public void setUsernameAttributeList(List<String> usernameAttributeList) {
+    this.usernameAttributeList = usernameAttributeList;
   }
 
   @Override
