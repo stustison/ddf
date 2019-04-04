@@ -16,6 +16,7 @@ package org.codice.ddf.security.session.management.impl;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.service.SecurityManager;
@@ -25,12 +26,14 @@ import java.time.Clock;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.session.management.service.SessionManagementService;
+import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +75,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             .forEach(
                 s -> {
                   try {
-                    doRenew(s, (SecurityToken) realmTokenMap.get(s), tokenHolder);
+                    doRenew(s, realmTokenMap.get(s), tokenHolder);
                   } catch (SecurityServiceException e) {
                     securityServiceExceptionThrown[0] = true;
                     LOGGER.error("Failed to renew", e);
@@ -99,29 +102,42 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   }
 
   private long getTimeLeft(SecurityTokenHolder securityToken) {
-    return securityToken
-        .getRealmTokenMap()
-        .values()
-        .stream()
-        .filter(SecurityToken.class::isInstance)
-        .map(SecurityToken.class::cast)
-        .map(SecurityAssertionSaml::new)
-        .map(SecurityAssertionSaml::getNotOnOrAfter)
-        .map(Date::getTime)
-        .min(Comparator.comparing(Long::valueOf))
-        .map(m -> Math.max(m - clock.millis(), 0))
-        .orElse(0L);
+    for (Object token : securityToken.getRealmTokenMap().values()) {
+      if (token instanceof SecurityToken) {
+        return Stream.of(token)
+            .map(SecurityToken.class::cast)
+            .map(SecurityAssertionSaml::new)
+            .map(SecurityAssertionSaml::getNotOnOrAfter)
+            .map(Date::getTime)
+            .min(Comparator.comparing(Long::valueOf))
+            .map(m -> Math.max(m - clock.millis(), 0))
+            .orElse(0L);
+      } else if (token instanceof OidcCredentials) {
+        return Stream.of(token)
+            .map(OidcCredentials.class::cast)
+            .map(OidcCredentials::getIdToken)
+            .map(SecurityAssertionJwt::new)
+            .map(SecurityAssertionJwt::getNotOnOrAfter)
+            .map(Date::getTime)
+            .min(Comparator.comparing(Long::valueOf))
+            .map(m -> Math.max(m - clock.millis(), 0))
+            .orElse(0L);
+      }
+    }
+    return 0L;
   }
 
   private void doRenew(String realm, Object securityToken, SecurityTokenHolder tokenHolder)
       throws SecurityServiceException {
-    SAMLAuthenticationToken samlToken =
-        new SAMLAuthenticationToken(
-            ((SecurityToken) securityToken).getPrincipal(), (SecurityToken) securityToken, realm);
-    Subject subject = securityManager.getSubject(samlToken);
-    for (Object principal : subject.getPrincipals().asList()) {
-      if (principal instanceof SecurityAssertion) {
-        tokenHolder.addSecurityToken(realm, ((SecurityAssertion) principal).getToken());
+    if (securityToken instanceof SecurityToken) {
+      SAMLAuthenticationToken samlToken =
+          new SAMLAuthenticationToken(
+              ((SecurityToken) securityToken).getPrincipal(), (SecurityToken) securityToken, realm);
+      Subject subject = securityManager.getSubject(samlToken);
+      for (Object principal : subject.getPrincipals().asList()) {
+        if (principal instanceof SecurityAssertion) {
+          tokenHolder.addSecurityToken(realm, ((SecurityAssertion) principal).getToken());
+        }
       }
     }
   }

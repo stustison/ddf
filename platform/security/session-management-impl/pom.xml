@@ -45,6 +45,11 @@
             <artifactId>platform-util-unavailableurls</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-oidc</artifactId>
+            <version>3.6.1</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
