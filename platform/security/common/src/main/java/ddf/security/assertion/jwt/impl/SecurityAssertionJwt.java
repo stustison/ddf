@@ -44,6 +44,10 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private List<AuthenticationStatement> authenticationStatements = new ArrayList<>();
 
+  public SecurityAssertionJwt(JWT token) {
+    this(token, new ArrayList<>());
+  }
+
   public SecurityAssertionJwt(JWT token, List<String> usernameAttributeList) {
     this.token = token;
     this.usernameAttributeList = usernameAttributeList;
