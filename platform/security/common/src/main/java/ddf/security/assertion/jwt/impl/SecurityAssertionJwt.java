@@ -13,6 +13,7 @@
  */
 package ddf.security.assertion.jwt.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ddf.security.assertion.Attribute;
@@ -28,6 +29,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
@@ -81,8 +83,8 @@ public class SecurityAssertionJwt implements SecurityAssertion {
   public Principal getPrincipal() {
     return () -> {
       try {
-        return jwtClaimsSet.getStringClaim("email");
-      } catch (ParseException e) {
+        return getMainPrincipalAsString();
+      } catch (NoSuchElementException e) {
         return "unknown";
       }
     };
@@ -117,8 +119,8 @@ public class SecurityAssertionJwt implements SecurityAssertion {
     for (AttributeStatement attributeStatement : getAttributeStatements()) {
       for (Attribute attr : attributeStatement.getAttributes()) {
         if (StringUtils.containsIgnoreCase(attr.getName(), "role")) {
-          for (final String obj : attr.getValues()) {
-            principals.add(new RolePrincipal(obj));
+          for (final String attrValue : attr.getValues()) {
+            principals.add(new RolePrincipal(attrValue));
           }
         }
       }
@@ -150,5 +152,20 @@ public class SecurityAssertionJwt implements SecurityAssertion {
   @Override
   public boolean isPresentlyValid() {
     return true;
+  }
+
+  private String getMainPrincipalAsString() throws NoSuchElementException {
+    final List<String> claimsToCheck = ImmutableList.of("preferred_username", "email", "sub");
+
+    for (String claim : claimsToCheck) {
+      try {
+        return jwtClaimsSet.getStringClaim(claim);
+      } catch (ParseException ignore) {
+      }
+    }
+    throw new NoSuchElementException(
+        String.format(
+            "Cannot find any principal claims [%s] in jwt claims [%s]",
+            String.join(",", claimsToCheck), String.join(",", jwtClaimsSet.getClaims().keySet())));
   }
 }
