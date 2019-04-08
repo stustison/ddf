@@ -144,12 +144,18 @@ public class OidcHandler implements AuthenticationHandler {
     if (session != null) {
       savedToken = (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
     }
-    if (savedToken != null) {
+    if (savedToken != null && savedToken.getSecurityToken("oidc") != null) {
       OidcCredentials credentials = (OidcCredentials) savedToken.getSecurityToken("oidc");
-      OidcAuthenticationToken oidcAuthenticationToken =
-          new OidcAuthenticationToken(credentials.getIdToken(), "oidc", credentials);
-      handlerResult.setToken(oidcAuthenticationToken);
-      handlerResult.setStatus(HandlerResult.Status.COMPLETED);
+      if (credentials.getIdToken() != null) {
+        OidcAuthenticationToken oidcAuthenticationToken =
+            new OidcAuthenticationToken(credentials.getIdToken(), "oidc", credentials);
+        handlerResult.setToken(oidcAuthenticationToken);
+        handlerResult.setStatus(HandlerResult.Status.COMPLETED);
+      } else {
+        LOGGER.error("ID TOKEN NULL. Credentials: {}", credentials);
+        session.invalidate();
+        handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
+      }
     } else {
 
       J2ESessionStore sessionStore = new J2ESessionStore();
@@ -163,16 +169,22 @@ public class OidcHandler implements AuthenticationHandler {
           httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
       OidcCredentials credentials = null;
       try {
-        handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
-        handlerConfiguration
-            .getOidcClient()
-            .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
-        handlerConfiguration.getOidcClient().init();
+        if (handlerConfiguration.getOidcClient() != null) {
+          handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
+          handlerConfiguration
+              .getOidcClient()
+              .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
+          handlerConfiguration.getOidcClient().init();
 
-        OidcExtractor oidcExtractor =
-            new OidcExtractor(
-                handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
-        credentials = oidcExtractor.extract(j2EContext);
+          OidcExtractor oidcExtractor =
+              new OidcExtractor(
+                  handlerConfiguration.getOidcConfiguration(),
+                  handlerConfiguration.getOidcClient());
+          credentials = oidcExtractor.extract(j2EContext);
+        } else {
+          LOGGER.error("OIDC HANDLER NOT CONFIGURED.");
+          handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
+        }
       } catch (TechnicalException e) {
         // ignore
       }
@@ -191,7 +203,7 @@ public class OidcHandler implements AuthenticationHandler {
         } catch (IOException e) {
           // ignore
         }
-      } else {
+      } else if (handlerConfiguration.getOidcClient() != null) {
         j2EContext
             .getSessionStore()
             .set(j2EContext, Pac4jConstants.REQUESTED_URL, requestURL.toString());
