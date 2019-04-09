@@ -13,6 +13,8 @@
  */
 package org.codice.ddf.security.filter.websso;
 
+import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,8 +46,6 @@ import org.slf4j.LoggerFactory;
  * (the SAML assertion).
  */
 public class WebSSOFilter implements SecurityFilter {
-
-  public static final String DDF_AUTHENTICATION_TOKEN = "ddf.security.token";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebSSOFilter.class);
 
@@ -208,7 +208,7 @@ public class WebSSOFilter implements SecurityFilter {
                 result.getToken().getClass().getName(),
                 result.getToken().getClass().getClassLoader());
           }
-          httpRequest.setAttribute(DDF_AUTHENTICATION_TOKEN, result);
+          httpRequest.setAttribute(AUTHENTICATION_TOKEN_KEY, result);
           break;
         default:
           LOGGER.warn(

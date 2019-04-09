@@ -184,7 +184,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>6.5</version>
+            <version>${nimbus.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.nimbusds</groupId>
@@ -195,7 +195,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>6.5</version>
+            <version>${nimbus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -320,7 +320,7 @@
                                         <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.23</minimum>
+                                            <minimum>0.20</minimum>
                                         </limit>
                                         <limit implementation="org.codice.jacoco.LenientLimit">
                                             <counter>BRANCH</counter>

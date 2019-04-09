@@ -13,11 +13,12 @@
  */
 package org.codice.ddf.security.filter.login;
 
+import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
+
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
-import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.io.IOException;
@@ -63,11 +64,7 @@ public class LoginFilter implements SecurityFilter {
 
   private static final XMLUtils XML_UTILS = XMLUtils.getInstance();
 
-  private static final String DDF_AUTHENTICATION_TOKEN = "ddf.security.token";
-
   private SecurityManager securityManager;
-
-  private SessionFactory sessionFactory;
 
   public LoginFilter() {
     super();
@@ -103,7 +100,7 @@ public class LoginFilter implements SecurityFilter {
 
     // grab token from httpRequest
     BaseAuthenticationToken token;
-    Object ddfAuthToken = httpRequest.getAttribute(DDF_AUTHENTICATION_TOKEN);
+    Object ddfAuthToken = httpRequest.getAttribute(AUTHENTICATION_TOKEN_KEY);
     if (ddfAuthToken instanceof HandlerResult) {
       token = ((HandlerResult) ddfAuthToken).getToken();
     } else {
@@ -111,13 +108,11 @@ public class LoginFilter implements SecurityFilter {
       return;
     }
 
-    // if token is a reference (eg, JESSSIONID), replace with stored credentials
-    boolean firstLogin = true;
+    // if token is a reference (eg, JSESSIONID), replace with stored credentials
     if (token.isReference()) {
       token.setRetrievedFromReference(true);
       Object savedToken = resolveReference(token, httpRequest);
       if (savedToken != null) {
-        firstLogin = false;
         token.replaceReference(savedToken);
       }
       // ensure that the token now has credentials
@@ -207,10 +202,6 @@ public class LoginFilter implements SecurityFilter {
 
   public void setSecurityManager(SecurityManager securityManager) {
     this.securityManager = securityManager;
-  }
-
-  public void setSessionFactory(SessionFactory sessionFactory) {
-    this.sessionFactory = sessionFactory;
   }
 
   @Override

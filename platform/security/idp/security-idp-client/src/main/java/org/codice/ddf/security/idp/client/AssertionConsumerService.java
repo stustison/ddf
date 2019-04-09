@@ -13,6 +13,9 @@
  */
 package org.codice.ddf.security.idp.client;
 
+import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
@@ -75,7 +78,6 @@ import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
-import org.codice.ddf.security.filter.websso.WebSSOFilter;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.saml.SAMLAssertionHandler;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -88,9 +90,10 @@ import org.w3c.dom.Document;
 @Path("sso")
 public class AssertionConsumerService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(IdpHandler.class);
+  @VisibleForTesting
+  static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
 
-  private static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
+  private static final Logger LOGGER = LoggerFactory.getLogger(IdpHandler.class);
 
   private static final String SAML_RESPONSE = "SAMLResponse";
 
@@ -342,24 +345,21 @@ public class AssertionConsumerService {
 
   private void addSamlToSession(
       HttpServletRequest httpRequest, String realm, SecurityToken securityToken) {
-    if (securityToken == null) {
-      LOGGER.debug("Cannot add null security token to session.");
-      return;
+    if (securityToken != null) {
+      HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
+      Object sessionToken = getSecurityToken(session, realm);
+      if (sessionToken == null) {
+        addSecurityToken(session, realm, securityToken);
+        SecurityLogger.audit(
+            "Added SAML for user [{}] to session [{}]",
+            securityToken.getPrincipal(),
+            Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
+        int minutes = 60;
+        session.setMaxInactiveInterval(minutes * 60);
+        return;
+      }
     }
-
-    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
-    Object sessionToken = getSecurityToken(session, realm);
-    if (sessionToken == null) {
-      addSecurityToken(session, realm, securityToken);
-    }
-    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
-    SecurityLogger.audit(
-        "Added SAML for user [{}] to session [{}]",
-        securityAssertion.getPrincipal().getName(),
-        Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
-    int minutes = 60;
-
-    session.setMaxInactiveInterval(minutes * 60);
+    LOGGER.debug("Problem adding security token to session.");
   }
 
   private void addSecurityToken(HttpSession session, String realm, SecurityToken token) {
@@ -474,7 +474,7 @@ public class AssertionConsumerService {
       return false;
     }
 
-    request.setAttribute(WebSSOFilter.DDF_AUTHENTICATION_TOKEN, samlResult);
+    request.setAttribute(AUTHENTICATION_TOKEN_KEY, samlResult);
     request.removeAttribute(ContextPolicy.NO_AUTH_POLICY);
 
     //

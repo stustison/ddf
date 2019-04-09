@@ -37,6 +37,9 @@ public final class SecurityConstants {
    */
   public static final String SECURITY_JAVA_SUBJECT = "ddf.security.java.subject";
 
+  /** Property key to obtain the authentication token from a query request / response. */
+  public static final String AUTHENTICATION_TOKEN_KEY = "ddf.security.token";
+
   /** Property key to obtain the security token from a query request / response. */
   public static final String SECURITY_TOKEN_KEY = "security.assertion";
 

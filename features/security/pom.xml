@@ -469,7 +469,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>6.5</version>
+            <version>${nimbus.version}</version>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>

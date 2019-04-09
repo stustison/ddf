@@ -263,6 +263,7 @@
         <opengis.bundle.version>${opengis.version}_1</opengis.bundle.version>
         <opengis.version>19.1</opengis.version>
         <opensaml.osgi.version>3.3.0_2</opensaml.osgi.version>
+        <nimbus.version>6.5</nimbus.version>
         <org.geotools.bundle.version>${org.geotools.version}_2</org.geotools.bundle.version>
         <org.geotools.version>19.1</org.geotools.version>
         <!-- Note: The swissbox version needs to match the version used by pax-exam . -->

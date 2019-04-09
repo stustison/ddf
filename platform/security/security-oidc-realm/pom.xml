@@ -86,7 +86,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>6.5</version>
+            <version>${nimbus.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.nimbusds</groupId>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>6.5</version>
+            <version>${nimbus.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
