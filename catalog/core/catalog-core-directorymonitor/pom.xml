@@ -143,6 +143,7 @@
             <artifactId>bootflag-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <!-- Component test dependencies -->
         <dependency>
             <groupId>ddf.catalog.core</groupId>

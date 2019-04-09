@@ -29,11 +29,13 @@ import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.cxf.ws.security.trust.STSClient;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.wss4j.common.saml.OpenSAMLUtil;
 import org.codice.ddf.security.handler.api.BSTAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.handler.api.STSAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -43,7 +45,12 @@ import org.xml.sax.SAXException;
 
 public class StsRealmTest {
 
-  public static Document readXml(InputStream is)
+  @BeforeClass
+  public static void setupClass() throws Exception {
+    OpenSAMLUtil.initSamlEngine();
+  }
+
+  private static Document readXml(InputStream is)
       throws SAXException, IOException, ParserConfigurationException {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -91,12 +98,8 @@ public class StsRealmTest {
 
     WssStsRealm wssStsRealm = new WssStsRealm();
     STSAuthenticationToken baseAuthTok = mock(STSAuthenticationToken.class);
-    when(baseAuthTok.isUseWssSts()).thenReturn(false);
     when(baseAuthTok.getCredentials()).thenReturn("creds");
     assertEquals(true, realm.supports(baseAuthTok));
-    assertEquals(false, wssStsRealm.supports(baseAuthTok));
-    when(baseAuthTok.isUseWssSts()).thenReturn(true);
-    assertEquals(false, realm.supports(baseAuthTok));
     assertEquals(true, wssStsRealm.supports(baseAuthTok));
   }
 
@@ -184,7 +187,7 @@ public class StsRealmTest {
     assertEquals(3, stsRealm.getClaims().size());
   }
 
-  protected Document readDocument(String name)
+  private Document readDocument(String name)
       throws SAXException, IOException, ParserConfigurationException {
     InputStream inStream = getClass().getResourceAsStream(name);
     return readXml(inStream);

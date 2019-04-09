@@ -124,8 +124,6 @@ public abstract class AbstractStsRealm extends AuthenticatingRealm
 
   private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-  private static final String DDF_AUTHENTICATION_TOKEN = "ddf.security.token";
-
   private static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
 
   private static final int DEFAULT_EXPIRATION_TIME = 31;

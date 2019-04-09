@@ -355,7 +355,7 @@
         <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
         <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
         <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/6.5</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
         <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
         <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
     </feature>
@@ -368,7 +368,7 @@
         <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
         <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
         <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/6.5</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
         <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
         <bundle>mvn:ddf.security.handler/security-handler-oidc/${project.version}</bundle>
     </feature>
