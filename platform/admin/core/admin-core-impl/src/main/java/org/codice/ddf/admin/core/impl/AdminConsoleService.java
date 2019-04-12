@@ -49,6 +49,7 @@ import org.codice.ddf.admin.core.api.Service;
 import org.codice.ddf.admin.core.api.jmx.AdminConsoleServiceMBean;
 import org.codice.ddf.admin.core.impl.module.ValidationDecorator;
 import org.codice.ddf.ui.admin.api.module.AdminModule;
+import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.osgi.framework.InvalidSyntaxException;
@@ -64,6 +65,18 @@ import org.slf4j.LoggerFactory;
 public class AdminConsoleService extends StandardMBean implements AdminConsoleServiceMBean {
 
   private static final String GUEST_CLAIMS_CONFIG_PID = "ddf.security.sts.guestclaims";
+
+  private static final String IDP_CLIENT_CONFIG_PID =
+      "(service.pid=org.codice.ddf.security.idp.client.IdpMetadata)";
+
+  private static final String IDP_SERVER_CONFIG_PID =
+      "(service.pid=org.codice.ddf.security.idp.server.IdpEndpoint)";
+
+  private static final String OIDC_HANDLER_CONFIG_PID =
+      "(service.pid=org.codice.ddf.security.oidc.client.HandlerConfiguration)";
+
+  private static final String OIDC_REALM_CONFIG_PID =
+      "(service.pid=org.codice.ddf.security.oidc.realm.OidcRealm)";
 
   private static final String UI_CONFIG_PID = "ddf.platform.ui.config";
 
@@ -472,6 +485,28 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
     return config;
   }
 
+  @Override
+  public Map<String, Object>[] getIdpConfigurations() {
+    return new Map[] {
+      this.getService(IDP_CLIENT_CONFIG_PID),
+      this.getService(IDP_SERVER_CONFIG_PID),
+      this.getService(OIDC_HANDLER_CONFIG_PID),
+      this.getService(OIDC_REALM_CONFIG_PID)
+    };
+  }
+
+  @Override
+  public void setIdpConfigurations(Map<String, Object>[] configs) throws IOException {
+    LOGGER.info("setIdpClientConfiguration hit. Config: {}.", configs);
+
+    for (Map config : configs) {
+      String pid = (String) config.get("metatypeId");
+      Map<String, Object> updateValues = getUpdateValues((JSONArray) config.get("metatypeEntries"));
+
+      comprehensiveUpdate(pid, updateValues);
+    }
+  }
+
   public ConfigurationStatus enableConfiguration(String servicePid) throws IOException {
     if (StringUtils.isEmpty(servicePid)) {
       throw new IOException(
@@ -496,6 +531,17 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
   /** Setter method for mBeanServer. Needed for testing init() and destroy(). */
   void setMBeanServer(MBeanServer server) {
     mBeanServer = server;
+  }
+
+  private Map<String, Object> getUpdateValues(JSONArray metatypeEntries) {
+    Map<String, Object> updateValues = new HashMap<>();
+
+    for (Object entry : metatypeEntries) {
+      Map<String, Object> configEntry = (Map<String, Object>) entry;
+      updateValues.put((String) configEntry.get("id"), configEntry.get("value"));
+    }
+
+    return updateValues;
   }
 
   private static class CardinalityTransformer implements Transformer {
@@ -523,7 +569,7 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
       Integer cardinality = null;
       Integer type = null;
       for (MetatypeAttribute attribute : metatype) {
-        if (attrId.equals(attribute.getId())) {
+        if (attrId.equals(attribute.getId()) || attrId.equals(attribute.getName())) {
           cardinality = attribute.getCardinality();
           type = attribute.getType();
         }
@@ -570,9 +616,9 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
     }
 
     @SuppressWarnings("unchecked")
-    public T[] positiveCardinality(Object value) {
+    public Object[] positiveCardinality(Object value) {
       List<T> list = negativeCardinality(value);
-      return list.toArray((T[]) Array.newInstance(clazz, list.size()));
+      return listToArray(list);
     }
 
     public List<T> negativeCardinality(Object value) {
@@ -606,6 +652,16 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
         return clazz.cast(value);
       }
       throw loggedException("Failed to parse " + value + " as " + clazz);
+    }
+
+    private Object[] listToArray(List<T> list) {
+      Object[] array = (Object[]) Array.newInstance(clazz, list.size());
+
+      for (int i = 0; i < list.size(); i++) {
+        array[i] = list.get(i);
+      }
+
+      return array;
     }
   }
 

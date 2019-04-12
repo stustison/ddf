@@ -11,20 +11,27 @@
  *
  **/
  --}}
-<h3>Configure guest claims attributes</h3>
+<h3>Configure IdP</h3>
 <div class="inner-scroll scroll-area white ps-container">
     <div class="well well-sm white">
-        <div id="warning-container" class="warning-div">
-
-        </div>
-        <div id="anom-claim-input-container">
-            <div id="claims-profiles"></div>
-
-            <!--</form>-->
+        <div id="warning-container" class="warning-div"></div>
+        <div id="idp-configuration-input-container">
             <form class="form-horizontal">
                 <fieldset>
-                    <span>These are the security claims attributes that will be given to guest users. Additionally all other users will also be given these attributes in addition to their own.</span>
-                    <div class="data-section" id="config-div"></div>
+                    <h3 class="idp-config-overview">Configure connection to an Identity Provider (IdP).</h3>
+
+                    <div class="data-section" id="idp-client-config">
+
+                    </div>
+                    <div class="data-section" id="idp-server-config">
+
+                    </div>
+                    <div class="data-section" id="oidc-handler-config">
+
+                    </div>
+                    <div class="data-section" id="oidc-realm-config">
+
+                    </div>
                 </fieldset>
             </form>
         </div>

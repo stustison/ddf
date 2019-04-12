@@ -11,13 +11,6 @@
  *
  **/
  --}}
-<div class="form-group has-feedback">
-    <div class="input-group btn-group col-xs-4 item">
-        <span class="input-group-addon">Profile</span>
-        <select id="profile" name="profile" class="profile form-control input-sm">
-            {{#each profileNames}}
-                <option value="{{this}}" {{#is this ../curProfile}}selected="selected"{{/is}}>{{this}}</option>
-            {{/each}}
-        </select>
-    </div>
-</div>
+<input type="text" class="entry-value-multiple form-data input-text" value="{{value}}" oldValue="{{value}}">
+<i class="fa fa-minus-square fa-lg minus-button"></i>
+<span class="error-message" hidden>Invalid value. Value must be of type {{typeName}}.</span>

@@ -15,12 +15,11 @@
  -->
 <metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.2.0">
 
-    <OCD description="OIDC Configuration Settings"
+    <OCD description="OIDC Realm Configuration"
          name="OIDC Configuration Settings"
          id="org.codice.ddf.security.oidc.realm.OidcRealm">
 
         <AD name="OIDC NameID Policy" id="usernameAttributeList"
-            required="true"
             type="String" cardinality="100"
             default="name, email"
             description="List of attributes that are considered for replacing the username of the logged in user.

@@ -152,7 +152,10 @@ center {
   color: white;
 }
 
-.claim-button {
+.claim-button,
+.minus-button,
+.plus-button,
+.entry-info {
   text-decoration: none;
   cursor: pointer;
   color: #7f9293;
@@ -161,6 +164,7 @@ center {
     color: darken(#7f9293, 15%);
   }
 }
+
 .claim-add-attribute {
   cursor: pointer;
   background-color: #7f9293;
@@ -239,6 +243,138 @@ center {
 
   .minus-button {
     .claim-button;
+  }
+}
+
+/* IdP-Configuration */
+.idp-config-view {
+  .data-section {
+    padding: 5px;
+    border: 3px solid #dce4ec;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .idp-config-overview {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .idp-config-table {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 20px;
+  }
+
+  .table-title {
+    color: black;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #dce4ec;
+  }
+
+  .table-header-name,
+  table-data-name {
+    width: 25%;
+  }
+
+  .table-header-value,
+  table-data-value {
+    width: 75%;
+  }
+
+  .table-data-name {
+    width: 25%;
+    text-align: right;
+    padding-right: 15px;
+  }
+
+  .table-data-value {
+    width: 75%;
+  }
+
+  .table-entry {
+    height: 50px;
+    margin: 5px;
+  }
+
+  .entry-info {
+    padding-right: 10px;
+  }
+
+  .entry-value-simple,
+  .entry-value-select,
+  .entry-value-multiple,
+  .plus-button {
+    height: 45px;
+    padding: 10px 15px;
+    border: 2px solid #dce4ec;
+    border-radius: 4px;
+    outline: none;
+
+    transition-duration: 500ms;
+    transition-property: border;
+
+    &:focus {
+      border: 2px solid black;
+    }
+  }
+
+  .entry-value-boolean {
+    zoom: 2;
+    cursor: pointer;
+  }
+
+  .entry-value-simple,
+  .entry-value-select {
+    width: 100%;
+  }
+
+  .entry-value-select {
+    cursor: pointer;
+  }
+
+  .entry-value-multiple-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .table-data-value-multiple {
+    padding-left: 5px;
+    border-left: 3px solid #dce4ec;
+  }
+
+  .entry-value-multiple,
+  .plus-button {
+    width: 95%;
+  }
+
+  .deletable-entry,
+  .plus-button-wrapper {
+    padding: 2px;
+    width: 100%;
+  }
+
+  .plus-button,
+  .minus-button {
+    font-size: 25px;
+  }
+
+  .plus-button {
+    display: block;
+    background: #ecf0f1;
+    text-align: center;
+    vertical-align: middle;
+
+    &:hover {
+      background: darken(#ecf0f1, 15%);
+    }
+  }
+
+  .error-message {
+    color: red;
   }
 }
 

@@ -58,8 +58,8 @@ define([
     updateValues: function(e) {
       var profileName = e.currentTarget[e.currentTarget.selectedIndex].label
       var profile = this.model.get('availableProfiles')[profileName]
-      this.configuration.get('properties').set('attributes', profile)
       this.configuration.get('properties').set('profile', profileName)
+      this.configuration.get('properties').set('attributes', profile)
       wreqr.vent.trigger('profileChanged')
     },
   })
@@ -321,8 +321,9 @@ define([
     },
     initialize: function(options) {
       this.navigationModel = options.navigationModel
-      this.navigationModel.set('hidePrevious', true)
+      this.navigationModel.set('hidePrevious', false)
       this.listenTo(this.navigationModel, 'next', this.next)
+      this.listenTo(this.navigationModel, 'previous', this.previous)
       this.listenTo(wreqr.vent, 'showWarnings', this.verifyContinue)
       this.listenTo(wreqr.vent, 'saveClaimData', this.saveData)
 
@@ -487,6 +488,9 @@ define([
       this.$('#warning-container').on('hidden.bs.modal', function() {
         wreqr.vent.trigger('saveClaimData')
       })
+    },
+    previous: function() {
+      this.navigationModel.previousStep('', 100)
     },
   })
 

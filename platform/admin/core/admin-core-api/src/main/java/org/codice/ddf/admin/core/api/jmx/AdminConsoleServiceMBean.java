@@ -240,4 +240,8 @@ public interface AdminConsoleServiceMBean {
   ConfigurationStatus disableConfiguration(String servicePid) throws IOException;
 
   Map<String, Object> getClaimsConfiguration(String filter);
+
+  Map<String, Object>[] getIdpConfigurations();
+
+  void setIdpConfigurations(Map<String, Object>[] config) throws IOException;
 }
