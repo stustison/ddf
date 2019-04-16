@@ -26,7 +26,7 @@
     <cm:cm-properties id="initialProperties"
       persistent-id="org.codice.ddf.security.handler.api.OidcHandlerConfiguration"/>
 
-    <bean id="oidcConfiguration" class="org.codice.ddf.security.handler.oidc.OidcHandlerConfigurationImpl">
+    <bean id="oidcConfiguration" class="org.codice.ddf.security.handler.oidc.OidcHandlerConfigurationImpl" init-method="init">
         <cm:managed-properties persistent-id="org.codice.ddf.security.handler.api.OidcHandlerConfiguration"
                                update-strategy="component-managed" update-method="update"/>
         <argument ref="initialProperties"/>
