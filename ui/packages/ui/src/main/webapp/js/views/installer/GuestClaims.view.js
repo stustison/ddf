@@ -456,7 +456,7 @@ define([
         mbean:
           'org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0',
         operation: 'updateGuestClaimsProfile',
-        arguments: ['ddf.security.sts.guestclaims', attributes],
+        arguments: ['ddf.security.guest.realm', attributes],
       }
       $.ajax({
         type: 'POST',

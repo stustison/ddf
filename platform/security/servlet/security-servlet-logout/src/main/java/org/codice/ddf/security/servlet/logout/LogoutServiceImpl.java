@@ -55,7 +55,7 @@ public class LogoutServiceImpl implements LogoutService {
     HttpSession session = httpSessionFactory.getOrCreateSession(request);
     Object token =
         ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
-            .getSecurityToken();
+            .getPrincipals();
     Subject subject = securityManager.getSubject(token);
 
     Map<String, Object> subjectMap = new HashMap<>();

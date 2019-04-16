@@ -15,13 +15,13 @@ package ddf.security.realm.sts;
 
 import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.base.Splitter;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.sts.client.configuration.STSClientConfiguration;
 import java.security.Principal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -109,9 +108,6 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
   private Boolean useKey = null;
 
-  private Cache<Element, SecurityToken> cache =
-      CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build();
-
   private List<String> usernameAttributeList;
 
   public StsRealm() {
@@ -174,7 +170,7 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
     SecurityToken securityToken;
     if (token instanceof SAMLAuthenticationToken && credential instanceof SecurityToken) {
-      securityToken = renewSecurityToken((SecurityToken) credential);
+      securityToken = checkRenewSecurityToken((SecurityToken) credential);
     } else {
       securityToken = requestSecurityToken(credential);
     }
@@ -262,42 +258,44 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
    * @param securityToken The token being renewed.
    * @return security token (SAML assertion)
    */
-  protected SecurityToken renewSecurityToken(final SecurityToken securityToken) {
-    String stsAddress = getAddress();
-
+  protected SecurityToken checkRenewSecurityToken(final SecurityToken securityToken) {
     try {
-      LOGGER.debug("Renewing security token from STS at: {}.", stsAddress);
-
       if (securityToken != null) {
-        synchronized (securityToken.getToken()) {
-          return cache.get(
-              securityToken.getToken(),
-              () -> {
-                LOGGER.debug(
-                    "Telling the STS to renew a security token on behalf of the auth token");
-                STSClient stsClient = configureStsClient();
-
-                stsClient.setWsdlLocation(stsAddress);
-                stsClient.setTokenType(getAssertionType());
-                stsClient.setKeyType(getKeyType());
-                stsClient.setKeySize(Integer.parseInt(getKeySize()));
-                stsClient.setAllowRenewing(true);
-                stsClient.setAllowRenewingAfterExpiry(true);
-                SecurityToken token = stsClient.renewSecurityToken(securityToken);
-                cache.put(securityToken.getToken(), token);
-                LOGGER.debug("Finished renewing security token.");
-
-                return token;
-              });
+        if ((securityToken.getExpires() != null
+            && securityToken.getExpires().minus(Duration.ofMinutes(1)).isBefore(Instant.now()))) {
+          return renewSecurityToken(securityToken);
+        } else {
+          SecurityAssertionSaml securityAssertionSaml = new SecurityAssertionSaml(securityToken);
+          long afterMil = securityAssertionSaml.getNotOnOrAfter().getTime();
+          long timeoutMillis = afterMil - System.currentTimeMillis();
+          if (timeoutMillis <= 0L) {
+            return renewSecurityToken(securityToken);
+          }
         }
-      } else {
-        return null;
       }
+
+      return securityToken;
     } catch (Exception e) {
-      String msg = "Error renewing the security token from STS at: " + stsAddress + ".";
+      String msg = "Error renewing the security token from STS.";
       LOGGER.debug(msg, e);
       throw new AuthenticationException(msg, e);
     }
+  }
+
+  private SecurityToken renewSecurityToken(final SecurityToken securityToken) throws Exception {
+    LOGGER.debug("Telling the STS to renew a security token on behalf of the auth token");
+    STSClient stsClient = configureStsClient();
+    String stsAddress = getAddress();
+    LOGGER.debug("Renewing security token from STS at: {}.", stsAddress);
+    stsClient.setWsdlLocation(stsAddress);
+    stsClient.setTokenType(getAssertionType());
+    stsClient.setKeyType(getKeyType());
+    stsClient.setKeySize(Integer.parseInt(getKeySize()));
+    stsClient.setAllowRenewing(true);
+    stsClient.setAllowRenewingAfterExpiry(true);
+    SecurityToken token = stsClient.renewSecurityToken(securityToken);
+    LOGGER.debug("Finished renewing security token.");
+    return token;
   }
 
   /**

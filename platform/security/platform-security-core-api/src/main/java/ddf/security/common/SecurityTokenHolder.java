@@ -22,12 +22,12 @@ public class SecurityTokenHolder implements Serializable {
 
   private final AtomicReference<Object> securityTokenAtomicReference = new AtomicReference<>();
 
-  public Object getSecurityToken() {
+  public Object getPrincipals() {
     return securityTokenAtomicReference.get();
   }
 
-  public void setSecurityToken(Object securityToken) {
-    securityTokenAtomicReference.set(securityToken);
+  public void setPrincipals(Object principals) {
+    securityTokenAtomicReference.set(principals);
   }
 
   public void remove() {

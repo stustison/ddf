@@ -42,7 +42,7 @@ public class BSTAuthenticationTokenTest {
     // test normal case
     BaseAuthenticationToken bat = BSTAuthenticationToken.parse(TEST_STRING, false);
     MockBSTAuthenticationToken mockToken =
-        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials());
+        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials(), "127.0.0.1");
     assertNotNull(mockToken);
     assertEquals(PRINCIPAL, mockToken.getPrincipal());
     assertEquals(CREDENTIALS, mockToken.getCredentials());
@@ -60,7 +60,7 @@ public class BSTAuthenticationTokenTest {
                 + CREDENTIALS,
             false);
     MockBSTAuthenticationToken mockToken =
-        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials());
+        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials(), "127.0.0.1");
     assertNotNull(mockToken);
     assertEquals("", mockToken.getPrincipal());
     assertEquals(CREDENTIALS, mockToken.getCredentials());
@@ -81,7 +81,7 @@ public class BSTAuthenticationTokenTest {
                 + "",
             false);
     MockBSTAuthenticationToken mockToken =
-        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials());
+        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials(), "127.0.0.1");
     assertNotNull(mockToken);
     assertEquals(PRINCIPAL, mockToken.getPrincipal());
     assertEquals("", mockToken.getCredentials());
@@ -97,7 +97,7 @@ public class BSTAuthenticationTokenTest {
         BSTAuthenticationToken.parse(
             Base64.getEncoder().encodeToString(TEST_STRING.getBytes()), true);
     MockBSTAuthenticationToken mockToken =
-        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials());
+        new MockBSTAuthenticationToken(bat.getPrincipal(), bat.getCredentials(), "127.0.0.1");
     assertNotNull(mockToken);
     assertEquals(PRINCIPAL, mockToken.getPrincipal());
     assertEquals(CREDENTIALS, mockToken.getCredentials());

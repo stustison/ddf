@@ -60,7 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     // Create an authentication token
     BaseAuthenticationToken authenticationToken =
-        tokenFactory.fromUsernamePassword(username, password);
+        tokenFactory.fromUsernamePassword(username, password, request.getRemoteAddr());
 
     // Authenticate
     Subject subject = securityManager.getSubject(authenticationToken);
@@ -79,7 +79,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         session = sessionFactory.getOrCreateSession(request);
         SecurityTokenHolder holder =
             (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-        holder.setSecurityToken(((SecurityAssertion) principal).getToken());
+        holder.setPrincipals(((SecurityAssertion) principal).getToken());
       }
     }
   }

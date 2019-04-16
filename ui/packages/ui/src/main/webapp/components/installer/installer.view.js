@@ -52,7 +52,7 @@ define([
   var guestClaimsServiceResponse = new Service.Response()
   guestClaimsServiceResponse.fetch({
     url:
-      './jolokia/exec/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/getClaimsConfiguration/(service.pid%3Dddf.security.sts.guestclaims)',
+      './jolokia/exec/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/getClaimsConfiguration/(service.pid%3Dddf.security.guest.realm)',
   })
 
   var ssoConfigurationServiceResponses = new Service.Response()

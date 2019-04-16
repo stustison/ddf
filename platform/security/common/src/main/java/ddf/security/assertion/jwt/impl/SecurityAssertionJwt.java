@@ -14,7 +14,6 @@
 package ddf.security.assertion.jwt.impl;
 
 import com.google.common.collect.ImmutableList;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import ddf.security.assertion.Attribute;
 import ddf.security.assertion.AttributeStatement;
@@ -33,12 +32,20 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
+import org.codice.ddf.platform.util.DateUtils;
+import org.pac4j.oidc.credentials.OidcCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SecurityAssertionJwt implements SecurityAssertion {
 
-  private final JWT token;
+  private static final Logger LOGGER = LoggerFactory.getLogger(SecurityAssertionJwt.class);
+
+  public static final String JWT_TOKEN_TYPE = "jwt";
 
   private final List<String> usernameAttributeList;
+
+  private final OidcCredentials credentials;
 
   private JWTClaimsSet jwtClaimsSet;
 
@@ -46,15 +53,15 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private List<AuthenticationStatement> authenticationStatements = new ArrayList<>();
 
-  public SecurityAssertionJwt(JWT token) {
-    this(token, new ArrayList<>());
+  public SecurityAssertionJwt(OidcCredentials credentials) {
+    this(credentials, new ArrayList<>());
   }
 
-  public SecurityAssertionJwt(JWT token, List<String> usernameAttributeList) {
-    this.token = token;
+  public SecurityAssertionJwt(OidcCredentials credentials, List<String> usernameAttributeList) {
+    this.credentials = credentials;
     this.usernameAttributeList = usernameAttributeList;
     try {
-      jwtClaimsSet = token.getJWTClaimsSet();
+      jwtClaimsSet = credentials.getIdToken().getJWTClaimsSet();
       Map<String, Object> claims = jwtClaimsSet.getClaims();
       attributeStatements = new ArrayList<>();
       AttributeStatement attributeStatement = new AttributeStatementJwt();
@@ -131,26 +138,49 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public String getTokenType() {
-    return "jwt";
+    return JWT_TOKEN_TYPE;
   }
 
   @Override
   public Object getToken() {
-    return token;
+    return credentials;
   }
 
   @Override
   public Date getNotBefore() {
-    return jwtClaimsSet.getNotBeforeTime();
+    return DateUtils.copy(jwtClaimsSet.getNotBeforeTime());
   }
 
   @Override
   public Date getNotOnOrAfter() {
-    return jwtClaimsSet.getExpirationTime();
+    return DateUtils.copy(jwtClaimsSet.getExpirationTime());
+  }
+
+  @Override
+  public int getWeight() {
+    return SecurityAssertion.IDP_AUTH_WEIGHT;
   }
 
   @Override
   public boolean isPresentlyValid() {
+    Date now = new Date();
+
+    if (getNotBefore() != null && now.before(getNotBefore())) {
+      LOGGER.debug("Security Assertion Time Bound Check Failed.");
+      LOGGER.debug("\t Checked time of {} is before the NotBefore time of {}", now, getNotBefore());
+      return false;
+    }
+
+    if (getNotOnOrAfter() != null
+        && (now.equals(getNotOnOrAfter()) || now.after(getNotOnOrAfter()))) {
+      LOGGER.debug("Security Assertion Time Bound Check Failed.");
+      LOGGER.debug(
+          "\t Checked time of {} is equal to or after the NotOnOrAfter time of {}",
+          now,
+          getNotOnOrAfter());
+      return false;
+    }
+
     return true;
   }
 

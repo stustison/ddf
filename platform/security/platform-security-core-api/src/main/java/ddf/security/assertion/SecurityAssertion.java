@@ -25,6 +25,13 @@ import java.util.Set;
  * @author tustisos
  */
 public interface SecurityAssertion extends Serializable {
+
+  int IDP_AUTH_WEIGHT = 0;
+
+  int LOCAL_AUTH_WEIGHT = 5;
+
+  int NO_AUTH_WEIGHT = 10;
+
   /**
    * Returns the Principal contained within the SecurityToken
    *
@@ -102,6 +109,13 @@ public interface SecurityAssertion extends Serializable {
    * @return String
    */
   String toString();
+
+  /**
+   * Returns the weight associated with the type of authentication used to produce this assertion
+   *
+   * @return int
+   */
+  int getWeight();
 
   /**
    * Returns true if checked while within the time bounds defined by NotBefore and NotOnOrAfter

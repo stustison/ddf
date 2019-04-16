@@ -37,7 +37,7 @@ public class SecurityPolicyConfigurator {
 
   public static final String BASIC_AUTH_TYPES = "/=SAML|basic";
 
-  public static final String GUEST_AUTH_TYPES = "/=SAML|GUEST,/admin=SAML|basic,/system=SAML|basic";
+  public static final String GUEST_AUTH_TYPES = "/=SAML,/admin=SAML|basic,/system=SAML|basic";
 
   public static final String DEFAULT_WHITELIST =
       "/services/SecurityTokenService,/services/internal/metrics,/services/saml,/proxy,/services/idp,/idp,/services/platform/config/ui,/login";
@@ -110,6 +110,8 @@ public class SecurityPolicyConfigurator {
     if (whitelist != null) {
       putPolicyValues(policyProperties, "whiteListContexts", whitelist);
     }
+
+    putPolicyValues(policyProperties, "guestAccess", "true");
 
     new SynchronizedConfiguration(
             FACTORY_PID, null, policyProperties, createChecker(policyProperties), configAdmin)

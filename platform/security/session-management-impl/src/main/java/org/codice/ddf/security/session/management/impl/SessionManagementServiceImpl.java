@@ -15,21 +15,22 @@ package org.codice.ddf.security.session.management.impl;
 
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
+import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
-import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.net.URI;
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.session.management.service.SessionManagementService;
-import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,10 +64,10 @@ public class SessionManagementServiceImpl implements SessionManagementService {
       Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (securityToken instanceof SecurityTokenHolder) {
         SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
-        Object token = tokenHolder.getSecurityToken();
+        Object token = tokenHolder.getPrincipals();
 
         try {
-          doRenew(token, tokenHolder);
+          doRenew(token, tokenHolder, request);
         } catch (SecurityServiceException e) {
           LOGGER.error("Failed to renew", e);
           return null;
@@ -88,33 +89,32 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   }
 
   private long getTimeLeft(SecurityTokenHolder securityToken) {
-    Object token = securityToken.getSecurityToken();
+    Object token = securityToken.getPrincipals();
 
-    if (token instanceof SecurityToken) {
-      SecurityAssertionSaml securityAssertion = new SecurityAssertionSaml((SecurityToken) token);
-      long time = securityAssertion.getNotOnOrAfter().getTime();
-      return Math.max(time - clock.millis(), 0);
-
-    } else if (token instanceof OidcCredentials) {
-      OidcCredentials oidcCredentials = (OidcCredentials) token;
-      SecurityAssertionJwt securityAssertion =
-          new SecurityAssertionJwt(oidcCredentials.getIdToken());
+    if (token instanceof PrincipalCollection) {
+      Collection<SecurityAssertion> securityAssertions =
+          ((PrincipalCollection) token).byType(SecurityAssertion.class);
+      List<SecurityAssertion> assertionList = new ArrayList<>(securityAssertions);
+      assertionList.sort(SubjectUtils.getAssertionComparator());
+      SecurityAssertion securityAssertion = assertionList.get(0);
       long time = securityAssertion.getNotOnOrAfter().getTime();
       return Math.max(time - clock.millis(), 0);
     }
+
     return 0L;
   }
 
-  private void doRenew(Object securityToken, SecurityTokenHolder tokenHolder)
+  private void doRenew(
+      Object securityToken, SecurityTokenHolder tokenHolder, HttpServletRequest request)
       throws SecurityServiceException {
-    if (securityToken instanceof SecurityToken) {
+    if (securityToken instanceof PrincipalCollection) {
       SAMLAuthenticationToken samlToken =
           new SAMLAuthenticationToken(
-              ((SecurityToken) securityToken).getPrincipal(), (SecurityToken) securityToken);
+              null, (PrincipalCollection) securityToken, request.getRemoteAddr());
       Subject subject = securityManager.getSubject(samlToken);
       for (Object principal : subject.getPrincipals().asList()) {
         if (principal instanceof SecurityAssertion) {
-          tokenHolder.setSecurityToken(((SecurityAssertion) principal).getToken());
+          tokenHolder.setPrincipals(((SecurityAssertion) principal).getToken());
         }
       }
     }

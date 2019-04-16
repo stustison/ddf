@@ -124,7 +124,7 @@ public class SecureWebSocketServlet extends WebSocketServlet {
     }
 
     private boolean isUserLoggedIn() {
-      return securityTokenHolder.getSecurityToken() != null;
+      return securityTokenHolder.getPrincipals() != null;
     }
   }
 }

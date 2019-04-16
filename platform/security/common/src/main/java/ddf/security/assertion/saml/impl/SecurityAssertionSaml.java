@@ -69,6 +69,9 @@ public class SecurityAssertionSaml implements SecurityAssertion {
   /** Log4j Logger */
   private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConstants.SECURITY_LOGGER);
 
+  public static final String SAML2_TOKEN_TYPE =
+      "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0";
+
   /** Wrapped SecurityToken. */
   private SecurityToken securityToken;
 
@@ -383,7 +386,7 @@ public class SecurityAssertionSaml implements SecurityAssertion {
   /*
    * (non-Javadoc)
    *
-   * @see ddf.security.assertion.SecurityAssertion#getSecurityToken()
+   * @see ddf.security.assertion.SecurityAssertion#getPrincipals()
    */
   @Override
   public Object getToken() {
@@ -465,6 +468,11 @@ public class SecurityAssertionSaml implements SecurityAssertion {
       result.append("] ");
     }
     return result.toString();
+  }
+
+  @Override
+  public int getWeight() {
+    return SecurityAssertion.IDP_AUTH_WEIGHT;
   }
 
   @Override

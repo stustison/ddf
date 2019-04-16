@@ -125,10 +125,10 @@ public class HandlerConfiguration {
           break;
       }
     }
-    generateOidcClient();
+    init();
   }
 
-  private void generateOidcClient() {
+  public void init() {
     if ("Keycloak".equals(idpType)) {
       oidcConfiguration = new KeycloakOidcConfiguration();
       ((KeycloakOidcConfiguration) oidcConfiguration).setRealm(realm);

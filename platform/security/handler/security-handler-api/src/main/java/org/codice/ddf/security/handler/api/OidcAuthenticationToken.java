@@ -15,8 +15,8 @@ package org.codice.ddf.security.handler.api;
 
 public class OidcAuthenticationToken extends BaseAuthenticationToken {
 
-  public OidcAuthenticationToken(Object principal, Object credentials) {
-    super(principal, credentials);
+  public OidcAuthenticationToken(Object credentials, String ip) {
+    super(null, credentials, ip);
   }
 
   @Override

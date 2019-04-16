@@ -27,14 +27,17 @@ import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
+import ddf.security.http.SessionFactory;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
 import java.util.Arrays;
+import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.wss4j.common.saml.OpenSAMLUtil;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
@@ -53,6 +56,7 @@ public class LoginFilterTest {
 
   private LoginFilter loginFilter;
   private Subject subject;
+  private SecurityTokenHolder securityTokenHolder;
 
   // mocks
   @Mock private HttpServletRequest requestMock;
@@ -68,6 +72,7 @@ public class LoginFilterTest {
   @Mock private SecurityToken badSecurityTokenMock;
   @Mock private BaseAuthenticationToken referenceTokenMock;
   @Mock private SamlAssertionValidator samlAssertionValidatorMock;
+  @Mock private SessionFactory sessionFactory;
 
   @BeforeClass
   public static void init() {
@@ -78,9 +83,12 @@ public class LoginFilterTest {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
 
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    securityTokenHolder = new SecurityTokenHolder();
+    securityTokenHolder.setPrincipals(principalCollection);
     loginFilter = new LoginFilter();
     loginFilter.setSecurityManager(securityManagerMock);
-    loginFilter.setSamlAssertionValidator(samlAssertionValidatorMock);
+    loginFilter.setSessionFactory(sessionFactory);
     loginFilter.init();
 
     subject =
@@ -89,8 +97,8 @@ public class LoginFilterTest {
 
     when(securityAssertionMock.getToken()).thenReturn(goodSecurityTokenMock);
 
-    when(principalCollectionMock.oneByType(SecurityAssertion.class))
-        .thenReturn(securityAssertionMock);
+    when(principalCollectionMock.byType(SecurityAssertion.class))
+        .thenReturn(Collections.singletonList(securityAssertionMock));
     when(principalCollectionMock.asList()).thenReturn(Arrays.asList(goodSecurityTokenMock));
 
     when(securityManagerMock.getSubject(goodAuthenticationTokenMock)).thenReturn(subject);
@@ -99,6 +107,10 @@ public class LoginFilterTest {
     when(sessionMock.getId()).thenReturn("sessionId");
 
     when(requestMock.getSession(any(boolean.class))).thenReturn(sessionMock);
+
+    when(sessionFactory.getOrCreateSession(any())).thenReturn(sessionMock);
+
+    when(sessionMock.getAttribute(SECURITY_TOKEN_KEY)).thenReturn(securityTokenHolder);
 
     when(referenceTokenMock.isReference()).thenReturn(true, true, false);
   }
@@ -149,7 +161,7 @@ public class LoginFilterTest {
     when(requestMock.getAttribute(AUTHENTICATION_TOKEN_KEY)).thenReturn(result);
 
     SecurityTokenHolder securityTokenHolder = new SecurityTokenHolder();
-    securityTokenHolder.setSecurityToken(goodSecurityTokenMock);
+    securityTokenHolder.setPrincipals(principalCollectionMock);
     when(sessionMock.getAttribute(SECURITY_TOKEN_KEY)).thenReturn(securityTokenHolder);
 
     when(securityManagerMock.getSubject(referenceTokenMock)).thenReturn(subject);

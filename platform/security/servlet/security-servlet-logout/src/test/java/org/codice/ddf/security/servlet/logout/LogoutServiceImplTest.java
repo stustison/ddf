@@ -33,7 +33,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public class LogoutServiceImplTest {
     when(sessionFactory.getOrCreateSession(null)).thenReturn(httpSession);
     when(httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
         .thenReturn(securityTokenHolder);
-    when(securityTokenHolder.getSecurityToken()).thenReturn(new SecurityToken());
+    when(securityTokenHolder.getPrincipals()).thenReturn(new SimplePrincipalCollection());
   }
 
   @Test

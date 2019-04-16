@@ -225,6 +225,7 @@
         <module>security-migratable</module>
         <module>command</module>
         <module>secure-boot</module>
+        <module>security-guest-realm</module>
         <module>security-oidc-realm</module>
         <module>security-oidc-bundle</module>
         <module>saml</module>

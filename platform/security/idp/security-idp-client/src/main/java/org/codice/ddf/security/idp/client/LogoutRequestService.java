@@ -17,6 +17,7 @@ import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.SubjectUtils;
 import ddf.security.assertion.AuthenticationStatement;
+import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
@@ -40,6 +41,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,6 +67,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.wss4j.common.ext.WSSecurityException;
 import org.apache.wss4j.common.saml.OpenSAMLUtil;
 import org.apache.wss4j.common.util.DOM2Writer;
@@ -265,7 +268,12 @@ public class LogoutRequestService {
     return Stream.of(sessionAttributes.get(SecurityConstants.SECURITY_TOKEN_KEY))
         .filter(SecurityTokenHolder.class::isInstance)
         .map(SecurityTokenHolder.class::cast)
-        .map(SecurityTokenHolder::getSecurityToken)
+        .map(SecurityTokenHolder::getPrincipals)
+        .filter(PrincipalCollection.class::isInstance)
+        .map(PrincipalCollection.class::cast)
+        .map(p -> p.byType(SecurityAssertion.class))
+        .flatMap(Collection::stream)
+        .map(SecurityAssertion::getToken)
         .filter(SecurityToken.class::isInstance)
         .map(SecurityToken.class::cast)
         .map(this::extractSubject)
@@ -515,7 +523,14 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return (SecurityToken) getTokenHolder().getSecurityToken();
+    return ((PrincipalCollection) getTokenHolder().getPrincipals())
+        .byType(SecurityAssertion.class)
+        .stream()
+        .map(SecurityAssertion::getToken)
+        .filter(SecurityToken.class::isInstance)
+        .map(SecurityToken.class::cast)
+        .findFirst()
+        .orElse(null);
   }
 
   private void logout() {

@@ -100,7 +100,12 @@ public class UserManagerImpl implements UserManager {
       authenticationToken =
           new STSAuthenticationTokenFactory()
               .fromUsernamePassword(
-                  username, ((UsernamePasswordAuthentication) authentication).getPassword());
+                  username,
+                  ((UsernamePasswordAuthentication) authentication).getPassword(),
+                  ((UsernamePasswordAuthentication) authentication)
+                      .getUserMetadata()
+                      .getInetAddress()
+                      .getHostAddress());
 
       try {
         Subject subject = securityManager.getSubject(authenticationToken);

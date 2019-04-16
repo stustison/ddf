@@ -13,17 +13,13 @@
  */
 package com.connexta.ddf.security.saml.assertion.validator;
 
-import ddf.security.Subject;
 import ddf.security.http.SessionFactory;
-import javax.servlet.http.HttpServletRequest;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 
 public interface SamlAssertionValidator {
 
   void validate(SAMLAuthenticationToken token) throws AuthenticationFailureException;
-
-  void addToSession(HttpServletRequest request, Subject subject);
 
   void setSignatureProperties(String signatureProperties);
 

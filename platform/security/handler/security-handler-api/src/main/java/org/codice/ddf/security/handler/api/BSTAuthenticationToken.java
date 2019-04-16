@@ -54,8 +54,8 @@ public abstract class BSTAuthenticationToken extends STSAuthenticationToken {
 
   protected String tokenId = BST_LN;
 
-  public BSTAuthenticationToken(Object principal, Object credentials) {
-    super(principal, credentials);
+  public BSTAuthenticationToken(Object principal, Object credentials, String ip) {
+    super(principal, credentials, ip);
   }
 
   private static JAXBContext initContext() {
@@ -91,7 +91,7 @@ public abstract class BSTAuthenticationToken extends STSAuthenticationToken {
         String p = parseComponent(components[0], BST_PRINCIPAL);
         String c = parseComponent(components[1], BST_CREDENTIALS);
 
-        baseAuthenticationToken = new STSAuthenticationToken(p, c);
+        baseAuthenticationToken = new STSAuthenticationToken(p, c, "127.0.0.1");
       }
     }
 

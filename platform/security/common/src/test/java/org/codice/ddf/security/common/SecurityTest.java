@@ -37,6 +37,7 @@ import ddf.security.service.SecurityServiceException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
@@ -81,7 +82,7 @@ public class SecurityTest {
   @Test
   public void testGetSubjectNoSecurityManager() throws Exception {
     configureMockForSecurityManager(null);
-    Subject subject = security.getSubject("username", "password");
+    Subject subject = security.getSubject("username", "password", "127.0.0.1");
     assertThat(subject, is(equalTo(null)));
   }
 
@@ -92,7 +93,7 @@ public class SecurityTest {
 
     configureMockForSecurityManager(sm);
 
-    Subject subject = security.getSubject("username", "password");
+    Subject subject = security.getSubject("username", "password", "127.0.0.1");
     assertThat(subject, is(equalTo(null)));
   }
 
@@ -104,7 +105,7 @@ public class SecurityTest {
 
     configureMockForSecurityManager(sm);
 
-    Subject subject = security.getSubject("username", "password");
+    Subject subject = security.getSubject("username", "password", "127.0.0.1");
     assertThat(subject, not(equalTo(null)));
   }
 
@@ -121,7 +122,7 @@ public class SecurityTest {
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
     when(subject.getPrincipals()).thenReturn(pc);
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
-    when(pc.oneByType(any(Class.class))).thenReturn(assertion);
+    when(pc.byType(any(Class.class))).thenReturn(Collections.singletonList(assertion));
     when(assertion.getToken()).thenReturn(st);
     assertThat(security.tokenAboutToExpire(subject), equalTo(true));
     when(st.isAboutToExpire(anyLong())).thenReturn(false);

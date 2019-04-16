@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.wss4j.common.saml.SamlAssertionWrapper;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
@@ -173,7 +175,13 @@ public class SAMLAssertionHandlerTest {
     SecurityTokenHolder tokenHolder = mock(SecurityTokenHolder.class);
     when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     SecurityToken securityToken = mock(SecurityToken.class);
-    when(tokenHolder.getSecurityToken()).thenReturn(securityToken);
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
+    when(securityAssertion.getToken()).thenReturn(securityToken);
+    when(securityAssertion.getTokenType()).thenReturn(SAMLAssertionHandler.SAML2_TOKEN_TYPE);
+    when(securityAssertion.isPresentlyValid()).thenReturn(true);
+    principalCollection.add(securityAssertion, "default");
+    when(tokenHolder.getPrincipals()).thenReturn(principalCollection);
     when(securityToken.getToken()).thenReturn(readDocument("/saml.xml").getDocumentElement());
 
     HandlerResult result = handler.getNormalizedToken(request, response, chain, true);

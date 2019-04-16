@@ -23,7 +23,7 @@
     <reference id="sessionFactory" interface="ddf.security.http.SessionFactory"
                filter="(id=http)"/>
 
-    <bean id="oidcConfiguration" class="org.codice.ddf.security.oidc.client.HandlerConfiguration">
+    <bean id="oidcConfiguration" class="org.codice.ddf.security.oidc.client.HandlerConfiguration" init-method="init">
         <cm:managed-properties persistent-id="org.codice.ddf.security.oidc.client.HandlerConfiguration"
                                update-strategy="component-managed" update-method="update"/>
     </bean>

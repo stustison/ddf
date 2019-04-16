@@ -133,7 +133,7 @@ public class AssertionConsumerServiceTest {
 
     when(securityToken.getPrincipal()).thenReturn(principal);
 
-    when(securityTokenHolder.getSecurityToken()).thenReturn(null);
+    when(securityTokenHolder.getPrincipals()).thenReturn(null);
 
     when(session.getAttribute(SAML_PROPERTY_KEY)).thenReturn(securityTokenHolder);
     when(session.getId()).thenReturn(SESSION_ID);

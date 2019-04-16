@@ -13,23 +13,6 @@
  */
 package ddf.security.assertion.jwt.impl;
 
-import ddf.security.assertion.Attribute;
-import ddf.security.assertion.AttributeStatement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import ddf.security.assertion.impl.AttributeStatementDefault;
 
-public class AttributeStatementJwt implements AttributeStatement {
-
-  private List<Attribute> attributes = new ArrayList<>();
-
-  @Override
-  public List<Attribute> getAttributes() {
-    return Collections.unmodifiableList(attributes);
-  }
-
-  @Override
-  public void addAttribute(Attribute attribute) {
-    this.attributes.add(attribute);
-  }
-}
+public class AttributeStatementJwt extends AttributeStatementDefault {}

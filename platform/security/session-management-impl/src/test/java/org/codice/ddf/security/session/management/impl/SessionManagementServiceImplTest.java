@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
@@ -36,6 +37,8 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -55,8 +58,6 @@ import org.xml.sax.SAXException;
 public class SessionManagementServiceImplTest {
   private HttpServletRequest request;
 
-  private SecurityToken token;
-
   private SecurityTokenHolder tokenHolder;
 
   private SecurityToken securityToken;
@@ -65,16 +66,17 @@ public class SessionManagementServiceImplTest {
 
   private SessionManagementServiceImpl sessionManagementServiceImpl;
 
+  private PrincipalCollection principalCollection;
+
   @Before
   public void setup()
       throws ParserConfigurationException, SAXException, IOException, SecurityServiceException {
     request = mock(HttpServletRequest.class);
     HttpSession session = mock(HttpSession.class);
     tokenHolder = mock(SecurityTokenHolder.class);
-    token = mock(SecurityToken.class);
     securityToken = mock(SecurityToken.class);
     SecurityAssertion principal = mock(SecurityAssertion.class);
-    PrincipalCollection principalCollection = mock(PrincipalCollection.class);
+    principalCollection = mock(PrincipalCollection.class);
     Subject subject = mock(Subject.class);
     manager = mock(SecurityManager.class);
 
@@ -82,15 +84,21 @@ public class SessionManagementServiceImplTest {
     when(principalCollection.asList()).thenReturn(Collections.singletonList(principal));
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(manager.getSubject(isA(SAMLAuthenticationToken.class))).thenReturn(subject);
-    when(token.getToken())
+    when(securityToken.getToken())
         .thenReturn(
             readXml(getClass().getClassLoader().getResourceAsStream("saml.xml"))
                 .getDocumentElement());
-    when(tokenHolder.getSecurityToken()).thenReturn(token);
+    when(tokenHolder.getPrincipals()).thenReturn(principalCollection);
     when(request.getSession(false)).thenReturn(session);
     when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     sessionManagementServiceImpl = new SessionManagementServiceImpl();
     sessionManagementServiceImpl.setSecurityManager(manager);
+
+    Collection<SecurityAssertion> assertionList = new ArrayList<>();
+    when(principalCollection.byType(SecurityAssertion.class)).thenReturn(assertionList);
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
+    assertionList.add(securityAssertion);
+    when(principalCollection.byType(SecurityAssertion.class)).thenReturn(assertionList);
   }
 
   @Test
@@ -118,8 +126,13 @@ public class SessionManagementServiceImplTest {
     saml = saml.replace("2113", "2213");
     when(laterToken.getToken())
         .thenReturn(readXml(IOUtils.toInputStream(saml, "UTF-8")).getDocumentElement());
-    when(tokenHolder.getSecurityToken()).thenReturn(soonerToken);
+    Collection<SecurityAssertion> assertionList = new ArrayList<>();
+    when(principalCollection.byType(SecurityAssertion.class)).thenReturn(assertionList);
+    SecurityAssertion securityAssertion = new SecurityAssertionSaml(soonerToken);
+    assertionList.add(securityAssertion);
+
     String expiryString = sessionManagementServiceImpl.getExpiry(request);
+
     assertThat(expiryString, is("4206816594788"));
   }
 
@@ -127,7 +140,7 @@ public class SessionManagementServiceImplTest {
   public void testGetRenewal() {
     String renewalString = sessionManagementServiceImpl.getRenewal(request);
     assertNotNull(renewalString);
-    verify(tokenHolder).setSecurityToken(securityToken);
+    verify(tokenHolder).setPrincipals(securityToken);
   }
 
   @Test
