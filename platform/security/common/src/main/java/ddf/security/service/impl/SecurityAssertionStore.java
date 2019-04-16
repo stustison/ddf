@@ -14,6 +14,7 @@
 package ddf.security.service.impl;
 
 import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.SecurityAssertionPrincipal;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import java.security.Principal;
 import java.time.Duration;
@@ -70,7 +71,7 @@ public final class SecurityAssertionStore {
           }
         }
       }
-      if (tokenStore != null && principal != null && principal instanceof SAMLTokenPrincipal) {
+      if (tokenStore != null && principal instanceof SAMLTokenPrincipal) {
         String id = ((SAMLTokenPrincipal) principal).getId();
         SamlAssertionWrapper samlAssertionWrapper = ((SAMLTokenPrincipal) principal).getToken();
         SecurityToken token = tokenStore.getToken(id);
@@ -104,6 +105,8 @@ public final class SecurityAssertionStore {
         }
 
         return new SecurityAssertionSaml(token);
+      } else if (principal instanceof SecurityAssertionPrincipal) {
+        return ((SecurityAssertionPrincipal) principal).getAssertion();
       }
     }
     return new SecurityAssertionSaml();

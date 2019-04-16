@@ -175,5 +175,10 @@ public class AuthorizationFilterTest {
     public boolean isWhiteListed(String path) {
       return false;
     }
+
+    @Override
+    public boolean getGuestAccess() {
+      return true;
+    }
   }
 }

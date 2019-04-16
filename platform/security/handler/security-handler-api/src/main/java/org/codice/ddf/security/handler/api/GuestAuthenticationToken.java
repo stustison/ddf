@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Authentication token representing a guest user's credentials */
-public class GuestAuthenticationToken extends BSTAuthenticationToken {
+public class GuestAuthenticationToken extends BaseAuthenticationToken {
   private static final Logger LOGGER = LoggerFactory.getLogger(GuestAuthenticationToken.class);
 
   public static final String GUEST_CREDENTIALS = "Guest";
@@ -37,9 +37,7 @@ public class GuestAuthenticationToken extends BSTAuthenticationToken {
       BSTAuthenticationToken.BST_NS + BSTAuthenticationToken.TOKEN_VALUE_SEPARATOR + BST_GUEST_LN;
 
   public GuestAuthenticationToken(String name) {
-    super(new GuestPrincipal(name), GUEST_CREDENTIALS);
-    setTokenValueType(BSTAuthenticationToken.BST_NS, BST_GUEST_LN);
-    setTokenId(BST_GUEST_LN);
+    super(new GuestPrincipal(name), GUEST_CREDENTIALS, parseAddressFromName(name));
 
     if (!StringUtils.isEmpty(name)) {
       SecurityLogger.audit("Guest token generated for IP address: " + name);

@@ -91,7 +91,7 @@ public class SubjectIdentityTest {
         attributes.entrySet().stream().map(this::getAttribute).collect(Collectors.toList());
 
     doReturn(pc).when(subject).getPrincipals();
-    doReturn(assertion).when(pc).oneByType(SecurityAssertion.class);
+    doReturn(Collections.singletonList(assertion)).when(pc).byType(SecurityAssertion.class);
     doReturn(ImmutableList.of(assertion)).when(pc).byType(SecurityAssertion.class);
     doReturn(Collections.singletonList(as)).when(assertion).getAttributeStatements();
     doReturn(attrs).when(as).getAttributes();

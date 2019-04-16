@@ -125,7 +125,7 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
       return null;
     }
 
-    return extractAuthInfo(authHeader);
+    return extractAuthInfo(authHeader, request.getRemoteAddr());
   }
 
   /**
@@ -135,7 +135,7 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
    * @return the initialized BaseAuthenticationToken for this username and password combination (or
    *     null)
    */
-  protected BaseAuthenticationToken extractAuthInfo(String authHeader) {
+  protected BaseAuthenticationToken extractAuthInfo(String authHeader, String ip) {
     BaseAuthenticationToken token = null;
     authHeader = authHeader.trim();
     String[] parts = authHeader.split(" ");
@@ -149,9 +149,9 @@ public class BasicAuthenticationHandler implements AuthenticationHandler {
           String userPass = new String(decode, StandardCharsets.UTF_8);
           String[] authComponents = userPass.split(":");
           if (authComponents.length == 2) {
-            token = tokenFactory.fromUsernamePassword(authComponents[0], authComponents[1]);
+            token = tokenFactory.fromUsernamePassword(authComponents[0], authComponents[1], ip);
           } else if ((authComponents.length == 1) && (userPass.endsWith(":"))) {
-            token = tokenFactory.fromUsernamePassword(authComponents[0], "");
+            token = tokenFactory.fromUsernamePassword(authComponents[0], "", ip);
           }
         }
       }

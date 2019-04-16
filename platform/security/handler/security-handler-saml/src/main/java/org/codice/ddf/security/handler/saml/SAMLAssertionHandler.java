@@ -15,6 +15,7 @@ package org.codice.ddf.security.handler.saml;
 
 import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
@@ -22,6 +23,7 @@ import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -32,6 +34,8 @@ import javax.servlet.http.HttpSession;
 import javax.xml.stream.XMLStreamException;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
@@ -52,6 +56,9 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
   private static final String AUTH_TYPE = "SAML";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SAMLAssertionHandler.class);
+
+  protected static final String SAML2_TOKEN_TYPE =
+      "http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0";
 
   private SessionFactory sessionFactory;
 
@@ -84,7 +91,10 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
           String tokenString = RestSecurity.inflateBase64(encodedSamlAssertion);
           LOGGER.trace("Header value: {}", tokenString);
           securityToken = SAMLUtils.getInstance().getSecurityTokenFromSAMLAssertion(tokenString);
-          SAMLAuthenticationToken samlToken = new SAMLAuthenticationToken(null, securityToken);
+          SimplePrincipalCollection simplePrincipalCollection = new SimplePrincipalCollection();
+          simplePrincipalCollection.add(new SecurityAssertionSaml(securityToken), "default");
+          SAMLAuthenticationToken samlToken =
+              new SAMLAuthenticationToken(null, simplePrincipalCollection, request.getRemoteAddr());
           handlerResult.setToken(samlToken);
           handlerResult.setStatus(HandlerResult.Status.COMPLETED);
         } catch (IOException e) {
@@ -106,7 +116,10 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
         securityToken = new SecurityToken();
         Element thisToken = StaxUtils.read(new StringReader(tokenString)).getDocumentElement();
         securityToken.setToken(thisToken);
-        SAMLAuthenticationToken samlToken = new SAMLAuthenticationToken(null, securityToken);
+        SimplePrincipalCollection simplePrincipalCollection = new SimplePrincipalCollection();
+        simplePrincipalCollection.add(new SecurityAssertionSaml(securityToken), "default");
+        SAMLAuthenticationToken samlToken =
+            new SAMLAuthenticationToken(null, simplePrincipalCollection, request.getRemoteAddr());
         handlerResult.setToken(samlToken);
         handlerResult.setStatus(HandlerResult.Status.COMPLETED);
       } catch (IOException e) {
@@ -138,13 +151,20 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
       SecurityTokenHolder savedToken =
           (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       if (savedToken != null
-          && savedToken.getSecurityToken() != null
-          && savedToken.getSecurityToken() instanceof SecurityToken) {
-        SecurityAssertionSaml assertion =
-            new SecurityAssertionSaml((SecurityToken) savedToken.getSecurityToken());
-        if (assertion.isPresentlyValid()) {
+          && savedToken.getPrincipals() != null
+          && savedToken.getPrincipals() instanceof PrincipalCollection) {
+        Collection<SecurityAssertion> assertions =
+            ((PrincipalCollection) savedToken.getPrincipals()).byType(SecurityAssertion.class);
+        SecurityAssertion assertion =
+            assertions
+                .stream()
+                .filter(a -> SAML2_TOKEN_TYPE.equals(a.getTokenType()))
+                .findFirst()
+                .orElse(null);
+        if (assertion != null && assertion.isPresentlyValid()) {
           LOGGER.trace("Creating SAML authentication token with session.");
-          SAMLAuthenticationToken samlToken = new SAMLAuthenticationToken(null, session.getId());
+          SAMLAuthenticationToken samlToken =
+              new SAMLAuthenticationToken(null, session.getId(), request.getRemoteAddr());
           handlerResult.setToken(samlToken);
           handlerResult.setStatus(HandlerResult.Status.COMPLETED);
           return handlerResult;

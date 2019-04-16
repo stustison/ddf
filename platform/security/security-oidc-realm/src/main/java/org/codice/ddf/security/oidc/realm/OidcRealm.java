@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.oidc.realm;
 
-import com.nimbusds.jwt.JWT;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import java.security.Principal;
@@ -23,6 +22,7 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.realm.AuthenticatingRealm;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.pac4j.oidc.credentials.OidcCredentials;
@@ -56,21 +56,35 @@ public class OidcRealm extends AuthenticatingRealm {
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken)
       throws AuthenticationException {
     OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
-    OidcCredentials token = (OidcCredentials) oidcAuthenticationToken.getCredentials();
+    PrincipalCollection credentials =
+        (PrincipalCollection) oidcAuthenticationToken.getCredentials();
+    OidcCredentials token =
+        (OidcCredentials)
+            credentials
+                .byType(SecurityAssertion.class)
+                .stream()
+                .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
+                .map(SecurityAssertion::getToken)
+                .findFirst()
+                .orElse(null);
+
+    if (token == null) {
+      throw new AuthenticationException("Unable to validate null OIDC credentials.");
+    }
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principals = createPrincipalFromJwt(token.getIdToken());
+    SimplePrincipalCollection principals = createPrincipalFromJwt(token);
     simpleAuthenticationInfo.setPrincipals(principals);
-    simpleAuthenticationInfo.setCredentials(token);
+    simpleAuthenticationInfo.setCredentials(authenticationToken.getCredentials());
 
     return simpleAuthenticationInfo;
   }
 
-  private SimplePrincipalCollection createPrincipalFromJwt(JWT token) {
+  private SimplePrincipalCollection createPrincipalFromJwt(OidcCredentials credentials) {
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
     SecurityAssertion securityAssertion = null;
     try {
-      securityAssertion = new SecurityAssertionJwt(token, usernameAttributeList);
+      securityAssertion = new SecurityAssertionJwt(credentials, usernameAttributeList);
       Principal principal = securityAssertion.getPrincipal();
       if (principal != null) {
         principals.add(principal.getName(), getName());

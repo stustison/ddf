@@ -86,8 +86,11 @@ public class SubjectInjectorPlugin implements BrokerMessageInterceptor {
           SUBJECT_CACHE
               .get(session.getUsername(), () -> this.cacheAndReturnSubject(session))
               .getPrincipals()
-              .oneByType(SecurityAssertion.class)
-              .getToken();
+              .byType(SecurityAssertion.class)
+              .stream()
+              .filter(securityAssertion -> securityAssertion.getToken() instanceof SecurityToken)
+              .findFirst()
+              .orElse(null);
       if (token instanceof SecurityToken) {
         return ((SecurityToken) token).getToken();
       } else {
@@ -129,7 +132,8 @@ public class SubjectInjectorPlugin implements BrokerMessageInterceptor {
   Subject cacheAndReturnSubject(ServerSession session) throws SecurityServiceException {
     BaseAuthenticationToken usernamePasswordToken =
         new STSAuthenticationTokenFactory()
-            .fromUsernamePassword(session.getUsername(), session.getPassword());
+            .fromUsernamePassword(
+                session.getUsername(), session.getPassword(), session.getDefaultAddress());
     return securityManager.getSubject(usernamePasswordToken);
   }
 }

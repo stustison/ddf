@@ -24,6 +24,8 @@ import ddf.security.assertion.SecurityAssertion;
 import ddf.security.encryption.EncryptionService;
 import java.net.URLEncoder;
 import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
 import junit.framework.Assert;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -58,7 +60,8 @@ public class IdpLogoutActionProviderTest {
         .thenReturn("http://docs.oasis-open.org/wss/oasis-wss-saml-token-profile-1.1#SAMLV2.0");
 
     PrincipalCollection principalCollection = mock(PrincipalCollection.class);
-    when(principalCollection.oneByType(SecurityAssertion.class)).thenReturn(assertion);
+    List<SecurityAssertion> securityAssertions = Collections.singletonList(assertion);
+    when(principalCollection.byType(SecurityAssertion.class)).thenReturn(securityAssertions);
 
     Subject subject = mock(Subject.class);
     when(subject.getPrincipals()).thenReturn(principalCollection);

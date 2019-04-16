@@ -17,13 +17,17 @@ import ddf.action.Action;
 import ddf.action.ActionProvider;
 import ddf.action.impl.ActionImpl;
 import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.common.SecurityTokenHolder;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
@@ -84,8 +88,15 @@ public class OidcLogoutActionProvider implements ActionProvider {
       }
 
       OidcCredentials credentials = null;
-      if (savedToken != null && savedToken.getSecurityToken() != null) {
-        credentials = (OidcCredentials) savedToken.getSecurityToken();
+      if (savedToken != null && savedToken.getPrincipals() != null) {
+        Collection<SecurityAssertion> securityAssertions =
+            ((PrincipalCollection) savedToken.getPrincipals()).byType(SecurityAssertion.class);
+        for (SecurityAssertion securityAssertion : securityAssertions) {
+          if (SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(securityAssertion.getTokenType())) {
+            credentials = (OidcCredentials) securityAssertion.getToken();
+            break;
+          }
+        }
       }
 
       if (credentials == null) {

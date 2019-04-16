@@ -268,7 +268,8 @@ public class SecurityPluginTest {
     SecurityAssertion mockSecurityAssertion = mock(SecurityAssertion.class);
 
     when(mockSecurityAssertion.getAttributeStatements()).thenReturn(listOfAttributeStatements);
-    when(mockPrincipals.oneByType(SecurityAssertion.class)).thenReturn(mockSecurityAssertion);
+    when(mockPrincipals.byType(SecurityAssertion.class))
+        .thenReturn(Collections.singletonList(mockSecurityAssertion));
     when(mockSubject.getPrincipals()).thenReturn(mockPrincipals);
     return mockSubject;
   }

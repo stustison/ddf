@@ -113,7 +113,7 @@ public class AuthenticationServiceImplTest {
     when(subject.getPrincipals()).thenReturn(collection);
 
     BaseAuthenticationToken token =
-        new STSAuthenticationTokenFactory().fromUsernamePassword(username, password);
+        new STSAuthenticationTokenFactory().fromUsernamePassword(username, password, "local");
     when(securityManager.getSubject(argThat(new UsernamePasswordTokenMatcher(token))))
         .thenReturn(subject);
   }

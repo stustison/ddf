@@ -162,7 +162,7 @@ public class SubjectUtilsTest {
     SecurityAssertion assertion = mock(SecurityAssertion.class);
 
     doReturn(pc).when(subject).getPrincipals();
-    doReturn(assertion).when(pc).oneByType(SecurityAssertion.class);
+    doReturn(Collections.singletonList(assertion)).when(pc).byType(SecurityAssertion.class);
     doReturn(ImmutableList.of(assertion)).when(pc).byType(SecurityAssertion.class);
     doReturn(principal).when(assertion).getPrincipal();
 
@@ -246,7 +246,9 @@ public class SubjectUtilsTest {
         attributes.entrySet().stream().map(this::getAttribute).collect(Collectors.toList());
 
     doReturn(principalCollection).when(subject).getPrincipals();
-    doReturn(securityAssertion).when(principalCollection).oneByType(SecurityAssertion.class);
+    doReturn(Collections.singletonList(securityAssertion))
+        .when(principalCollection)
+        .byType(SecurityAssertion.class);
     doReturn(ImmutableList.of(securityAssertion))
         .when(principalCollection)
         .byType(SecurityAssertion.class);
