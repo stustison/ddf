@@ -15,17 +15,12 @@ package com.connexta.ddf.security.saml.assertion.validator.impl;
 
 import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.hash.Hashing;
 import ddf.security.PropertiesLoader;
-import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
-import ddf.security.common.SecurityTokenHolder;
-import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityServiceException;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -35,15 +30,15 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cxf.rs.security.saml.sso.SAMLProtocolResponseValidator;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.CryptoFactory;
 import org.apache.wss4j.common.ext.WSSecurityException;
@@ -132,12 +127,25 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
     try {
       LOGGER.debug("Validation received SAML Assertion");
 
-      SecurityToken securityToken;
-      securityToken = (SecurityToken) token.getCredentials();
+      PrincipalCollection principalCollection = (PrincipalCollection) token.getCredentials();
 
       // don't revalidate saved tokens
       if (!token.wasRetrievedFromReference()) {
-        SamlAssertionWrapper assertion = new SamlAssertionWrapper(securityToken.getToken());
+        Collection<SecurityAssertion> securityAssertions =
+            principalCollection.byType(SecurityAssertion.class);
+        SecurityAssertion securityAssertion = null;
+        for (SecurityAssertion assertion : securityAssertions) {
+          if (SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(assertion.getTokenType())) {
+            securityAssertion = assertion;
+            break;
+          }
+        }
+        if (securityAssertion == null) {
+          throw new AuthenticationFailureException(
+              "Unable to validate SAML token. Token is not SAML.");
+        }
+        SamlAssertionWrapper assertion =
+            new SamlAssertionWrapper(((SecurityToken) securityAssertion.getToken()).getToken());
 
         // get the crypto junk
         Crypto crypto = getSignatureCrypto();
@@ -187,66 +195,6 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
       LOGGER.debug("Unable to read/validate security token from request.", e);
       throw new AuthenticationFailureException(e);
     }
-  }
-
-  /**
-   * Attaches a subject to the HttpSession associated with an HttpRequest. If a session does not
-   * already exist, one will be created.
-   *
-   * @param request HttpRequest associated with an HttpSession to attach the Subject to
-   * @param subject Subject to attach to request
-   */
-  @Override
-  public void addToSession(HttpServletRequest request, Subject subject) {
-    for (Object principal : subject.getPrincipals().asList()) {
-      if (principal instanceof SecurityAssertion
-          && ((SecurityAssertion) principal).getToken() instanceof SecurityToken) {
-        SecurityToken securityToken = (SecurityToken) ((SecurityAssertion) principal).getToken();
-        addSamlToSession(request, securityToken);
-      }
-    }
-  }
-
-  private void addSamlToSession(HttpServletRequest httpRequest, SecurityToken securityToken) {
-    if (securityToken != null) {
-      HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
-      Object sessionToken = getSecurityToken(session);
-      if (sessionToken == null) {
-        SecurityTokenHolder holder = (SecurityTokenHolder) session.getAttribute(SAML_PROPERTY_KEY);
-        holder.setSecurityToken(securityToken);
-        SecurityLogger.audit(
-            "Added SAML for user [{}] to session [{}]",
-            securityToken.getPrincipal(),
-            Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
-        int minutes = 60;
-        session.setMaxInactiveInterval(minutes * 60);
-        return;
-      }
-    }
-    LOGGER.debug("Problem adding security token to session.");
-  }
-
-  private Object getSecurityToken(HttpSession session) {
-    if (session.getAttribute(SAML_PROPERTY_KEY) == null) {
-      LOGGER.debug("Security token holder missing from session. New session created improperly.");
-      return null;
-    }
-
-    SecurityTokenHolder tokenHolder =
-        ((SecurityTokenHolder) session.getAttribute(SAML_PROPERTY_KEY));
-
-    SecurityToken token = (SecurityToken) tokenHolder.getSecurityToken();
-
-    if (token != null) {
-      SecurityAssertionSaml assertion = new SecurityAssertionSaml(token);
-      if (!assertion.isPresentlyValid()) {
-        LOGGER.debug("Session SAML token is invalid.  Removing from session.");
-        tokenHolder.remove();
-        return null;
-      }
-    }
-
-    return token;
   }
 
   /**

@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AdminConsoleService extends StandardMBean implements AdminConsoleServiceMBean {
 
-  private static final String GUEST_CLAIMS_CONFIG_PID = "ddf.security.sts.guestclaims";
+  private static final String GUEST_CLAIMS_CONFIG_PID = "ddf.security.guest.realm";
 
   private static final String IDP_CLIENT_CONFIG_PID =
       "(service.pid=org.codice.ddf.security.idp.client.IdpMetadata)";

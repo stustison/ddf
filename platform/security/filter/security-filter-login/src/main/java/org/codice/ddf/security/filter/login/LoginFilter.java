@@ -15,25 +15,32 @@ package org.codice.ddf.security.filter.login;
 
 import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
 
-import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
+import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
+import ddf.security.common.audit.SecurityLogger;
+import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivilegedExceptionAction;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
@@ -67,7 +74,9 @@ public class LoginFilter implements SecurityFilter {
 
   private SecurityManager securityManager;
 
-  private SamlAssertionValidator samlAssertionValidator;
+  private SessionFactory sessionFactory;
+
+  private int expirationTime;
 
   public LoginFilter() {
     super();
@@ -149,7 +158,7 @@ public class LoginFilter implements SecurityFilter {
     }
 
     // attach subject to the http session
-    samlAssertionValidator.addToSession(httpRequest, subject);
+    addToSession(httpRequest, subject);
 
     // subject is now resolved, perform request as that subject
     httpRequest.setAttribute(SecurityConstants.SECURITY_SUBJECT, subject);
@@ -166,13 +175,20 @@ public class LoginFilter implements SecurityFilter {
                 chain.doFilter(request, response);
                 return null;
               };
-          SecurityAssertion securityAssertion =
-              subject.getPrincipals().oneByType(SecurityAssertion.class);
-          if (null != securityAssertion) {
+          Collection<SecurityAssertion> securityAssertions =
+              subject.getPrincipals().byType(SecurityAssertion.class);
+          if (!securityAssertions.isEmpty()) {
             HashSet emptySet = new HashSet();
             javax.security.auth.Subject javaSubject =
                 new javax.security.auth.Subject(
-                    true, securityAssertion.getPrincipals(), emptySet, emptySet);
+                    true,
+                    securityAssertions
+                        .stream()
+                        .map(SecurityAssertion::getPrincipals)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toSet()),
+                    emptySet,
+                    emptySet);
             httpRequest.setAttribute(SecurityConstants.SECURITY_JAVA_SUBJECT, javaSubject);
             javax.security.auth.Subject.doAs(javaSubject, action);
           } else {
@@ -198,7 +214,7 @@ public class LoginFilter implements SecurityFilter {
             SecurityToken.class.getClassLoader());
       }
       try {
-        return ((SecurityTokenHolder) sessionTokenHolder).getSecurityToken();
+        return ((SecurityTokenHolder) sessionTokenHolder).getPrincipals();
       } catch (ClassCastException e) {
         httpRequest.getSession(false).invalidate();
       }
@@ -206,12 +222,43 @@ public class LoginFilter implements SecurityFilter {
     return null;
   }
 
+  /**
+   * Attaches a subject to the HttpSession associated with an HttpRequest. If a session does not
+   * already exist, one will be created.
+   *
+   * @param httpRequest HttpRequest associated with an HttpSession to attach the Subject to
+   * @param subject Subject to attach to request
+   */
+  private void addToSession(HttpServletRequest httpRequest, Subject subject) {
+    boolean nullSession = httpRequest.getSession(false) == null;
+    PrincipalCollection principals = subject.getPrincipals();
+    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
+    SecurityTokenHolder holder =
+        (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+    PrincipalCollection oldPrincipals = (PrincipalCollection) holder.getPrincipals();
+    if (!principals.equals(oldPrincipals)) {
+      holder.setPrincipals(principals);
+    }
+
+    if (nullSession) {
+      SecurityLogger.audit(
+          "Added token for user [{}] to session [{}]",
+          principals.getPrimaryPrincipal(),
+          Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
+      session.setMaxInactiveInterval(expirationTime * 60);
+    }
+  }
+
   public void setSecurityManager(SecurityManager securityManager) {
     this.securityManager = securityManager;
   }
 
-  public void setSamlAssertionValidator(SamlAssertionValidator samlAssertionValidator) {
-    this.samlAssertionValidator = samlAssertionValidator;
+  public void setExpirationTime(int expirationTime) {
+    this.expirationTime = expirationTime;
+  }
+
+  public void setSessionFactory(SessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
   }
 
   @Override

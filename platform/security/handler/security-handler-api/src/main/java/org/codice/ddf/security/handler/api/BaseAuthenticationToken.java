@@ -13,6 +13,9 @@
  */
 package org.codice.ddf.security.handler.api;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.slf4j.Logger;
@@ -62,9 +65,22 @@ public class BaseAuthenticationToken implements AuthenticationToken {
    */
   protected Object credentials;
 
-  public BaseAuthenticationToken(Object principal, Object credentials) {
+  protected String ip;
+
+  protected boolean allowGuest;
+
+  public BaseAuthenticationToken(Object principal, Object credentials, String ip) {
     this.principal = principal;
     this.credentials = credentials;
+    this.ip = formatIpAddress(ip);
+  }
+
+  public boolean getAllowGuest() {
+    return allowGuest;
+  }
+
+  public void setAllowGuest(boolean allowGuest) {
+    this.allowGuest = allowGuest;
   }
 
   @Override
@@ -120,5 +136,23 @@ public class BaseAuthenticationToken implements AuthenticationToken {
     } else {
       LOGGER.debug("Current token is not a reference - call to replace is ignored.");
     }
+  }
+
+  // IPv6 addresses should be contained within brackets to conform
+  // to the spec IETF RFC 2732
+  private static String formatIpAddress(String ipAddress) {
+    try {
+      if (InetAddress.getByName(ipAddress) instanceof Inet6Address && !ipAddress.contains("[")) {
+        ipAddress = "[" + ipAddress + "]";
+      }
+    } catch (UnknownHostException e) {
+      LOGGER.debug("Error formatting the ip address, using the unformatted ipaddress", e);
+    }
+
+    return ipAddress;
+  }
+
+  public String getIpAddress() {
+    return ip;
   }
 }

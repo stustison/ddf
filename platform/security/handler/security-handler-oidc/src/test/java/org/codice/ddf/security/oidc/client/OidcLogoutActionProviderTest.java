@@ -22,10 +22,13 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import ddf.action.Action;
 import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.common.SecurityTokenHolder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.core.redirect.RedirectAction;
@@ -64,9 +67,14 @@ public class OidcLogoutActionProviderTest {
     HttpServletResponse response = mock(HttpServletResponse.class);
     HttpSession session = mock(HttpSession.class);
     SecurityTokenHolder tokenHolder = mock(SecurityTokenHolder.class);
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
     OidcCredentials credentials = mock(OidcCredentials.class);
 
-    when(tokenHolder.getSecurityToken()).thenReturn(credentials);
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
+    when(securityAssertion.getToken()).thenReturn(credentials);
+    when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
+    when(tokenHolder.getPrincipals()).thenReturn(principalCollection);
+    principalCollection.add(securityAssertion, "default");
     when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     when(request.getSession(false)).thenReturn(session);
 

@@ -17,6 +17,7 @@ import static org.apache.commons.lang.Validate.notNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.Subject;
+import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.service.SecurityManager;
@@ -44,9 +45,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.security.auth.AuthPermission;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
@@ -102,13 +105,14 @@ public class Security {
    * @param password password
    * @return {@link Subject} associated with the user name and password provided
    */
-  public Subject getSubject(String username, String password) {
+  public Subject getSubject(String username, String password, String ip) {
     STSAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
-    BaseAuthenticationToken token = tokenFactory.fromUsernamePassword(username, password);
+    BaseAuthenticationToken token = tokenFactory.fromUsernamePassword(username, password, ip);
     SecurityManager securityManager = getSecurityManager();
 
     if (securityManager != null) {
       try {
+        token.setAllowGuest(true);
         return securityManager.getSubject(token);
       } catch (SecurityServiceException | RuntimeException e) {
         LOGGER.info("Unable to request subject for {} user.", username, e);
@@ -239,8 +243,9 @@ public class Security {
 
     STSAuthenticationTokenFactory tokenFactory = createBasicTokenFactory();
     BaseAuthenticationToken token =
-        tokenFactory.fromCertificates(new X509Certificate[] {(X509Certificate) cert});
+        tokenFactory.fromCertificates(new X509Certificate[] {(X509Certificate) cert}, "127.0.0.1");
     if (token != null) {
+      token.setAllowGuest(true);
       SecurityManager securityManager = getSecurityManager();
       if (securityManager != null) {
         try {
@@ -284,14 +289,25 @@ public class Security {
   public boolean tokenAboutToExpire(Subject subject) {
     return !((null != subject)
         && (null != subject.getPrincipals())
-        && (null != subject.getPrincipals().oneByType(SecurityAssertion.class))
-        && (!isAboutToExpire(
+        && (!subject.getPrincipals().byType(SecurityAssertion.class).isEmpty())
+        && (!areAnyAboutToExpire(
             subject
                 .getPrincipals()
-                .oneByType(SecurityAssertion.class)
-                .getNotOnOrAfter()
-                .toInstant(),
+                .byType(SecurityAssertion.class)
+                .stream()
+                .map(SecurityAssertion::getNotOnOrAfter)
+                .map(Date::toInstant)
+                .collect(Collectors.toList()),
             TimeUnit.MINUTES.toSeconds(1))));
+  }
+
+  public boolean areAnyAboutToExpire(List<Instant> expireList, long secondsToExpiry) {
+    for (Instant expire : expireList) {
+      if (isAboutToExpire(expire, secondsToExpiry)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean isAboutToExpire(Instant expires, long secondsToExpiry) {
@@ -311,8 +327,15 @@ public class Security {
   public Date getExpires(Subject subject) {
     return ((null != subject)
             && (null != subject.getPrincipals())
-            && (null != subject.getPrincipals().oneByType(SecurityAssertion.class)))
-        ? subject.getPrincipals().oneByType(SecurityAssertion.class).getNotOnOrAfter()
+            && !(subject.getPrincipals().byType(SecurityAssertion.class)).isEmpty())
+        ? subject
+            .getPrincipals()
+            .byType(SecurityAssertion.class)
+            .stream()
+            .sorted(SubjectUtils.getAssertionComparator())
+            .map(SecurityAssertion::getNotOnOrAfter)
+            .findFirst()
+            .orElse(null)
         : null;
   }
 

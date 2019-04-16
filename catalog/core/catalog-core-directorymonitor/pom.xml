@@ -438,6 +438,7 @@
                             !org.eclipse.jetty.server.ssl,
                             !org.apache.tools.ant,
                             !org.apache.tools.ant.types,
+                            !com.nimbusds.jwt,
                             org.apache.commons.io.comparator,
                             *
                         </Import-Package>

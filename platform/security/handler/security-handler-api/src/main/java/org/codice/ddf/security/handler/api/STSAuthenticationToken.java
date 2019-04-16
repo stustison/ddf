@@ -20,8 +20,8 @@ public class STSAuthenticationToken extends BaseAuthenticationToken {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(STSAuthenticationToken.class);
 
-  public STSAuthenticationToken(Object principal, Object credentials) {
-    super(principal, credentials);
+  public STSAuthenticationToken(Object principal, Object credentials, String ip) {
+    super(principal, credentials, ip);
   }
 
   /**

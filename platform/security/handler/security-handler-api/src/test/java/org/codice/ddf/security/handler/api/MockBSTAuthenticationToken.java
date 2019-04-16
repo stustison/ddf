@@ -15,7 +15,7 @@ package org.codice.ddf.security.handler.api;
 
 public class MockBSTAuthenticationToken extends BSTAuthenticationToken {
 
-  public MockBSTAuthenticationToken(Object p, Object c) {
-    super(p, c);
+  public MockBSTAuthenticationToken(Object p, Object c, String i) {
+    super(p, c, i);
   }
 }

@@ -515,6 +515,12 @@
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ddf.security</groupId>
+            <artifactId>security-guest-realm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!--feature dependencies-->
         <dependency>
             <groupId>ddf.features</groupId>

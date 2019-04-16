@@ -77,7 +77,7 @@ public class PKIHandler implements AuthenticationHandler {
     // doesn't matter what the resolve flag is set to, we do the same action
     X509Certificate[] certs =
         (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-    BaseAuthenticationToken token = tokenFactory.fromCertificates(certs);
+    BaseAuthenticationToken token = tokenFactory.fromCertificates(certs, request.getRemoteAddr());
 
     HttpServletResponse httpResponse =
         response instanceof HttpServletResponse ? (HttpServletResponse) response : null;

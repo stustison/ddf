@@ -22,12 +22,14 @@ import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
@@ -102,18 +104,6 @@ public class OidcHandler implements AuthenticationHandler {
       return new HandlerResult(HandlerResult.Status.NO_ACTION, null);
     }
 
-    // replace with JWT handler
-    //        SAMLAssertionHandler samlAssertionHandler = new SAMLAssertionHandler();
-    //        samlAssertionHandler.setSessionFactory(sessionFactory);
-    //
-    //        LOGGER.trace("Processing SAML assertion with SAML Handler.");
-    //        HandlerResult samlResult =
-    //                samlAssertionHandler.getNormalizedToken(wrappedRequest, null, null, false);
-    //
-    //        if (samlResult != null && samlResult.getStatus() == HandlerResult.Status.COMPLETED) {
-    //            return samlResult;
-    //        }
-
     if (userAgentCheck && userAgentIsNotBrowser(httpRequest)) {
       SecurityLogger.audit("Attempting to log client in as a legacy system.");
       // if we get here, it is most likely an older DDF that is federating
@@ -144,110 +134,97 @@ public class OidcHandler implements AuthenticationHandler {
     if (session != null) {
       savedToken = (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
     }
-    if (savedToken != null && savedToken.getSecurityToken() != null) {
-      OidcCredentials credentials = (OidcCredentials) savedToken.getSecurityToken();
-      if (credentials.getIdToken() != null) {
+    if (savedToken != null && savedToken.getPrincipals() != null) {
+      PrincipalCollection principals = (PrincipalCollection) savedToken.getPrincipals();
+      OidcCredentials credentials =
+          (OidcCredentials)
+              principals
+                  .byType(SecurityAssertion.class)
+                  .stream()
+                  .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
+                  .map(SecurityAssertion::getToken)
+                  .findFirst()
+                  .orElse(null);
+      if (credentials != null && credentials.getIdToken() != null) {
         OidcAuthenticationToken oidcAuthenticationToken =
-            new OidcAuthenticationToken(credentials.getIdToken(), credentials);
+            new OidcAuthenticationToken(principals, request.getRemoteAddr());
         handlerResult.setToken(oidcAuthenticationToken);
         handlerResult.setStatus(HandlerResult.Status.COMPLETED);
+        return handlerResult;
       } else {
         LOGGER.error("ID TOKEN NULL. Credentials: {}", credentials);
         session.invalidate();
         handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
       }
-    } else {
+    }
 
-      J2ESessionStore sessionStore = new J2ESessionStore();
+    J2ESessionStore sessionStore = new J2ESessionStore();
 
-      J2EContext j2EContext =
-          new J2EContext(httpRequest, ((HttpServletResponse) response), sessionStore);
+    J2EContext j2EContext =
+        new J2EContext(httpRequest, ((HttpServletResponse) response), sessionStore);
 
-      // haven't seen this request, so redirect
-      StringBuffer requestURL = httpRequest.getRequestURL();
-      requestURL.append(
-          httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
-      OidcCredentials credentials = null;
+    // haven't seen this request, so redirect
+    StringBuffer requestURL = httpRequest.getRequestURL();
+    requestURL.append(
+        httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
+    OidcCredentials credentials = null;
+    try {
+      if (handlerConfiguration.getOidcClient() != null) {
+        handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
+        handlerConfiguration
+            .getOidcClient()
+            .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
+        handlerConfiguration.getOidcClient().init();
+
+        OidcExtractor oidcExtractor =
+            new OidcExtractor(
+                handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
+        credentials = oidcExtractor.extract(j2EContext);
+      } else {
+        LOGGER.error("OIDC HANDLER NOT CONFIGURED.");
+        handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
+        return handlerResult;
+      }
+    } catch (TechnicalException e) {
+      // ignore
+    }
+
+    // Authorization code flow
+    if (handlerConfiguration.getOidcConfiguration().getResponseType() != null
+        && handlerConfiguration.getOidcConfiguration().getResponseType().equals("code")
+        && httpRequest.getParameter("code") != null) {
+
+      OidcAuthenticator authenticator =
+          new OidcAuthenticator(
+              handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
+      authenticator.validate(credentials, j2EContext);
+    }
+
+    if (credentials != null) {
+      // we've seen this request before, so process it
+      SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+      principalCollection.add(new SecurityAssertionJwt(credentials), "default");
+      OidcAuthenticationToken oidcAuthenticationToken =
+          new OidcAuthenticationToken(principalCollection, request.getRemoteAddr());
+      handlerResult.setToken(oidcAuthenticationToken);
+      handlerResult.setStatus(HandlerResult.Status.COMPLETED);
+      String requestedUrl =
+          (String) j2EContext.getSessionStore().get(j2EContext, Pac4jConstants.REQUESTED_URL);
       try {
-        if (handlerConfiguration.getOidcClient() != null) {
-          handlerConfiguration.getOidcClient().setCallbackUrl(requestURL.toString());
-          handlerConfiguration
-              .getOidcClient()
-              .setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
-          handlerConfiguration.getOidcClient().init();
-
-          OidcExtractor oidcExtractor =
-              new OidcExtractor(
-                  handlerConfiguration.getOidcConfiguration(),
-                  handlerConfiguration.getOidcClient());
-          credentials = oidcExtractor.extract(j2EContext);
-        } else {
-          LOGGER.error("OIDC HANDLER NOT CONFIGURED.");
-          handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
-          return handlerResult;
-        }
-      } catch (TechnicalException e) {
+        ((HttpServletResponse) response).sendRedirect(requestedUrl);
+      } catch (IOException e) {
         // ignore
       }
+    } else if (handlerConfiguration.getOidcClient() != null) {
+      j2EContext
+          .getSessionStore()
+          .set(j2EContext, Pac4jConstants.REQUESTED_URL, requestURL.toString());
 
-      // Authorization code flow
-      if (handlerConfiguration.getOidcConfiguration().getResponseType().equals("code")
-          && httpRequest.getParameter("code") != null) {
-
-        OidcAuthenticator authenticator =
-            new OidcAuthenticator(
-                handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
-        authenticator.validate(credentials, j2EContext);
-      }
-
-      if (credentials != null) {
-        // we've seen this request before, so process it
-        OidcAuthenticationToken oidcAuthenticationToken =
-            new OidcAuthenticationToken(credentials.getIdToken(), credentials);
-        handlerResult.setToken(oidcAuthenticationToken);
-        handlerResult.setStatus(HandlerResult.Status.COMPLETED);
-        addJwtToSession(httpRequest, credentials);
-        String requestedUrl =
-            (String) j2EContext.getSessionStore().get(j2EContext, Pac4jConstants.REQUESTED_URL);
-        try {
-          ((HttpServletResponse) response).sendRedirect(requestedUrl);
-        } catch (IOException e) {
-          // ignore
-        }
-      } else if (handlerConfiguration.getOidcClient() != null) {
-        j2EContext
-            .getSessionStore()
-            .set(j2EContext, Pac4jConstants.REQUESTED_URL, requestURL.toString());
-
-        HttpAction redirect = handlerConfiguration.getOidcClient().redirect(j2EContext);
-      }
+      HttpAction redirect = handlerConfiguration.getOidcClient().redirect(j2EContext);
     }
+    //    }
 
     return handlerResult;
-  }
-
-  // hack
-
-  private void addJwtToSession(HttpServletRequest httpRequest, OidcCredentials credentials) {
-    if (credentials == null) {
-      LOGGER.debug("Cannot add null security token to session.");
-      return;
-    }
-
-    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
-    Object sessionToken = getSecurityToken(session);
-    if (sessionToken == null) {
-      addSecurityToken(session, credentials);
-    }
-    SecurityAssertion securityAssertion =
-        new SecurityAssertionJwt(credentials.getIdToken(), new ArrayList<>());
-    SecurityLogger.audit(
-        "Added SAML for user [{}] to session [{}]",
-        securityAssertion.getPrincipal().getName(),
-        Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
-    int minutes = 60;
-
-    session.setMaxInactiveInterval(minutes * 60);
   }
 
   private void addSecurityToken(HttpSession session, OidcCredentials token) {
@@ -255,7 +232,7 @@ public class OidcHandler implements AuthenticationHandler {
         (SecurityTokenHolder)
             session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY);
 
-    holder.setSecurityToken(token);
+    holder.setPrincipals(token);
   }
 
   private Object getSecurityToken(HttpSession session) {
@@ -268,18 +245,14 @@ public class OidcHandler implements AuthenticationHandler {
         ((SecurityTokenHolder)
             session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY));
 
-    OidcCredentials token = (OidcCredentials) tokenHolder.getSecurityToken();
+    PrincipalCollection principalCollection = (PrincipalCollection) tokenHolder.getPrincipals();
 
-    if (token != null) {
-      SecurityAssertion assertion = new SecurityAssertionJwt(token.getIdToken(), new ArrayList<>());
-      if (!assertion.isPresentlyValid()) {
-        LOGGER.debug("Session SAML token is invalid.  Removing from session.");
-        tokenHolder.remove();
-        return null;
-      }
+    if (principalCollection != null) {
+      Collection<SecurityAssertion> assertion = principalCollection.byType(SecurityAssertion.class);
+      return assertion;
     }
 
-    return token;
+    return null;
   }
 
   // end hack

@@ -60,6 +60,8 @@ public class PolicyManager implements ContextPolicyManager {
 
   private int traversalDepth;
 
+  private boolean guestAccess;
+
   public PolicyManager() {
     policyStore.put("/", defaultPolicy);
   }
@@ -424,6 +426,15 @@ public class PolicyManager implements ContextPolicyManager {
     if (this.traversalDepth > MAX_TRAVERSAL_DEPTH) {
       this.traversalDepth = MAX_TRAVERSAL_DEPTH;
     }
+  }
+
+  public void setGuestAccess(boolean guestAccess) {
+    this.guestAccess = guestAccess;
+  }
+
+  @Override
+  public boolean getGuestAccess() {
+    return guestAccess;
   }
 
   /**

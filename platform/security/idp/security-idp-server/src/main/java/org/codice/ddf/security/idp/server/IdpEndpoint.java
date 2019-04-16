@@ -116,6 +116,7 @@ import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.wss4j.common.crypto.CryptoType;
 import org.apache.wss4j.common.ext.WSSecurityException;
 import org.apache.wss4j.common.saml.OpenSAMLUtil;
@@ -939,18 +940,26 @@ public class IdpEndpoint implements Idp, SessionHandler {
     } else if (USER_PASS.equals(authMethod)) {
       LOGGER.debug("Logging user in via BASIC auth.");
       if (authObj != null && authObj.username != null && authObj.password != null) {
-        token = tokenFactory.fromUsernamePassword(authObj.username, authObj.password);
+        token =
+            tokenFactory.fromUsernamePassword(
+                authObj.username, authObj.password, request.getRemoteAddr());
       } else {
         token = getNormalizedSTSAuthenticationToken(request);
       }
     } else if (SAML.equals(authMethod)) {
       LOGGER.debug("Logging user in via SAML assertion.");
-      token = new SAMLAuthenticationToken(null, authObj.assertion);
+      SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+      principalCollection.add(new SecurityAssertionSaml(authObj.assertion), "default");
+      token = new SAMLAuthenticationToken(null, principalCollection, request.getRemoteAddr());
     } else if (GUEST.equals(authMethod) && guestAccess) {
       LOGGER.debug("Logging user in as Guest.");
       token = new GuestAuthenticationToken(request.getRemoteAddr());
     } else {
       throw new IllegalArgumentException("Auth method is not supported.");
+    }
+
+    if (token != null) {
+      token.setAllowGuest(guestAccess);
     }
 
     org.w3c.dom.Element samlToken = null;
@@ -1013,9 +1022,11 @@ public class IdpEndpoint implements Idp, SessionHandler {
           String userPass = new String(decode, StandardCharsets.UTF_8);
           String[] authComponents = userPass.split(":");
           if (authComponents.length == 2) {
-            return tokenFactory.fromUsernamePassword(authComponents[0], authComponents[1]);
+            return tokenFactory.fromUsernamePassword(
+                authComponents[0], authComponents[1], request.getRemoteAddr());
           } else if ((authComponents.length == 1) && (userPass.endsWith(":"))) {
-            return tokenFactory.fromUsernamePassword(authComponents[0], "");
+            return tokenFactory.fromUsernamePassword(
+                authComponents[0], "", request.getRemoteAddr());
           }
         }
       }
@@ -1057,8 +1068,10 @@ public class IdpEndpoint implements Idp, SessionHandler {
           cookieCache.removeSamlAssertion(key);
           return false;
         } else if (!assertion.isPresentlyValid()) {
+          SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+          principalCollection.add(assertion, "default");
           SAMLAuthenticationToken samlAuthenticationToken =
-              new SAMLAuthenticationToken(null, securityToken);
+              new SAMLAuthenticationToken(null, principalCollection, request.getRemoteAddr());
           try {
             Subject subject = securityManager.getSubject(samlAuthenticationToken);
             for (Object principal : subject.getPrincipals().asList()) {

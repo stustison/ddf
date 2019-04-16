@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -117,12 +118,17 @@ public abstract class AbstractAuthorizingRealm extends AuthorizingRealm {
   protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
     SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
     LOGGER.debug("Retrieving authorization info for {}", principalCollection.getPrimaryPrincipal());
-    SecurityAssertion assertion = principalCollection.oneByType(SecurityAssertion.class);
-    if (assertion == null) {
+    Collection<SecurityAssertion> assertions = principalCollection.byType(SecurityAssertion.class);
+    if (assertions.isEmpty()) {
       String msg = "No assertion found, cannot retrieve authorization info.";
       throw new AuthorizationException(msg);
     }
-    List<AttributeStatement> attributeStatements = assertion.getAttributeStatements();
+    List<AttributeStatement> attributeStatements =
+        assertions
+            .stream()
+            .map(SecurityAssertion::getAttributeStatements)
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
     Set<Permission> permissions = new HashSet<>();
     Set<String> roles = new HashSet<>();
 

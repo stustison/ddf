@@ -24,9 +24,12 @@ import static org.mockito.Mockito.when;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import java.text.ParseException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.junit.Test;
@@ -73,7 +76,12 @@ public class OidcRealmTest {
     credentials.setIdToken(jwt);
 
     AuthenticationToken authenticationToken = mock(OidcAuthenticationToken.class);
-    when(authenticationToken.getCredentials()).thenReturn(credentials);
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
+    when(securityAssertion.getToken()).thenReturn(credentials);
+    when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
+    principalCollection.add(securityAssertion, "default");
+    when(authenticationToken.getCredentials()).thenReturn(principalCollection);
 
     AuthenticationInfo authenticationInfo = realm.doGetAuthenticationInfo(authenticationToken);
     assertNotNull(authenticationInfo.getCredentials());
@@ -90,7 +98,13 @@ public class OidcRealmTest {
     credentials.setIdToken(jwt);
 
     AuthenticationToken authenticationToken = mock(OidcAuthenticationToken.class);
-    when(authenticationToken.getCredentials()).thenReturn(credentials);
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
+    when(securityAssertion.getToken()).thenReturn(credentials);
+    when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
+    principalCollection.add(securityAssertion, "default");
+
+    when(authenticationToken.getCredentials()).thenReturn(principalCollection);
 
     AuthenticationInfo authenticationInfo = realm.doGetAuthenticationInfo(authenticationToken);
     assertNotNull(authenticationInfo.getCredentials());
@@ -107,8 +121,14 @@ public class OidcRealmTest {
     JWT jwt = mock(JWT.class);
     credentials.setIdToken(jwt);
 
+    SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
+    when(securityAssertion.getToken()).thenReturn(credentials);
+    when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
+    principalCollection.add(securityAssertion, "default");
+
     AuthenticationToken authenticationToken = mock(OidcAuthenticationToken.class);
-    when(authenticationToken.getCredentials()).thenReturn(credentials);
+    when(authenticationToken.getCredentials()).thenReturn(principalCollection);
 
     AuthenticationInfo authenticationInfo = realm.doGetAuthenticationInfo(authenticationToken);
     assertNotNull(authenticationInfo.getCredentials());

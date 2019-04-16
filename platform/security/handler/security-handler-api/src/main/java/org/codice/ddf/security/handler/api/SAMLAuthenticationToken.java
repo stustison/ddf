@@ -13,8 +13,10 @@
  */
 package org.codice.ddf.security.handler.api;
 
+import ddf.security.assertion.SecurityAssertion;
 import java.security.Principal;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -30,13 +32,13 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
    * @param principal represents the
    * @param token
    */
-  public SAMLAuthenticationToken(Principal principal, SecurityToken token) {
-    super(principal, token);
+  public SAMLAuthenticationToken(Principal principal, PrincipalCollection token, String ip) {
+    super(principal, token, ip);
     reference = false;
   }
 
-  public SAMLAuthenticationToken(Principal principal, String samlRef) {
-    super(principal, samlRef);
+  public SAMLAuthenticationToken(Principal principal, String samlRef, String ip) {
+    super(principal, samlRef, ip);
     reference = true;
   }
 
@@ -44,7 +46,7 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
     return reference;
   }
 
-  public void replaceReference(SecurityToken token) {
+  public void replaceReference(PrincipalCollection token) {
     if (reference) {
       credentials = token;
       reference = false;
@@ -64,7 +66,16 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
       return null;
     }
 
-    SecurityToken token = (SecurityToken) getCredentials();
+    SecurityToken token =
+        ((PrincipalCollection) getCredentials())
+            .byType(SecurityAssertion.class)
+            .stream()
+            .filter(sa -> sa.getTokenType().contains("SAML"))
+            .map(SecurityAssertion::getToken)
+            .filter(SecurityToken.class::isInstance)
+            .map(SecurityToken.class::cast)
+            .findFirst()
+            .orElse(null);
     if (token != null) {
       return token.getToken();
     }

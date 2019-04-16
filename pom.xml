@@ -942,25 +942,6 @@
                 </pluginManagement>
                 <plugins>
                     <plugin>
-                        <groupId>ddf.support</groupId>
-                        <artifactId>version-validation-plugin</artifactId>
-                        <version>${ddf.support.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>check-package-json</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <whitelistedValues>
-                                <param>-beta</param>
-                                <param>#</param>
-                            </whitelistedValues>
-                        </configuration>
-                    </plugin>
-                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
                         <!--  We don't want to inherit this *change* to the plugin configuration. -->

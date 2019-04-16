@@ -14,15 +14,22 @@
 package org.codice.ddf.security.servlet.whoami
 
 import ddf.security.SecurityConstants
+import ddf.security.Subject
 import ddf.security.common.SecurityTokenHolder
 import ddf.security.http.SessionFactory
+import ddf.security.permission.CollectionPermission
 import ddf.security.service.SecurityManager
 import groovy.json.JsonSlurper
 import org.apache.cxf.ws.security.tokenstore.SecurityToken
+import org.apache.shiro.util.ThreadContext
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
+
+import static org.mockito.Matchers.any
+import static org.mockito.Mockito.mock
+import static org.mockito.Mockito.when
 
 class WhoAmIServletSpec extends SubjectSpec {
 
@@ -33,20 +40,11 @@ class WhoAmIServletSpec extends SubjectSpec {
 
         def securityToken = Mock(SecurityToken)
 
-        def securityTokenHolder = Mock(SecurityTokenHolder)
-        securityTokenHolder.getRealmTokenMap() >> ["test": securityToken]
-
-        def httpSession = Mock(HttpSession)
-        httpSession.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY) >> securityTokenHolder
-
-        def sessionFactory = Mock(SessionFactory)
-        sessionFactory.getOrCreateSession(_ as HttpServletRequest) >> httpSession
-
         def securityManager = Mock(SecurityManager)
         securityManager.getSubject(_) >> mockSubject()
 
-        whoAmIServlet.setHttpSessionFactory(sessionFactory)
-        whoAmIServlet.setSecurityManager(securityManager)
+        def subject = mockSubject()
+        ThreadContext.bind(subject)
     }
 
     def 'Prints valid json response'() {
@@ -66,9 +64,10 @@ class WhoAmIServletSpec extends SubjectSpec {
         def jsonSlurper = new JsonSlurper()
         def json = jsonSlurper.parseText(body)
 
-        assert json.email == 'guest@localhost'
-        assert json.claims.size() == 1
-        assert json.isGuest
+        assert json.default.whoAmISubjects.get(0).email == 'guest@localhost'
+        assert json.default.whoAmISubjects.size() == 1
+        assert json.default.whoAmISubjects.get(0).claims.size() == 1
+        assert json.default.whoAmISubjects.get(0).isGuest
 
         true
     }

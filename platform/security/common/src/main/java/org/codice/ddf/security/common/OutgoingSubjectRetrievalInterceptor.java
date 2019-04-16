@@ -117,7 +117,8 @@ public class OutgoingSubjectRetrievalInterceptor extends AbstractPhaseIntercepto
 
       X509Certificate[] certs = ((X509Certificate[]) info.getServerCertificates());
       try {
-        BaseAuthenticationToken token = tokenFactory.fromCertificates(certs);
+        BaseAuthenticationToken token =
+            tokenFactory.fromCertificates(certs, urlConnectionInfo.getURI().getHost());
 
         Subject receiverSubject = securityManager.getSubject(token);
         message.put(Subject.class, receiverSubject);

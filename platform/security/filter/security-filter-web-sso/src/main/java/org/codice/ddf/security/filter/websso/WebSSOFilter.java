@@ -29,6 +29,7 @@ import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
+import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.InvalidSAMLReceivedException;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -174,14 +175,18 @@ public class WebSSOFilter implements SecurityFilter {
           LOGGER.debug("Stopping filter chain - handled by plugins");
           throw new AuthenticationChallengeException("Stopping filter chain - handled by plugins");
         case NO_ACTION:
-          // should never occur - one of the handlers should have returned a token
-          LOGGER.warn(
-              "No handlers were able to determine required credentials, returning bad request to {}. Check policy configuration for path: {}",
-              ipAddress,
-              path);
-          returnSimpleResponse(HttpServletResponse.SC_BAD_REQUEST, httpResponse);
-          throw new AuthenticationFailureException(
-              "No handlers were able to determine required credentials");
+          if (!contextPolicyManager.getGuestAccess()) {
+            LOGGER.warn(
+                "No handlers were able to determine required credentials, returning bad request to {}. Check policy configuration for path: {}",
+                ipAddress,
+                path);
+            returnSimpleResponse(HttpServletResponse.SC_BAD_REQUEST, httpResponse);
+            throw new AuthenticationFailureException(
+                "No handlers were able to determine required credentials");
+          }
+          result.setStatus(HandlerResult.Status.COMPLETED);
+          result.setToken(new GuestAuthenticationToken(httpRequest.getRemoteAddr()));
+          // fall through
         case COMPLETED:
           if (result.getToken() == null) {
             LOGGER.warn(
@@ -197,6 +202,7 @@ public class WebSSOFilter implements SecurityFilter {
                 result.getToken().getClass().getName(),
                 result.getToken().getClass().getClassLoader());
           }
+          result.getToken().setAllowGuest(contextPolicyManager.getGuestAccess());
           httpRequest.setAttribute(AUTHENTICATION_TOKEN_KEY, result);
           break;
         default:

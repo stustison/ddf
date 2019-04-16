@@ -84,7 +84,7 @@ public class STSAuthenticationTokenFactory {
    * @param password - user's password
    * @return a BaseAuthenticationToken containing the given username and password
    */
-  public STSAuthenticationToken fromUsernamePassword(String username, String password) {
+  public STSAuthenticationToken fromUsernamePassword(String username, String password, String ip) {
     UsernameTokenType usernameTokenType = new UsernameTokenType();
     AttributedString user = new AttributedString();
     user.setValue(username);
@@ -122,7 +122,7 @@ public class STSAuthenticationTokenFactory {
       LOGGER.info("Unable to parse username token.", ex);
     }
 
-    return new STSAuthenticationToken(null, usernameToken);
+    return new STSAuthenticationToken(null, usernameToken, ip);
   }
 
   /**
@@ -132,7 +132,7 @@ public class STSAuthenticationTokenFactory {
    * @param certs - the user's certificates
    * @return a BaseAuthenticationToken containing the given certificates
    */
-  public STSAuthenticationToken fromCertificates(X509Certificate[] certs) {
+  public STSAuthenticationToken fromCertificates(X509Certificate[] certs, String ip) {
     if (certs == null || certs.length == 0) {
       return null;
     }
@@ -163,7 +163,7 @@ public class STSAuthenticationTokenFactory {
     Node textNode = doc.createTextNode(data);
     binarySecurity.getElement().appendChild(textNode);
 
-    return new STSAuthenticationToken(certs[0].getSubjectDN(), binarySecurity.toString());
+    return new STSAuthenticationToken(certs[0].getSubjectDN(), binarySecurity.toString(), ip);
   }
 
   /**
