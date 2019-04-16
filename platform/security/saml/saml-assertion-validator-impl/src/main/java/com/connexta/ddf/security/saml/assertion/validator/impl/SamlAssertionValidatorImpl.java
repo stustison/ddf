@@ -140,8 +140,21 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
         throw new AuthenticationFailureException(
             "Unable to validate SAML token. Token is not SAML.");
       }
-      SamlAssertionWrapper assertion =
-          new SamlAssertionWrapper(((SecurityToken) securityAssertion.getToken()).getToken());
+      Collection<SecurityAssertion> securityAssertions =
+            principalCollection.byType(SecurityAssertion.class);
+        SecurityAssertion securityAssertion = null;
+        for (SecurityAssertion assertion : securityAssertions) {
+          if (SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(assertion.getTokenType())) {
+            securityAssertion = assertion;
+            break;
+          }
+        }
+        if (securityAssertion == null) {
+          throw new AuthenticationFailureException(
+              "Unable to validate SAML token. Token is not SAML.");
+        }
+        SamlAssertionWrapper assertion =
+            new SamlAssertionWrapper(((SecurityToken) securityAssertion.getToken()).getToken());
 
       // get the crypto junk
       Crypto crypto = getSignatureCrypto();

@@ -148,7 +148,7 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public Date getNotBefore() {
-    return jwtClaimsSet.getNotBeforeTime();
+    return DateUtils.copy(jwtClaimsSet.getNotBeforeTime());
   }
 
   @Override

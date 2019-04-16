@@ -27,6 +27,7 @@ import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
+import ddf.security.http.SessionFactory;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
@@ -107,6 +108,10 @@ public class LoginFilterTest {
     when(sessionMock.getId()).thenReturn("sessionId");
 
     when(requestMock.getSession(any(boolean.class))).thenReturn(sessionMock);
+
+    when(sessionFactory.getOrCreateSession(any())).thenReturn(sessionMock);
+
+    when(sessionMock.getAttribute(SECURITY_TOKEN_KEY)).thenReturn(securityTokenHolder);
 
     when(sessionFactory.getOrCreateSession(any())).thenReturn(sessionMock);
 
