@@ -49,6 +49,11 @@
 
         </AD>
 
+        <AD name="Logout URI" id="logoutUri" type="String" required="true" default=""
+            description="URI directing to single logout service of the IdP in use.">
+
+        </AD>
+
         <AD name="Scope" id="scope" type="String" required="true" default=""
             description="Space separated scopes">
 

@@ -130,7 +130,6 @@
                             pac4j-core,
                             oauth2-oidc-sdk,
                             lang-tag,
-                            json-smart,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>

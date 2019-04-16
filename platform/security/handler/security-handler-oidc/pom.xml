@@ -105,6 +105,16 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
+        <dependency>
+            <groupId>ddf.action.core</groupId>
+            <artifactId>action-core-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.action.core</groupId>
+            <artifactId>action-core-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -166,7 +176,6 @@
                             platform-util-unavailableurls,
                             oauth2-oidc-sdk,
                             lang-tag,
-                            json-smart,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>

@@ -21,6 +21,11 @@ import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.AzureAdOidcConfiguration;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
 import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
+import org.pac4j.oidc.profile.azuread.AzureAdProfile;
+import org.pac4j.oidc.profile.creator.OidcProfileCreator;
+import org.pac4j.oidc.profile.google.GoogleOidcProfile;
+import org.pac4j.oidc.profile.keycloak.KeycloakOidcProfile;
 
 public class HandlerConfiguration {
 
@@ -48,7 +53,18 @@ public class HandlerConfiguration {
 
   private static final String BASE_URI = "baseUri";
 
-  public void init(Map<String, Object> properties) {
+  private static final String LOGOUT_URI = "logoutUri";
+
+  private Map<String, Object> properties;
+
+  private OidcLogoutActionBuilder logoutActionBuilder;
+
+  private OidcProfileCreator oidcProfileCreator;
+
+  public void init() {
+    if (properties == null) {
+      return;
+    }
     if (properties.get(IDP_TYPE).equals("Keycloak")) {
       oidcConfiguration = new KeycloakOidcConfiguration();
       ((KeycloakOidcConfiguration) oidcConfiguration).setRealm((String) properties.get(REALM));
@@ -67,20 +83,44 @@ public class HandlerConfiguration {
     oidcConfiguration.setResponseType((String) properties.get(RESPONSE_TYPE));
     oidcConfiguration.setResponseMode((String) properties.get(RESPONSE_MODE));
     oidcConfiguration.setUseNonce((Boolean) properties.get(USE_NONCE));
+    oidcConfiguration.setLogoutUrl((String) properties.get(LOGOUT_URI));
 
     if (properties.get(IDP_TYPE).equals("Keycloak")) {
       oidcClient = new KeycloakOidcClient((KeycloakOidcConfiguration) oidcConfiguration);
+      oidcProfileCreator = new OidcProfileCreator<KeycloakOidcProfile>(oidcConfiguration);
     } else if (properties.get(IDP_TYPE).equals("Azure")) {
       oidcClient = new AzureAdClient((AzureAdOidcConfiguration) oidcConfiguration);
+      oidcProfileCreator = new OidcProfileCreator<AzureAdProfile>(oidcConfiguration);
     } else if (properties.get(IDP_TYPE).equals("Google")) {
       oidcClient = new GoogleOidcClient(oidcConfiguration);
+      oidcProfileCreator = new OidcProfileCreator<GoogleOidcProfile>(oidcConfiguration);
     } else {
       oidcClient = new OidcClient(oidcConfiguration);
+      oidcProfileCreator = new OidcProfileCreator<>(oidcConfiguration);
     }
+
+    logoutActionBuilder = new OidcLogoutActionBuilder(oidcConfiguration);
+  }
+
+  public void init(Map<String, Object> properties) {
+    this.properties = properties;
+    init();
   }
 
   public OidcClient getOidcClient() {
     return oidcClient;
+  }
+
+  public OidcLogoutActionBuilder getLogoutActionBuilder() {
+    return logoutActionBuilder;
+  }
+
+  public OidcProfileCreator getOidcProfileCreator() {
+    return oidcProfileCreator;
+  }
+
+  public String getLogoutUri() {
+    return (String) properties.get(LOGOUT_URI);
   }
 
   public OidcConfiguration getOidcConfiguration() {

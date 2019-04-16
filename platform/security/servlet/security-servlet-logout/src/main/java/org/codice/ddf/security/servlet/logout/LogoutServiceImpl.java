@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.subject.Subject;
@@ -49,17 +50,22 @@ public class LogoutServiceImpl implements LogoutService {
   private SecurityManager securityManager;
 
   @Override
-  public String getActionProviders(HttpServletRequest request) throws SecurityServiceException {
+  public String getActionProviders(HttpServletRequest request, HttpServletResponse response)
+      throws SecurityServiceException {
 
     HttpSession session = httpSessionFactory.getOrCreateSession(request);
     Map<String, Object> realmTokenMap =
         ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
             .getRealmTokenMap();
-    Map<String, Subject> realmSubjectMap = new HashMap<>();
+    Map<String, Object> realmSubjectMap = new HashMap<>();
 
     for (Map.Entry<String, Object> entry : realmTokenMap.entrySet()) {
       realmSubjectMap.put(entry.getKey(), securityManager.getSubject(entry.getValue()));
     }
+
+    realmSubjectMap.put("http_request", request);
+
+    realmSubjectMap.put("http_response", response);
 
     List<Map<String, String>> realmToPropMaps = new ArrayList<>();
 
@@ -70,7 +76,7 @@ public class LogoutServiceImpl implements LogoutService {
 
         if (realmTokenMap.get(realm) != null) {
           Map<String, String> actionProperties = new HashMap<>();
-          String displayName = SubjectUtils.getName(realmSubjectMap.get(realm), "", true);
+          String displayName = SubjectUtils.getName((Subject) realmSubjectMap.get(realm), "", true);
 
           actionProperties.put("title", action.getTitle());
           actionProperties.put("realm", realm);

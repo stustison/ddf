@@ -83,7 +83,7 @@ public class OidcHandler implements AuthenticationHandler {
    * @param resolve flag with true implying that credentials should be obtained, false implying
    *     return if no credentials are found.
    * @return result of handling this request - status and optional tokens
-   * @throws ServletException
+   * @throws AuthenticationFailureException
    */
   @Override
   public HandlerResult getNormalizedToken(
