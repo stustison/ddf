@@ -60,8 +60,6 @@ public class HandlerConfiguration {
   private String responseMode;
   private String logoutUri;
 
-  private Map<String, Object> properties;
-
   private OidcLogoutActionBuilder logoutActionBuilder;
 
   private OidcProfileCreator oidcProfileCreator;

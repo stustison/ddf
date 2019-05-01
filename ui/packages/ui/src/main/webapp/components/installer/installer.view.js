@@ -56,14 +56,16 @@ define([
   })
 
   var idpConfigurationServiceResponses = new Service.Response()
-  idpConfigurationServiceResponses.listenTo( // when the config is modified in the installer
+  idpConfigurationServiceResponses.listenTo(
+    // when the config is modified in the installer
     wreqr.vent,
     'idpConfigModified',
     function() {
       idpConfigurationServiceResponses.attributes.modified = true
     }
   )
-  idpConfigurationServiceResponses.listenTo( // when the config is persisted in the installer
+  idpConfigurationServiceResponses.listenTo(
+    // when the config is persisted in the installer
     wreqr.vent,
     'idpConfigPersisted',
     function() {
@@ -220,7 +222,8 @@ define([
       }
     },
     showIdpConfiguration: function() {
-      if (idpConfigurationServiceResponses.get('fetched') != true) { // wait for fetch
+      if (idpConfigurationServiceResponses.get('fetched') != true) {
+        // wait for fetch
         this.listenToOnce(
           idpConfigurationServiceResponses,
           'change:fetched',
@@ -230,7 +233,8 @@ define([
         return
       }
 
-      if (idpConfigurationServiceResponses.get('modified') === true) { // fetch and wait
+      if (idpConfigurationServiceResponses.get('modified') === true) {
+        // fetch and wait
         idpConfigurationServiceResponses.attributes.fetched = false
         idpConfigurationServiceResponses.fetch({
           url:

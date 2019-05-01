@@ -497,8 +497,6 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
 
   @Override
   public void setIdpConfigurations(Map<String, Object>[] configs) throws IOException {
-    LOGGER.info("setIdpClientConfiguration hit. Config: {}.", configs);
-
     for (Map config : configs) {
       String pid = (String) config.get("metatypeId");
       Map<String, Object> updateValues = getUpdateValues((JSONArray) config.get("metatypeEntries"));
