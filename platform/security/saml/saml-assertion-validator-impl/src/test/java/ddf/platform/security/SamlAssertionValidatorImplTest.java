@@ -11,11 +11,16 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package ddf.security.realm.sts;
+package ddf.platform.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
-public class WssStsRealm extends AbstractStsRealm {
-  private static final Logger LOGGER = LoggerFactory.getLogger(WssStsRealm.class);
+public class SamlAssertionValidatorImplTest {
+
+  @BeforeClass
+  public static void init() {}
+
+  @Before
+  public void setup() throws Exception {}
 }

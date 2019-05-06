@@ -72,7 +72,7 @@ public class LogoutServiceImplTest {
     logoutServiceImpl.setLogoutActionProviders(
         Arrays.asList(karafLogoutActionProvider, ldapLogoutActionProvider));
 
-    String responseMessage = logoutServiceImpl.getActionProviders(null);
+    String responseMessage = logoutServiceImpl.getActionProviders(null, null);
 
     JSONArray actionProperties = (JSONArray) new JSONParser().parse(responseMessage);
     assertEquals(2, actionProperties.size());

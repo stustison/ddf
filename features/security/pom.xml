@@ -14,8 +14,7 @@
 -->
 <project
     xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>features</artifactId>
         <groupId>ddf.features</groupId>
@@ -427,6 +426,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>ddf.security.saml</groupId>
+            <artifactId>saml-assertion-validator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ddf.security.saml</groupId>
+            <artifactId>saml-assertion-validator-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ddf.platform.security</groupId>
             <artifactId>security-rest-cxfwrapper</artifactId>
             <version>${project.version}</version>
@@ -485,7 +494,6 @@
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
         </dependency>
-
         <!--feature dependencies-->
         <dependency>
             <groupId>ddf.features</groupId>
@@ -523,7 +531,6 @@
             <classifier>features</classifier>
         </dependency>
         <!--end feature dependencies-->
-
         <dependency>
             <groupId>ddf.platform</groupId>
             <artifactId>sync-installer-api</artifactId>

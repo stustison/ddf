@@ -15,6 +15,7 @@ package org.codice.ddf.security.filter.login;
 
 import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
 
+import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
@@ -65,6 +66,8 @@ public class LoginFilter implements SecurityFilter {
   private static final XMLUtils XML_UTILS = XMLUtils.getInstance();
 
   private SecurityManager securityManager;
+
+  private SamlAssertionValidator samlAssertionValidator;
 
   public LoginFilter() {
     super();
@@ -145,6 +148,9 @@ public class LoginFilter implements SecurityFilter {
       return;
     }
 
+    // attach subject to the http session
+    samlAssertionValidator.addToSession(httpRequest, "idp", subject);
+
     // subject is now resolved, perform request as that subject
     httpRequest.setAttribute(SecurityConstants.SECURITY_SUBJECT, subject);
     LOGGER.debug(
@@ -202,6 +208,10 @@ public class LoginFilter implements SecurityFilter {
 
   public void setSecurityManager(SecurityManager securityManager) {
     this.securityManager = securityManager;
+  }
+
+  public void setSamlAssertionValidator(SamlAssertionValidator samlAssertionValidator) {
+    this.samlAssertionValidator = samlAssertionValidator;
   }
 
   @Override

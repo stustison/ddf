@@ -227,5 +227,6 @@
         <module>secure-boot</module>
         <module>security-oidc-realm</module>
         <module>security-oidc-bundle</module>
+        <module>saml</module>
     </modules>
 </project>

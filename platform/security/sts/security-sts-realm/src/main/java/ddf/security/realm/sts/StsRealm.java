@@ -17,10 +17,4 @@ package ddf.security.realm.sts;
  * The STS Realm is the main piece of the security framework responsible for exchanging a binary
  * security token for a SAML assertion.
  */
-public class StsRealm extends AbstractStsRealm {
-
-  @Override
-  protected boolean shouldHandleWss() {
-    return false;
-  }
-}
+public class StsRealm extends AbstractStsRealm {}

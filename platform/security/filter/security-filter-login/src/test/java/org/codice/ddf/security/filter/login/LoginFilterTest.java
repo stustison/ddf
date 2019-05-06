@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
@@ -67,6 +68,7 @@ public class LoginFilterTest {
   @Mock private SecurityToken goodSecurityTokenMock;
   @Mock private SecurityToken badSecurityTokenMock;
   @Mock private BaseAuthenticationToken referenceTokenMock;
+  @Mock private SamlAssertionValidator samlAssertionValidatorMock;
 
   @BeforeClass
   public static void init() {
@@ -79,6 +81,7 @@ public class LoginFilterTest {
 
     loginFilter = new LoginFilter();
     loginFilter.setSecurityManager(securityManagerMock);
+    loginFilter.setSamlAssertionValidator(samlAssertionValidatorMock);
     loginFilter.init();
 
     subject =
