@@ -17,10 +17,10 @@ define([
   'underscore',
   'js/wreqr.js',
   'jquery',
-  'templates/installer/idpConfigurationEntrySimple.handlebars',
+  'templates/installer/ssoConfigSimple.handlebars',
 ], function(Marionette, _, wreqr, $, template) {
   /* Displays metatype entry as a text field */
-  var IdpConfigurationEntrySimple = Marionette.ItemView.extend({
+  var SsoConfigSimple = Marionette.ItemView.extend({
     template: template,
     tagName: 'tr',
     className: 'table-entry',
@@ -62,7 +62,7 @@ define([
       this.value = event.currentTarget.value.toString()
       this.isValid = this.validateValue()
 
-      wreqr.vent.trigger('idpConfigModified')
+      wreqr.vent.trigger('ssoConfigModified')
 
       if (this.isValid) {
         this.hideError()
@@ -95,5 +95,5 @@ define([
     },
   })
 
-  return IdpConfigurationEntrySimple
+  return SsoConfigSimple
 })

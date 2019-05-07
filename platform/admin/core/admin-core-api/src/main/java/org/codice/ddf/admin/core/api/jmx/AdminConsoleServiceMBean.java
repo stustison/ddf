@@ -241,7 +241,7 @@ public interface AdminConsoleServiceMBean {
 
   Map<String, Object> getClaimsConfiguration(String filter);
 
-  Map<String, Object>[] getIdpConfigurations();
+  Map<String, Object>[] getSsoConfigurations();
 
-  void setIdpConfigurations(Map<String, Object>[] config) throws IOException;
+  void setSsoConfigurations(Map<String, Object>[] config) throws IOException;
 }

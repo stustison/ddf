@@ -17,9 +17,9 @@ define([
   'underscore',
   'js/wreqr.js',
   'jquery',
-  'templates/installer/idpConfigurationEntryBoolean.handlebars',
+  'templates/installer/ssoConfigBoolean.handlebars',
 ], function(Marionette, _, wreqr, $, template) {
-  var IdpConfigurationEntryBoolean = Marionette.ItemView.extend({
+  var SsoConfigBoolean = Marionette.ItemView.extend({
     template: template,
     tagName: 'tr',
     className: 'table-entry',
@@ -55,7 +55,7 @@ define([
     updateValue: function(event) {
       this.value = event.currentTarget.checked.toString().toLowerCase()
 
-      wreqr.vent.trigger('idpConfigModified')
+      wreqr.vent.trigger('ssoConfigModified')
     },
     getConfig: function() {
       return {
@@ -68,5 +68,5 @@ define([
     },
   })
 
-  return IdpConfigurationEntryBoolean
+  return SsoConfigBoolean
 })

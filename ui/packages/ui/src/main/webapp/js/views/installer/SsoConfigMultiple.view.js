@@ -17,19 +17,12 @@ define([
   'underscore',
   'js/wreqr.js',
   'jquery',
-  'templates/installer/idpConfigurationEntryMultiple.handlebars',
+  'templates/installer/ssoConfigMultiple.handlebars',
   'templates/installer/deletableEntry.handlebars',
-], function(
-  Marionette,
-  _,
-  wreqr,
-  $,
-  multipleEntryTemplate,
-  deletableEntryTemplate
-) {
+], function(Marionette, _, wreqr, $, template, deletableEntryTemplate) {
   /* Displays metatype entry as multiple DeletableEntries */
-  var IdpConfigurationEntryMultiple = Marionette.ItemView.extend({
-    template: multipleEntryTemplate,
+  var SsoConfigMultiple = Marionette.ItemView.extend({
+    template: template,
     tagName: 'tr',
     className: 'table-entry',
     events: {
@@ -94,7 +87,7 @@ define([
 
       if (!isInitialization) {
         this.values.push(value)
-        wreqr.vent.trigger('idpConfigModified')
+        wreqr.vent.trigger('ssoConfigModified')
       }
     },
     updateValue: function(event) {
@@ -107,7 +100,7 @@ define([
 
       target.setAttribute('oldValue', value)
 
-      wreqr.vent.trigger('idpConfigModified')
+      wreqr.vent.trigger('ssoConfigModified')
     },
     removeValue: function(event) {
       var removeButton = event.currentTarget
@@ -118,7 +111,7 @@ define([
       this.values.splice(this.values.indexOf(inputValue), 1)
       this.entriesElement[0].removeChild(entry)
 
-      wreqr.vent.trigger('idpConfigModified')
+      wreqr.vent.trigger('ssoConfigModified')
     },
     validateValue: function(value) {
       switch (this.typeName) {
@@ -214,5 +207,5 @@ define([
     },
   })
 
-  return IdpConfigurationEntryMultiple
+  return SsoConfigMultiple
 })

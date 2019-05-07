@@ -75,9 +75,6 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
   private static final String OIDC_HANDLER_CONFIG_PID =
       "(service.pid=org.codice.ddf.security.oidc.client.HandlerConfiguration)";
 
-  private static final String OIDC_REALM_CONFIG_PID =
-      "(service.pid=org.codice.ddf.security.oidc.realm.OidcRealm)";
-
   private static final String UI_CONFIG_PID = "ddf.platform.ui.config";
 
   private static final String PROFILE_KEY = "profile";
@@ -486,17 +483,16 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
   }
 
   @Override
-  public Map<String, Object>[] getIdpConfigurations() {
+  public Map<String, Object>[] getSsoConfigurations() {
     return new Map[] {
       this.getService(IDP_CLIENT_CONFIG_PID),
       this.getService(IDP_SERVER_CONFIG_PID),
-      this.getService(OIDC_HANDLER_CONFIG_PID),
-      this.getService(OIDC_REALM_CONFIG_PID)
+      this.getService(OIDC_HANDLER_CONFIG_PID)
     };
   }
 
   @Override
-  public void setIdpConfigurations(Map<String, Object>[] configs) throws IOException {
+  public void setSsoConfigurations(Map<String, Object>[] configs) throws IOException {
     for (Map config : configs) {
       String pid = (String) config.get("metatypeId");
       Map<String, Object> updateValues = getUpdateValues((JSONArray) config.get("metatypeEntries"));

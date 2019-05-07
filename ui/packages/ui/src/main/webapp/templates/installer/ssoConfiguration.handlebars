@@ -11,27 +11,20 @@
  *
  **/
  --}}
-<h3>Configure IdP</h3>
+<h3>Configure Single Sign On (SSO)</h3>
 <div class="inner-scroll scroll-area white ps-container">
     <div class="well well-sm white">
         <div id="warning-container" class="warning-div"></div>
-        <div id="idp-configuration-input-container">
+        <div id="sso-configuration-input-container">
             <form class="form-horizontal">
                 <fieldset>
-                    <h3 class="idp-config-overview">Configure connection to an Identity Provider (IdP).</h3>
-
-                    <div class="data-section" id="idp-client-config">
-
+                    <h3 class="sso-config-overview">Configure connection to a Single Sign On service.</h3>
+                    <div class="sso-config-tabs">
+                      <label class="sso-config-tab" id="saml-tab">SAML</label>
+                      <label class="sso-config-tab" id="oidc-tab">OIDC</label>
                     </div>
-                    <div class="data-section" id="idp-server-config">
-
-                    </div>
-                    <div class="data-section" id="oidc-handler-config">
-
-                    </div>
-                    <div class="data-section" id="oidc-realm-config">
-
-                    </div>
+                    <div class="data-section" id="saml-category"></div>
+                    <div class="data-section" id="oidc-category"></div>
                 </fieldset>
             </form>
         </div>

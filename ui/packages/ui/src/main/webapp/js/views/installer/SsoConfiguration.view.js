@@ -19,12 +19,12 @@ define([
   'underscore',
   'js/wreqr.js',
   'jquery',
-  'templates/installer/idpConfiguration.handlebars',
-  'templates/installer/idpConfigurationTable.handlebars',
-  'views/installer/IdpConfigurationEntrySimple.view.js',
-  'views/installer/IdpConfigurationEntryBoolean.view.js',
-  'views/installer/IdpConfigurationEntryOptions.view.js',
-  'views/installer/IdpConfigurationEntryMultiple.view.js',
+  'templates/installer/ssoConfiguration.handlebars',
+  'templates/installer/ssoConfigurationTable.handlebars',
+  'views/installer/SsoConfigSimple.view.js',
+  'views/installer/SsoConfigBoolean.view.js',
+  'views/installer/SsoConfigOptions.view.js',
+  'views/installer/SsoConfigMultiple.view.js',
 ], function(
   Marionette,
   _,
@@ -32,10 +32,10 @@ define([
   $,
   viewTemplate,
   tableTemplate,
-  IdpConfigurationEntrySimple,
-  IdpConfigurationEntryBoolean,
-  IdpConfigurationEntryOptions,
-  IdpConfigurationEntryMultiple
+  SsoConfigSimple,
+  SsoConfigBoolean,
+  SsoConfigOptions,
+  SsoConfigMultiple
 ) {
   var IDP_CLIENT_METATYPE_ID = 'org.codice.ddf.security.idp.client.IdpMetadata'
   var IDP_SERVER_METATYPE_ID = 'org.codice.ddf.security.idp.server.IdpEndpoint'
@@ -58,59 +58,76 @@ define([
     }
   }
 
-  /* Displays different metatypes as IdpConfigurationTables */
-  var IdpConfigurationView = Marionette.Layout.extend({
+  /* Displays different metatypes as SsoConfigurationCategories and allows switching between categories */
+  var SsoConfigurationView = Marionette.Layout.extend({
     template: viewTemplate,
-    className: 'full-height idp-config-view',
+    className: 'full-height sso-config-view',
     regions: {
-      idpClientConfig: '#idp-client-config',
-      idpServerConfig: '#idp-server-config',
-      oidcHandlerConfig: '#oidc-handler-config',
-      oidcRealmConfig: '#oidc-realm-config',
+      oidcRegion: '#oidc-category',
+      samlRegion: '#saml-category',
+    },
+    events: {
+      'click #saml-tab': 'showSaml',
+      'click #oidc-tab': 'showOidc',
     },
     initialize: function(options) {
-      this.idpMetatypes = options.idpMetatypes
+      this.metatypes = options.metatypes
       this.navigationModel = options.navigationModel
       this.navigationModel.set('hidePrevious', true)
       this.modified = false
       this.listenTo(this.navigationModel, 'next', this.next)
-      this.listenTo(wreqr.vent, 'idpConfigModified', this.setModified)
+      this.listenTo(wreqr.vent, 'ssoConfigModified', this.setModified)
+
+      this.samlMetatypes = []
+      this.oidcMetatypes = []
+      this.sortMetatypes()
+
+      this.samlCategory = new SsoConfigurationCategory({
+        metatypes: this.samlMetatypes,
+      })
+      this.oidcCategory = new SsoConfigurationCategory({
+        metatypes: this.oidcMetatypes,
+      })
     },
-    onRender: function() {
-      this.initConfigs()
-    },
-    initConfigs: function() {
+    sortMetatypes: function() {
       var self = this
 
-      _.each(self.idpMetatypes, function(metatype) {
+      _.each(self.metatypes, function(metatype) {
         switch (metatype.get('id')) {
           case IDP_CLIENT_METATYPE_ID:
-            self.showRegion(self.idpClientConfig, metatype)
-            break
           case IDP_SERVER_METATYPE_ID:
-            self.showRegion(self.idpServerConfig, metatype)
+            self.samlMetatypes.push(metatype)
             break
           case OIDC_HANDLER_METATYPE_ID:
-            self.showRegion(self.oidcHandlerConfig, metatype)
-            break
-          case OIDC_REALM_METATYPE_ID:
-            self.showRegion(self.oidcRealmConfig, metatype)
+            self.oidcMetatypes.push(metatype)
             break
           default:
             break
         }
       })
     },
-    showRegion: function(region, metatype) {
-      if (region.currentView) {
-        region.show()
-      } else {
-        region.show(
-          new IdpConfigurationTable({
-            metatype: metatype,
-          })
-        )
-      }
+    onRender: function() {
+      this.samlTab = this.$('#saml-tab')
+      this.oidcTab = this.$('#oidc-tab')
+
+      this.samlRegion.show(this.samlCategory)
+      this.oidcRegion.show(this.oidcCategory)
+
+      this.showSaml()
+    },
+    showSaml: function(event) {
+      this.samlTab.attr('isSelected', 'true')
+      this.oidcTab.attr('isSelected', 'false')
+
+      this.oidcRegion.$el.hide()
+      this.samlRegion.$el.show()
+    },
+    showOidc: function(event) {
+      this.samlTab.attr('isSelected', 'false')
+      this.oidcTab.attr('isSelected', 'true')
+
+      this.samlRegion.$el.hide()
+      this.oidcRegion.$el.show()
     },
     setModified: function() {
       this.modified = true
@@ -138,7 +155,7 @@ define([
         type: 'WRITE',
         mbean:
           'org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0',
-        attribute: 'IdpConfigurations',
+        attribute: 'SsoConfigurations',
         value: config,
       }
 
@@ -149,42 +166,98 @@ define([
         url:
           './jolokia/exec/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0',
         success: function() {
-          wreqr.vent.trigger('idpConfigPersisted')
+          wreqr.vent.trigger('ssoConfigPersisted')
         },
       })
     },
     getConfig: function() {
-      return [
-        this.idpClientConfig.currentView.getConfig(),
-        this.idpServerConfig.currentView.getConfig(),
-        this.oidcHandlerConfig.currentView.getConfig(),
-        this.oidcRealmConfig.currentView.getConfig(),
-      ]
+      var result = []
+
+      _.each(this.samlCategory.getConfig(), function(config) {
+        result.push(config)
+      })
+
+      _.each(this.oidcCategory.getConfig(), function(config) {
+        result.push(config)
+      })
+
+      return result
     },
     hasErrors: function() {
-      return (
-        this.idpClientConfig.currentView.hasErrors() ||
-        this.idpServerConfig.currentView.hasErrors() ||
-        this.oidcHandlerConfig.currentView.hasErrors() ||
-        this.oidcRealmConfig.currentView.hasErrors()
-      )
+      return this.samlCategory.hasErrors() || this.oidcCategory.hasErrors()
     },
     onClose: function() {
       this.stopListening(this.navigationModel)
     },
   })
 
+  /* Displays multiple metatypes as SsoConfigurationTables */
+  var SsoConfigurationCategory = Marionette.Layout.extend({
+    //template: false,
+    tagName: 'div',
+    initialize: function(options) {
+      this.metatypes = options.metatypes
+
+      this.tables = []
+      this.initTables()
+    },
+    initTables: function() {
+      var self = this
+
+      _.each(self.metatypes, function(metatype) {
+        var table = new SsoConfigurationTable({
+          metatype: metatype,
+        })
+
+        self.tables.push(table)
+      })
+    },
+    onRender: function() {
+      this.rootElement = this.el
+
+      this.renderTables()
+    },
+    renderTables: function() {
+      var self = this
+
+      _.each(self.tables, function(table) {
+        table.render()
+        self.el.append(table.el)
+      })
+    },
+    getConfig: function() {
+      var config = []
+
+      _.each(this.tables, function(table) {
+        config.push(table.getConfig())
+      })
+
+      return config
+    },
+    hasErrors: function() {
+      var hasErrors = false
+
+      _.each(this.tables, function(table) {
+        if (table.hasErrors()) {
+          hasErrors = true
+        }
+      })
+
+      return hasErrors
+    },
+  })
+
   /* Displays all the different metatype entries (Simple, Boolean, Options, Multiple) in a metatype */
-  var IdpConfigurationTable = Marionette.Layout.extend({
+  var SsoConfigurationTable = Marionette.Layout.extend({
     template: tableTemplate,
-    tagName: 'table',
-    className: 'idp-config-table',
+    tagName: 'div',
+    className: 'sso-config-table-container',
     initialize: function(options) {
       this.metatype = options.metatype
       this.metatypeName = this.metatype.get('name')
       this.metatypeId = this.metatype.get('id')
 
-      this.idpConfigurationEntries = []
+      this.metatypeEntries = []
     },
     serializeData: function() {
       return {
@@ -212,19 +285,16 @@ define([
       var self = this
 
       _.each(self.metatype.get('metatype').models, function(metatypeEntry) {
-        var tableEntry = self.createIdpConfigurationEntry(
-          metatypeEntry,
-          metatypeValues
-        )
+        var tableEntry = self.createTableEntry(metatypeEntry, metatypeValues)
 
         tableEntry.render()
 
-        self.idpConfigurationEntries.push(tableEntry)
+        self.metatypeEntries.push(tableEntry)
 
         self.tableBody.append(tableEntry.el)
       })
     },
-    createIdpConfigurationEntry: function(metatypeEntry, metatypeValues) {
+    createTableEntry: function(metatypeEntry, metatypeValues) {
       var name = metatypeEntry.get('name')
       var id = metatypeEntry.get('id')
       var value = metatypeValues[id]
@@ -248,36 +318,36 @@ define([
       }
 
       if (!_.isEmpty(options)) {
-        return new IdpConfigurationEntryOptions(entryInfo)
+        return new SsoConfigOptions(entryInfo)
       }
 
       if (type === BOOLEAN_TYPE) {
-        return new IdpConfigurationEntryBoolean(entryInfo)
+        return new SsoConfigBoolean(entryInfo)
       }
 
       if (cardinality !== 0) {
-        return new IdpConfigurationEntryMultiple(entryInfo)
+        return new SsoConfigMultiple(entryInfo)
       }
 
-      return new IdpConfigurationEntrySimple(entryInfo)
+      return new SsoConfigSimple(entryInfo)
     },
     getConfig: function() {
-      var result = {
+      var config = {
         metatypeName: this.metatypeName,
         metatypeId: this.metatypeId,
         metatypeEntries: [],
       }
-      _.each(this.idpConfigurationEntries, function(idpConfigurationEntry) {
-        result.metatypeEntries.push(idpConfigurationEntry.getConfig())
+      _.each(this.metatypeEntries, function(metatypeEntry) {
+        config.metatypeEntries.push(metatypeEntry.getConfig())
       })
 
-      return result
+      return config
     },
     hasErrors: function() {
       var hasErrors = false
 
-      _.each(this.idpConfigurationEntries, function(idpConfigurationEntry) {
-        if (idpConfigurationEntry.hasErrors()) {
+      _.each(this.metatypeEntries, function(metatypeEntry) {
+        if (metatypeEntry.hasErrors()) {
           hasErrors = true
         }
       })
@@ -286,5 +356,5 @@ define([
     },
   })
 
-  return IdpConfigurationView
+  return SsoConfigurationView
 })

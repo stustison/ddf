@@ -246,24 +246,62 @@ center {
   }
 }
 
-/* IdP-Configuration */
-.idp-config-view {
-  .data-section {
-    padding: 5px;
+/* SSO-Configuration */
+.sso-config-view {
+  .sso-config-overview {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .sso-config-tabs {
+    display: inline-flex;
+    flex-direction: row;
+    font-size: 20px;
     border: 3px solid #dce4ec;
     border-radius: 4px;
-    margin-bottom: 10px;
+    margin-left: 5px;
+    margin-bottom: 15px;
   }
 
-  .idp-config-overview {
-    text-align: center;
-    margin-bottom: 20px;
+  .sso-config-tab {
+    cursor: pointer;
+    background: white;
+    padding: 5px;
+    margin: 0px;
+
+    transition: background 500ms;
+
+    &:hover {
+      background: darken(white, 5%);
+    }
+
+    &[isSelected='true'] {
+      background: #ecf0f1;
+    }
   }
 
-  .idp-config-table {
+  #saml-tab {
+    border-right: 1px solid #dce4ec;
+  }
+
+  #oidc-tab {
+    border-left: 1px solid #dce4ec;
+  }
+
+  .data-section {
+    padding: 5px;
+  }
+
+  .sso-config-table-container {
     width: 100%;
     padding: 5px;
     margin-bottom: 20px;
+    border: 3px solid #dce4ec;
+    border-radius: 4px;
+  }
+
+  .sso-config-table {
+    width: 100%;
   }
 
   .table-title {
@@ -301,6 +339,7 @@ center {
 
   .entry-info {
     padding-right: 10px;
+    transition: color 500ms;
   }
 
   .entry-value-simple,
@@ -313,8 +352,7 @@ center {
     border-radius: 4px;
     outline: none;
 
-    transition-duration: 500ms;
-    transition-property: border;
+    transition: border 500ms;
 
     &:focus {
       border: 2px solid black;
@@ -367,6 +405,7 @@ center {
     background: #ecf0f1;
     text-align: center;
     vertical-align: middle;
+    transition: background 500ms;
 
     &:hover {
       background: darken(#ecf0f1, 15%);

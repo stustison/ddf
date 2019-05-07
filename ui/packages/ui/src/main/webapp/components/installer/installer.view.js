@@ -21,7 +21,7 @@ define([
   'js/wreqr.js',
   'js/views/installer/Welcome.view',
   'js/views/installer/Profile.view.js',
-  'js/views/installer/IdpConfiguration.view.js',
+  'js/views/installer/SsoConfiguration.view.js',
   'js/views/installer/Configuration.view.js',
   'js/views/installer/GuestClaims.view.js',
   'js/views/installer/Finish.view.js',
@@ -38,7 +38,7 @@ define([
   wreqr,
   WelcomeView,
   ProfileView,
-  IdpConfigurationView,
+  SsoConfigurationView,
   ConfigurationView,
   GuestClaimsView,
   FinishView,
@@ -55,31 +55,31 @@ define([
       './jolokia/exec/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/getClaimsConfiguration/(service.pid%3Dddf.security.sts.guestclaims)',
   })
 
-  var idpConfigurationServiceResponses = new Service.Response()
-  idpConfigurationServiceResponses.listenTo(
+  var ssoConfigurationServiceResponses = new Service.Response()
+  ssoConfigurationServiceResponses.listenTo(
     // when the config is modified in the installer
     wreqr.vent,
-    'idpConfigModified',
+    'ssoConfigModified',
     function() {
-      idpConfigurationServiceResponses.attributes.modified = true
+      ssoConfigurationServiceResponses.attributes.modified = true
     }
   )
-  idpConfigurationServiceResponses.listenTo(
+  ssoConfigurationServiceResponses.listenTo(
     // when the config is persisted in the installer
     wreqr.vent,
-    'idpConfigPersisted',
+    'ssoConfigPersisted',
     function() {
-      idpConfigurationServiceResponses.attributes.fetched = false
-      idpConfigurationServiceResponses.attributes.modified = false
-      idpConfigurationServiceResponses.fetch({
+      ssoConfigurationServiceResponses.attributes.fetched = false
+      ssoConfigurationServiceResponses.attributes.modified = false
+      ssoConfigurationServiceResponses.fetch({
         url:
-          './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/IdpConfigurations',
+          './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
       })
     }
   )
-  idpConfigurationServiceResponses.fetch({
+  ssoConfigurationServiceResponses.fetch({
     url:
-      './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/IdpConfigurations',
+      './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
   })
 
   var systemPropertiesWrapped = new ConfigurationModel.SystemPropertiesWrapped()
@@ -92,7 +92,7 @@ define([
     regions: {
       welcome: '#welcome',
       profiles: '#profiles',
-      idpConfiguration: '#idpConfiguration',
+      ssoConfiguration: '#ssoConfiguration',
       guestClaims: '#guestClaims',
       configuration: '#configuration',
       finish: '#finish',
@@ -108,7 +108,7 @@ define([
       this.$el.toggleClass('is-loading', false)
       var welcomeStep = 0,
         profileStep = 1,
-        idpConfigurationStep = 2,
+        ssoConfigurationStep = 2,
         guestClaimsStep = 3,
         configStep = 4,
         finishStep = 5
@@ -122,10 +122,10 @@ define([
         this.hideProfiles()
       }
       if (
-        this.idpConfiguration.currentView &&
-        stepNumber != idpConfigurationStep
+        this.ssoConfiguration.currentView &&
+        stepNumber != ssoConfigurationStep
       ) {
-        this.hideIdpConfiguration()
+        this.hideSsoConfiguration()
       }
       if (this.guestClaims.currentView && stepNumber !== guestClaimsStep) {
         this.hideGuestClaims()
@@ -142,10 +142,10 @@ define([
       } else if (!this.profiles.currentView && stepNumber === profileStep) {
         this.showProfiles()
       } else if (
-        !this.idpConfiguration.currentView &&
-        stepNumber === idpConfigurationStep
+        !this.ssoConfiguration.currentView &&
+        stepNumber === ssoConfigurationStep
       ) {
-        this.showIdpConfiguration()
+        this.showSsoConfiguration()
       } else if (
         !this.guestClaims.currentView &&
         stepNumber === guestClaimsStep
@@ -221,11 +221,11 @@ define([
         this.showLoading()
       }
     },
-    showIdpConfiguration: function() {
-      if (idpConfigurationServiceResponses.get('fetched') != true) {
+    showSsoConfiguration: function() {
+      if (ssoConfigurationServiceResponses.get('fetched') != true) {
         // wait for fetch
         this.listenToOnce(
-          idpConfigurationServiceResponses,
+          ssoConfigurationServiceResponses,
           'change:fetched',
           this.changePage
         )
@@ -233,15 +233,15 @@ define([
         return
       }
 
-      if (idpConfigurationServiceResponses.get('modified') === true) {
+      if (ssoConfigurationServiceResponses.get('modified') === true) {
         // fetch and wait
-        idpConfigurationServiceResponses.attributes.fetched = false
-        idpConfigurationServiceResponses.fetch({
+        ssoConfigurationServiceResponses.attributes.fetched = false
+        ssoConfigurationServiceResponses.fetch({
           url:
-            './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/IdpConfigurations',
+            './jolokia/read/org.codice.ddf.ui.admin.api.ConfigurationAdmin:service=ui,version=2.3.0/SsoConfigurations',
         })
         this.listenToOnce(
-          idpConfigurationServiceResponses,
+          ssoConfigurationServiceResponses,
           'change:fetched',
           this.changePage
         )
@@ -249,17 +249,17 @@ define([
         return
       }
 
-      if (this.idpConfiguration.currentView) {
-        this.idpConfiguration.show()
+      if (this.ssoConfiguration.currentView) {
+        this.ssoConfiguration.show()
       } else {
-        this.idpConfiguration.show(
-          new IdpConfigurationView({
-            idpMetatypes: idpConfigurationServiceResponses.get('value').models,
+        this.ssoConfiguration.show(
+          new SsoConfigurationView({
+            metatypes: ssoConfigurationServiceResponses.get('value').models,
             navigationModel: this.model,
           })
         )
       }
-      this.$(this.idpConfiguration.el).show()
+      this.$(this.ssoConfiguration.el).show()
     },
     showConfiguration: function() {
       if (systemPropertiesWrapped.get('fetched')) {
@@ -299,9 +299,9 @@ define([
       this.profiles.close()
       this.$(this.profiles.el).hide()
     },
-    hideIdpConfiguration: function() {
-      this.idpConfiguration.close()
-      this.$(this.idpConfiguration.el).hide()
+    hideSsoConfiguration: function() {
+      this.ssoConfiguration.close()
+      this.$(this.ssoConfiguration.el).hide()
     },
     hideGuestClaims: function() {
       this.guestClaims.close()
