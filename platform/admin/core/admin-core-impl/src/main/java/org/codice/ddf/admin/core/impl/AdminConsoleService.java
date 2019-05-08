@@ -610,9 +610,9 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
     }
 
     @SuppressWarnings("unchecked")
-    public Object[] positiveCardinality(Object value) {
+    public T[] positiveCardinality(Object value) {
       List<T> list = negativeCardinality(value);
-      return listToArray(list);
+      return list.toArray((T[]) Array.newInstance(clazz, list.size()));
     }
 
     public List<T> negativeCardinality(Object value) {
@@ -646,16 +646,6 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
         return clazz.cast(value);
       }
       throw loggedException("Failed to parse " + value + " as " + clazz);
-    }
-
-    private Object[] listToArray(List<T> list) {
-      Object[] array = (Object[]) Array.newInstance(clazz, list.size());
-
-      for (int i = 0; i < list.size(); i++) {
-        array[i] = list.get(i);
-      }
-
-      return array;
     }
   }
 
