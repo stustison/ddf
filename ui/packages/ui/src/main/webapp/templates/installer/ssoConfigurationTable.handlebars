@@ -11,13 +11,9 @@
  *
  **/
  --}}
-<div class="form-group has-feedback">
-    <div class="input-group btn-group col-xs-4 item">
-        <span class="input-group-addon">Profile</span>
-        <select id="profile" name="profile" class="profile form-control input-sm">
-            {{#each profileNames}}
-                <option value="{{this}}" {{#is this ../curProfile}}selected="selected"{{/is}}>{{this}}</option>
-            {{/each}}
-        </select>
-    </div>
-</div>
+<table class="sso-config-table">
+  <thead>
+      <caption class="table-title" title="ID: {{metatypeId}}">{{metatypeName}}</caption>
+  </thead>
+  <tbody class="table-body"></tbody>
+</table>
