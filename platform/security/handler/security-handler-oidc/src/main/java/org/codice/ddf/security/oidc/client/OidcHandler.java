@@ -42,6 +42,7 @@ import org.pac4j.core.exception.HttpAction;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.callback.QueryParameterCallbackUrlResolver;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.pac4j.oidc.credentials.extractor.OidcExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,9 +185,20 @@ public class OidcHandler implements AuthenticationHandler {
         } else {
           LOGGER.error("OIDC HANDLER NOT CONFIGURED.");
           handlerResult.setStatus(HandlerResult.Status.NO_ACTION);
+          return handlerResult;
         }
       } catch (TechnicalException e) {
         // ignore
+      }
+
+      // Authorization code flow
+      if (handlerConfiguration.getOidcConfiguration().getResponseType().equals("code")
+          && httpRequest.getParameter("code") != null) {
+
+        OidcAuthenticator authenticator =
+            new OidcAuthenticator(
+                handlerConfiguration.getOidcConfiguration(), handlerConfiguration.getOidcClient());
+        authenticator.validate(credentials, j2EContext);
       }
 
       if (credentials != null) {
