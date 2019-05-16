@@ -440,8 +440,7 @@ public class OidcHandler implements AuthenticationHandler {
     this.sessionFactory = sessionFactory;
   }
 
-  private void addJwtToSession(
-      HttpServletRequest httpRequest, OidcCredentials credentials) {
+  private void addJwtToSession(HttpServletRequest httpRequest, OidcCredentials credentials) {
     if (credentials == null) {
       LOGGER.debug("Cannot add null security token to session.");
       return;
