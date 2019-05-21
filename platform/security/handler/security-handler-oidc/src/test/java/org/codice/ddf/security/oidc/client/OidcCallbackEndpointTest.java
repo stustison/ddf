@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
+import org.codice.ddf.security.handler.oidc.OidcCallbackEndpoint;
 import org.junit.Test;
 
 public class OidcCallbackEndpointTest {

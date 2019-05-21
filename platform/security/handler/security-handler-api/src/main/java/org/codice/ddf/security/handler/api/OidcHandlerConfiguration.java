@@ -13,23 +13,19 @@
  */
 package org.codice.ddf.security.handler.api;
 
-import org.pac4j.core.context.WebContext;
+import org.pac4j.oidc.client.OidcClient;
+import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
+import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 
-public class OidcAuthenticationToken extends BaseAuthenticationToken {
-  private WebContext webContext;
+public interface OidcHandlerConfiguration {
+  OidcConfiguration getOidcConfiguration();
 
-  public OidcAuthenticationToken(Object credentials, WebContext webContext, String ip) {
-    super(null, credentials, ip);
+  OidcClient getOidcClient();
 
-    this.webContext = webContext;
-  }
+  OidcLogoutActionBuilder getLogoutActionBuilder();
 
-  @Override
-  public String getCredentialsAsString() {
-    return null;
-  }
+  OidcProfileCreator getOidcProfileCreator();
 
-  public WebContext getWebContext() {
-    return webContext;
-  }
+  boolean isInitialized();
 }

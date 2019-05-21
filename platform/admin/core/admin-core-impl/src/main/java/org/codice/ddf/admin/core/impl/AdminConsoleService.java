@@ -73,7 +73,7 @@ public class AdminConsoleService extends StandardMBean implements AdminConsoleSe
       "(service.pid=org.codice.ddf.security.idp.server.IdpEndpoint)";
 
   private static final String OIDC_HANDLER_CONFIG_PID =
-      "(service.pid=org.codice.ddf.security.oidc.client.HandlerConfiguration)";
+      "(service.pid=org.codice.ddf.security.handler.api.OidcHandlerConfiguration)";
 
   private static final String UI_CONFIG_PID = "ddf.platform.ui.config";
 
