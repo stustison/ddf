@@ -130,6 +130,13 @@ public class OidcLogoutActionProvider implements ActionProvider {
       return false;
     }
 
+    HttpServletRequest request = (HttpServletRequest) ((Map) subjectMap).get("http_request");
+    HttpServletResponse response = (HttpServletResponse) ((Map) subjectMap).get("http_response");
+
+    if (request == null || response == null) {
+      return false;
+    }
+
     Object credentials = ((Map) subjectMap).get(SecurityConstants.SECURITY_SUBJECT);
     return credentials instanceof OidcCredentials;
   }
