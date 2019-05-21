@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ddf.security.oidc.client;
+package org.codice.ddf.security.handler.oidc;
 
 import ddf.action.Action;
 import ddf.action.ActionProvider;
@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
+import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.J2ESessionStore;
@@ -52,9 +53,9 @@ public class OidcLogoutActionProvider implements ActionProvider {
   private static final String DESCRIPTION =
       "Logging out of the Identity Provider(IdP) will logout all external clients signed in via that Identity Provider.";
 
-  private final HandlerConfiguration handlerConfiguration;
+  private final OidcHandlerConfiguration handlerConfiguration;
 
-  public OidcLogoutActionProvider(HandlerConfiguration handlerConfiguration) {
+  public OidcLogoutActionProvider(OidcHandlerConfiguration handlerConfiguration) {
     this.handlerConfiguration = handlerConfiguration;
   }
 

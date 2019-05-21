@@ -29,6 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
+import org.codice.ddf.security.handler.oidc.OidcLogoutActionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.core.redirect.RedirectAction;
@@ -54,7 +56,7 @@ public class OidcLogoutActionProviderTest {
     when(redirectAction.getLocation()).thenReturn(LOCATION);
     when(oidcLogoutActionBuilder.getLogoutAction(any(), any(), any())).thenReturn(redirectAction);
 
-    HandlerConfiguration handlerConfiguration = mock(HandlerConfiguration.class);
+    OidcHandlerConfiguration handlerConfiguration = mock(OidcHandlerConfiguration.class);
     when(handlerConfiguration.getLogoutActionBuilder()).thenReturn(oidcLogoutActionBuilder);
     when(handlerConfiguration.getOidcProfileCreator()).thenReturn(oidcProfileCreator);
 

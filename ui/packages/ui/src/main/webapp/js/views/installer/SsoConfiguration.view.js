@@ -40,7 +40,7 @@ define([
   var IDP_CLIENT_METATYPE_ID = 'org.codice.ddf.security.idp.client.IdpMetadata'
   var IDP_SERVER_METATYPE_ID = 'org.codice.ddf.security.idp.server.IdpEndpoint'
   var OIDC_HANDLER_METATYPE_ID =
-    'org.codice.ddf.security.oidc.client.HandlerConfiguration'
+    'org.codice.ddf.security.handler.api.OidcHandlerConfiguration'
 
   var STRING_TYPE = 1
   var INTEGER_TYPE = 3

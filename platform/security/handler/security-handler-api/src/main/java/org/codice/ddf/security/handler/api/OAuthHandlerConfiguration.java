@@ -13,23 +13,13 @@
  */
 package org.codice.ddf.security.handler.api;
 
-import org.pac4j.core.context.WebContext;
+import org.pac4j.oauth.client.OAuth20Client;
+import org.pac4j.oauth.config.OAuth20Configuration;
 
-public class OidcAuthenticationToken extends BaseAuthenticationToken {
-  private WebContext webContext;
+public interface OAuthHandlerConfiguration {
+  OAuth20Configuration getOAuthConfiguration();
 
-  public OidcAuthenticationToken(Object credentials, WebContext webContext, String ip) {
-    super(null, credentials, ip);
+  OAuth20Client getOAuthClient();
 
-    this.webContext = webContext;
-  }
-
-  @Override
-  public String getCredentialsAsString() {
-    return null;
-  }
-
-  public WebContext getWebContext() {
-    return webContext;
-  }
+  boolean isInitialized();
 }

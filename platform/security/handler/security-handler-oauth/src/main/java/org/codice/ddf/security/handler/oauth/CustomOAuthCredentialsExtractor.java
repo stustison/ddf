@@ -11,7 +11,9 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ddf.security.oidc.client;
+package org.codice.ddf.security.handler.oauth;
+
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.utils.OAuthEncoder;
@@ -43,7 +45,7 @@ public class CustomOAuthCredentialsExtractor extends OAuth20CredentialsExtractor
     final String accessTokenParam = context.getRequestParameter("access_token");
     final String accessTokenHeader = getAccessTokenFromHeader(context);
     final String accessToken = accessTokenParam != null ? accessTokenParam : accessTokenHeader;
-    if (accessToken != null) {
+    if (isNotBlank(accessToken)) {
       credentials.setAccessToken(new OAuth2AccessToken(OAuthEncoder.decode(accessToken)));
     } else {
       logger.debug("No OAuth2 access token found on request.");

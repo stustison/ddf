@@ -261,7 +261,7 @@ public class IdpHandler implements AuthenticationHandler {
     }
 
     HandlerResult handlerResult = new HandlerResult(HandlerResult.Status.REDIRECTED, null);
-    handlerResult.setSource("idp-" + SOURCE);
+    handlerResult.setSource(SOURCE);
 
     String path = httpRequest.getServletPath();
     LOGGER.debug("Doing IdP authentication and authorization for path {}", path);
@@ -305,7 +305,7 @@ public class IdpHandler implements AuthenticationHandler {
   private HandlerResult doPaosRequest(ServletRequest request, ServletResponse response) {
     HttpServletResponse httpServletResponse = (HttpServletResponse) response;
     HandlerResult handlerResult = new HandlerResult(HandlerResult.Status.REDIRECTED, null);
-    handlerResult.setSource("idp-" + SOURCE);
+    handlerResult.setSource(SOURCE);
     String paosHeader = ((HttpServletRequest) request).getHeader(PAOS);
 
     // some of these options aren't currently used, leaving these here as a marker for what
