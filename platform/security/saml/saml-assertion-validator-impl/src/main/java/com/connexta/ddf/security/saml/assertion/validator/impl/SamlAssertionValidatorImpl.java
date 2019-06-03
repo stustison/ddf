@@ -16,8 +16,6 @@ package com.connexta.ddf.security.saml.assertion.validator.impl;
 import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.PropertiesLoader;
-import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityServiceException;
 import java.io.ByteArrayInputStream;
@@ -30,7 +28,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -38,7 +35,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cxf.rs.security.saml.sso.SAMLProtocolResponseValidator;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.CryptoFactory;
 import org.apache.wss4j.common.ext.WSSecurityException;
@@ -54,7 +50,6 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.util.XMLUtils;
-import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.joda.time.DateTime;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -116,78 +111,59 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
   String signatureProperties = null;
 
   /**
-   * Validates a SAMLAuthenticationToken by checking it's signature against the configured system
+   * Validates a SAML SecurityAssertion by checking it's signature against the configured system
    * certs.
    *
-   * @param token token to validate
+   * @param securityToken saml BaseAuthenticationToken containing saml assertion to validate
    * @throws AuthenticationFailureException thrown when the cert fails to validate
    */
   @Override
-  public void validate(SAMLAuthenticationToken token) throws AuthenticationFailureException {
+  public void validate(SecurityToken securityToken, X509Certificate[] certs, String requestUri)
+      throws AuthenticationFailureException {
+
     try {
       LOGGER.debug("Validation received SAML Assertion");
+      SamlAssertionWrapper assertionWrapper = new SamlAssertionWrapper(securityToken.getToken());
 
-      PrincipalCollection principalCollection = (PrincipalCollection) token.getCredentials();
+      // get the crypto junk
+      Crypto crypto = getSignatureCrypto();
+      Response samlResponse =
+          createSamlResponse(
+              requestUri,
+              assertionWrapper.getIssuerString(),
+              createStatus(SAMLProtocolResponseValidator.SAML2_STATUSCODE_SUCCESS, null));
 
-      // don't revalidate saved tokens
-      if (!token.wasRetrievedFromReference()) {
-        Collection<SecurityAssertion> securityAssertions =
-            principalCollection.byType(SecurityAssertion.class);
-        SecurityAssertion securityAssertion = null;
-        for (SecurityAssertion assertion : securityAssertions) {
-          if (SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(assertion.getTokenType())) {
-            securityAssertion = assertion;
-            break;
-          }
-        }
-        if (securityAssertion == null) {
-          throw new AuthenticationFailureException(
-              "Unable to validate SAML token. Token is not SAML.");
-        }
-        SamlAssertionWrapper assertion =
-            new SamlAssertionWrapper(((SecurityToken) securityAssertion.getToken()).getToken());
+      BUILDER.get().reset();
+      Document doc = BUILDER.get().newDocument();
+      Element policyElement = OpenSAMLUtil.toDom(samlResponse, doc);
+      doc.appendChild(policyElement);
 
-        // get the crypto junk
-        Crypto crypto = getSignatureCrypto();
-        Response samlResponse =
-            createSamlResponse(
-                token.getRequestURI(),
-                assertion.getIssuerString(),
-                createStatus(SAMLProtocolResponseValidator.SAML2_STATUSCODE_SUCCESS, null));
+      Credential credential = new Credential();
+      credential.setSamlAssertion(assertionWrapper);
 
-        BUILDER.get().reset();
-        Document doc = BUILDER.get().newDocument();
-        Element policyElement = OpenSAMLUtil.toDom(samlResponse, doc);
-        doc.appendChild(policyElement);
+      RequestData requestData = new RequestData();
+      requestData.setWsDocInfo(new WSDocInfo(samlResponse.getDOM().getOwnerDocument()));
+      requestData.setSigVerCrypto(crypto);
+      WSSConfig wssConfig = WSSConfig.getNewInstance();
+      requestData.setWssConfig(wssConfig);
 
-        Credential credential = new Credential();
-        credential.setSamlAssertion(assertion);
+      requestData.setTlsCerts(certs);
 
-        RequestData requestData = new RequestData();
-        requestData.setWsDocInfo(new WSDocInfo(samlResponse.getDOM().getOwnerDocument()));
-        requestData.setSigVerCrypto(crypto);
-        WSSConfig wssConfig = WSSConfig.getNewInstance();
-        requestData.setWssConfig(wssConfig);
+      validateHolderOfKeyConfirmation(assertionWrapper, certs);
 
-        X509Certificate[] x509Certs = token.getX509Certs();
-        requestData.setTlsCerts(x509Certs);
+      if (assertionWrapper.isSigned()) {
+        // Verify the signature
+        WSSSAMLKeyInfoProcessor wsssamlKeyInfoProcessor = new WSSSAMLKeyInfoProcessor(requestData);
+        assertionWrapper.verifySignature(wsssamlKeyInfoProcessor, crypto);
 
-        validateHolderOfKeyConfirmation(assertion, x509Certs);
-
-        if (assertion.isSigned()) {
-          // Verify the signature
-          WSSSAMLKeyInfoProcessor wsssamlKeyInfoProcessor =
-              new WSSSAMLKeyInfoProcessor(requestData);
-          assertion.verifySignature(wsssamlKeyInfoProcessor, crypto);
-
-          assertion.parseSubject(
-              new WSSSAMLKeyInfoProcessor(requestData),
-              requestData.getSigVerCrypto(),
-              requestData.getCallbackHandler());
-        }
-
-        assertionValidator.validate(credential, requestData);
+        assertionWrapper.parseSubject(
+            new WSSSAMLKeyInfoProcessor(requestData),
+            requestData.getSigVerCrypto(),
+            requestData.getCallbackHandler());
       }
+
+      assertionValidator.validate(credential, requestData);
+
     } catch (SecurityServiceException e) {
       LOGGER.debug("Unable to get subject from SAML request.", e);
       throw new AuthenticationFailureException(e);

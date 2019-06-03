@@ -15,7 +15,6 @@ package org.codice.ddf.security.rest.authentication.impl;
 
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
-import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
@@ -68,19 +67,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       throw new SecurityServiceException("Authentication failed");
     }
 
-    for (Object principal : subject.getPrincipals()) {
-      if (principal instanceof SecurityAssertion) {
-        if (((SecurityAssertion) principal).getToken() == null) {
-          LOGGER.debug("Cannot add null security token to session");
-          continue;
-        }
-
-        // Create a session and add the security token
-        session = sessionFactory.getOrCreateSession(request);
-        SecurityTokenHolder holder =
-            (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-        holder.setPrincipals(((SecurityAssertion) principal).getToken());
-      }
-    }
+    // Create a session and add the security token
+    session = sessionFactory.getOrCreateSession(request);
+    SecurityTokenHolder holder =
+        (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+    holder.setPrincipals(subject.getPrincipals());
   }
 }

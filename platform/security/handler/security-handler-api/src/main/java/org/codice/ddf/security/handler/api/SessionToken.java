@@ -11,28 +11,15 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package ddf.security.common;
+package org.codice.ddf.security.handler.api;
 
-import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicReference;
-import org.apache.shiro.subject.PrincipalCollection;
+public class SessionToken extends BaseAuthenticationToken {
 
-public class SecurityTokenHolder implements Serializable {
-
-  private static final long serialVersionUID = 1L;
-
-  private final AtomicReference<PrincipalCollection> securityTokenAtomicReference =
-      new AtomicReference<>();
-
-  public PrincipalCollection getPrincipals() {
-    return securityTokenAtomicReference.get();
+  public SessionToken(Object credentials) {
+    super(credentials, credentials, "127.0.0.1");
   }
 
-  public void setPrincipals(PrincipalCollection principals) {
-    securityTokenAtomicReference.set(principals);
-  }
-
-  public void remove() {
-    securityTokenAtomicReference.set(null);
+  public SessionToken(Object principal, Object credentials, String ip) {
+    super(principal, credentials, ip);
   }
 }

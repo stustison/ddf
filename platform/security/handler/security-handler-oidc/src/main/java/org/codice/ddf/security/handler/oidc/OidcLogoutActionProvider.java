@@ -27,7 +27,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.core.context.J2EContext;
@@ -82,16 +81,16 @@ public class OidcLogoutActionProvider implements ActionProvider {
       J2EContext j2EContext = new J2EContext(request, response, sessionStore);
 
       HttpSession session = request.getSession(false);
-      SecurityTokenHolder savedToken = null;
+      SecurityTokenHolder tokenHolder = null;
       if (session != null) {
-        savedToken =
+        tokenHolder =
             (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       }
 
       OidcCredentials credentials = null;
-      if (savedToken != null && savedToken.getPrincipals() != null) {
+      if (tokenHolder != null && tokenHolder.getPrincipals() != null) {
         Collection<SecurityAssertion> securityAssertions =
-            ((PrincipalCollection) savedToken.getPrincipals()).byType(SecurityAssertion.class);
+            tokenHolder.getPrincipals().byType(SecurityAssertion.class);
         for (SecurityAssertion securityAssertion : securityAssertions) {
           if (SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(securityAssertion.getTokenType())) {
             credentials = (OidcCredentials) securityAssertion.getToken();

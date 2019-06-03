@@ -140,7 +140,7 @@ public class SessionManagementServiceImplTest {
   public void testGetRenewal() {
     String renewalString = sessionManagementServiceImpl.getRenewal(request);
     assertNotNull(renewalString);
-    verify(tokenHolder).setPrincipals(securityToken);
+    verify(tokenHolder).setPrincipals(principalCollection);
   }
 
   @Test

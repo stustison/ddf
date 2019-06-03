@@ -26,6 +26,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.credentials.OidcCredentials;
@@ -42,68 +43,71 @@ public class OidcRealm extends AuthenticatingRealm {
 
   /** Determine if the supplied token is supported by this realm. */
   @Override
-  public boolean supports(AuthenticationToken authenticationToken) {
-    if (!(authenticationToken instanceof OidcAuthenticationToken)) {
-      LOGGER.debug("The supplied authentication token is null. Sending back not supported.");
+  public boolean supports(AuthenticationToken token) {
+    if (token instanceof SessionToken) {
+      OidcCredentials credentials = getOidcCredentialsFromSessionToken((SessionToken) token);
+
+      if (credentials == null || credentials.getIdToken() == null) {
+        LOGGER.debug(
+            "The supplied session token didn't have any oidc credentials. Sending back not supported.");
+        return false;
+      }
+      return true;
+    }
+
+    if (!(token instanceof OidcAuthenticationToken)) {
+      LOGGER.debug(
+          "The supplied authentication token is not an instance of SessionToken or OidcAuthenticationToken. Sending back not supported.");
       return false;
     }
 
-    OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
-    PrincipalCollection principals = (PrincipalCollection) oidcAuthenticationToken.getCredentials();
+    OidcAuthenticationToken oidcToken = (OidcAuthenticationToken) token;
 
-    if (principals == null) {
-      LOGGER.warn(
-          "The supplied authentication token has null principal collection."
-              + " Sending back not supported.");
-      return false;
-    }
-
-    OidcCredentials credentials =
-        (OidcCredentials)
-            principals
-                .byType(SecurityAssertion.class)
-                .stream()
-                .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
-                .map(SecurityAssertion::getToken)
-                .findFirst()
-                .orElse(null);
+    OidcCredentials credentials = (OidcCredentials) oidcToken.getCredentials();
 
     if (credentials == null
         || (credentials.getCode() == null
             && credentials.getAccessToken() == null
             && credentials.getIdToken() == null)) {
-      LOGGER.warn(
+      LOGGER.debug(
           "The supplied authentication token has null/empty credentials. Sending back no supported.");
       return false;
     }
 
-    WebContext webContext = oidcAuthenticationToken.getWebContext();
+    WebContext webContext = oidcToken.getWebContext();
     if (webContext == null) {
-      LOGGER.warn(
+      LOGGER.debug(
           "The supplied authentication token has null web context. Sending back not supported.");
       return false;
     }
 
-    LOGGER.debug(
-        "Token {} is supported by {}.", authenticationToken.getClass(), OidcRealm.class.getName());
+    LOGGER.debug("Token {} is supported by {}.", token.getClass(), OidcRealm.class.getName());
     return true;
   }
 
   @Override
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken)
       throws AuthenticationException {
-    // the following variables are guaranteed to be non-null by the supports() method.
-    OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
-    PrincipalCollection principals = (PrincipalCollection) oidcAuthenticationToken.getCredentials();
-    OidcCredentials credentials =
-        (OidcCredentials)
-            principals
-                .byType(SecurityAssertion.class)
-                .stream()
-                .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
-                .map(SecurityAssertion::getToken)
-                .findFirst()
-                .orElse(null);
+    if (authenticationToken instanceof SessionToken) {
+      return handleSessionToken((SessionToken) authenticationToken);
+    }
+    // token is guaranteed to by of type OidcAuthenticationToken by the supports() method
+    return handleOidcToken((OidcAuthenticationToken) authenticationToken);
+  }
+
+  private AuthenticationInfo handleSessionToken(SessionToken sessionToken) {
+    OidcCredentials credentials = getOidcCredentialsFromSessionToken(sessionToken);
+    SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
+    SimplePrincipalCollection principalCollection =
+        createPrincipalCollectionFromCredentials(credentials);
+    simpleAuthenticationInfo.setPrincipals(principalCollection);
+    simpleAuthenticationInfo.setCredentials(sessionToken.getCredentials());
+
+    return simpleAuthenticationInfo;
+  }
+
+  private AuthenticationInfo handleOidcToken(OidcAuthenticationToken oidcAuthenticationToken) {
+    OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
     WebContext webContext = oidcAuthenticationToken.getWebContext();
 
     if (credentials.getIdToken() == null) {
@@ -137,14 +141,16 @@ public class OidcRealm extends AuthenticatingRealm {
     }
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principalCollection = createPrincipalCollectionFromJwt(credentials);
-    simpleAuthenticationInfo.setPrincipals(principals);
+    SimplePrincipalCollection principalCollection =
+        createPrincipalCollectionFromCredentials(credentials);
+    simpleAuthenticationInfo.setPrincipals(principalCollection);
     simpleAuthenticationInfo.setCredentials(credentials);
 
     return simpleAuthenticationInfo;
   }
 
-  private SimplePrincipalCollection createPrincipalCollectionFromJwt(OidcCredentials credentials) {
+  private SimplePrincipalCollection createPrincipalCollectionFromCredentials(
+      OidcCredentials credentials) {
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
     SecurityAssertion securityAssertion = null;
     try {
@@ -162,6 +168,29 @@ public class OidcRealm extends AuthenticatingRealm {
       principals.add(securityAssertion, getName());
     }
     return principals;
+  }
+
+  private OidcCredentials getOidcCredentialsFromSessionToken(SessionToken sessionToken) {
+    OidcCredentials credentials = null;
+
+    PrincipalCollection principals = (PrincipalCollection) sessionToken.getPrincipal();
+
+    SecurityAssertionJwt assertionJwt =
+        (SecurityAssertionJwt)
+            principals
+                .byType(SecurityAssertion.class)
+                .stream()
+                .filter(
+                    assertion ->
+                        SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(assertion.getTokenType()))
+                .findFirst()
+                .orElse(null);
+
+    if (assertionJwt != null && assertionJwt.getCredentials() != null) {
+      credentials = assertionJwt.getCredentials();
+    }
+
+    return credentials;
   }
 
   public List<String> getUsernameAttributeList() {

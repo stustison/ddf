@@ -56,4 +56,11 @@ public interface ContextPolicyManager {
    * @return true if guest is access is on
    */
   boolean getGuestAccess();
+
+  /**
+   * Returns true if session information should be stored for all context paths
+   *
+   * @return true if session information should be stored
+   */
+  boolean getSessionAccess();
 }

@@ -28,6 +28,7 @@
             </array>
         </property>
         <property name="guestAccess" value="true" />
+        <property name="sessionAccess" value="true" />
         <property name="requiredAttributes">
             <array value-type="java.lang.String">
                 <!-- @formatter:off -->

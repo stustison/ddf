@@ -13,28 +13,20 @@
  */
 package org.codice.ddf.security.handler.saml;
 
-import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
-import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
-import ddf.security.common.SecurityTokenHolder;
-import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.xml.stream.XMLStreamException;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.common.HttpUtils;
@@ -94,7 +86,8 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
           SimplePrincipalCollection simplePrincipalCollection = new SimplePrincipalCollection();
           simplePrincipalCollection.add(new SecurityAssertionSaml(securityToken), "default");
           SAMLAuthenticationToken samlToken =
-              new SAMLAuthenticationToken(null, simplePrincipalCollection, request.getRemoteAddr());
+              new SAMLAuthenticationToken(
+                  simplePrincipalCollection, simplePrincipalCollection, request.getRemoteAddr());
           handlerResult.setToken(samlToken);
           handlerResult.setStatus(HandlerResult.Status.COMPLETED);
         } catch (IOException e) {
@@ -132,52 +125,6 @@ public class SAMLAssertionHandler implements AuthenticationHandler {
             e);
       }
       return handlerResult;
-    }
-
-    HttpSession session = httpRequest.getSession(false);
-    if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()) {
-      SecurityLogger.audit(
-          "Incoming HTTP Request contained possible unknown session ID [{}] for this server.",
-          Hashing.sha256()
-              .hashString(httpRequest.getRequestedSessionId(), StandardCharsets.UTF_8)
-              .toString());
-    }
-    if (session == null && httpRequest.getRequestedSessionId() != null) {
-      session = sessionFactory.getOrCreateSession(httpRequest);
-    }
-    if (session != null) {
-      // Check if there is a SAML Assertion in the session
-      // If so, create a SAMLAuthenticationToken using the sessionId
-      SecurityTokenHolder savedToken =
-          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-      if (savedToken != null
-          && savedToken.getPrincipals() != null
-          && savedToken.getPrincipals() instanceof PrincipalCollection) {
-        Collection<SecurityAssertion> assertions =
-            ((PrincipalCollection) savedToken.getPrincipals()).byType(SecurityAssertion.class);
-        SecurityAssertion assertion =
-            assertions
-                .stream()
-                .filter(a -> SAML2_TOKEN_TYPE.equals(a.getTokenType()))
-                .findFirst()
-                .orElse(null);
-        if (assertion != null && assertion.isPresentlyValid()) {
-          LOGGER.trace("Creating SAML authentication token with session.");
-          SAMLAuthenticationToken samlToken =
-              new SAMLAuthenticationToken(null, session.getId(), request.getRemoteAddr());
-          handlerResult.setToken(samlToken);
-          handlerResult.setStatus(HandlerResult.Status.COMPLETED);
-          return handlerResult;
-        } else {
-          LOGGER.trace(
-              "SAML token in session has expired - removing from session and returning with no results");
-          savedToken.remove();
-        }
-      } else {
-        LOGGER.trace("No SAML token located in session - returning with no results");
-      }
-    } else {
-      LOGGER.trace("No HTTP Session - returning with no results");
     }
 
     return handlerResult;

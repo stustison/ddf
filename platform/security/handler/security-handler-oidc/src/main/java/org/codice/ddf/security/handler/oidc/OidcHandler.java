@@ -13,17 +13,12 @@
  */
 package org.codice.ddf.security.handler.oidc;
 
-import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
-import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
@@ -94,26 +89,6 @@ public class OidcHandler implements AuthenticationHandler {
       return processHeadRequest(httpResponse);
     }
 
-    HttpSession session = getOrCreateSessionOnRequest(httpRequest);
-    if (session == null) {
-      LOGGER.error("Unable to get/create session off of incoming request. Cannot continue.");
-      return noActionResult;
-    }
-    SecurityTokenHolder tokenHolder = getOrCreateTokenHolderOnSession(session);
-    if (tokenHolder == null) {
-      LOGGER.error("Unable to get/create token holder off of session. Cannot continue.");
-      return noActionResult;
-    }
-
-    J2ESessionStore sessionStore = new J2ESessionStore();
-    J2EContext j2EContext = new J2EContext(httpRequest, httpResponse, sessionStore);
-
-    // credentials exist on session
-    if (tokenHolder.getPrincipals() != null
-        && tokenHolder.getPrincipals() instanceof PrincipalCollection) {
-      return getCredentialsFromTokenHolder(tokenHolder, session, j2EContext);
-    }
-
     // at this point, the OIDC Handler must be configured
     if (!configuration.isInitialized()) {
       LOGGER.error(
@@ -122,11 +97,13 @@ public class OidcHandler implements AuthenticationHandler {
       return noActionResult;
     }
 
-    // no credentials found in session, time to try and pull some off of the request
     LOGGER.debug(
         "Doing Oidc authentication and authorization for path {}.", httpRequest.getContextPath());
 
     OidcCredentials credentials = new OidcCredentials();
+
+    J2ESessionStore sessionStore = new J2ESessionStore();
+    J2EContext j2EContext = new J2EContext(httpRequest, httpResponse, sessionStore);
 
     StringBuffer requestUrlBuffer = httpRequest.getRequestURL();
     requestUrlBuffer.append(
@@ -199,45 +176,6 @@ public class OidcHandler implements AuthenticationHandler {
     return noActionResult;
   }
 
-  private HandlerResult getCredentialsFromTokenHolder(
-      SecurityTokenHolder tokenHolder, HttpSession session, J2EContext j2EContext) {
-    // guaranteed non null PrincipalCollection by calling code
-    PrincipalCollection principals = (PrincipalCollection) tokenHolder.getPrincipals();
-
-    OidcCredentials credentials =
-        (OidcCredentials)
-            principals
-                .byType(SecurityAssertion.class)
-                .stream()
-                .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
-                .map(SecurityAssertion::getToken)
-                .findFirst()
-                .orElse(null);
-
-    if (credentials == null) {
-      LOGGER.debug(
-          "No Oidc Credentials found in token holder principals. Continuing to other handlers.");
-      return noActionResult;
-    }
-
-    if ((credentials.getCode() == null
-        && credentials.getAccessToken() == null
-        && credentials.getIdToken() == null)) {
-      LOGGER.error(
-          "Invalid Oidc Credentials found in token holder principals, invalidating session and continuing to other handlers.",
-          credentials);
-      session.invalidate();
-      return noActionResult;
-    }
-
-    OidcAuthenticationToken token =
-        new OidcAuthenticationToken(credentials, j2EContext, j2EContext.getRemoteAddr());
-
-    HandlerResult handlerResult = new HandlerResult(Status.COMPLETED, token);
-    handlerResult.setSource(SOURCE);
-    return handlerResult;
-  }
-
   private boolean userAgentIsNotBrowser(HttpServletRequest httpRequest) {
     String userAgentHeader = httpRequest.getHeader("User-Agent");
     // basically all browsers support the "Mozilla" way of operating, so they all have "Mozilla"
@@ -266,25 +204,6 @@ public class OidcHandler implements AuthenticationHandler {
     configuration.getOidcClient().redirect(j2EContext);
 
     return redirectedResult;
-  }
-
-  private HttpSession getOrCreateSessionOnRequest(HttpServletRequest httpRequest) {
-    HttpSession session = httpRequest.getSession(false);
-    if (session == null) {
-      session = sessionFactory.getOrCreateSession(httpRequest);
-    }
-    return session;
-  }
-
-  private SecurityTokenHolder getOrCreateTokenHolderOnSession(HttpSession session) {
-    SecurityTokenHolder tokenHolder =
-        ((SecurityTokenHolder)
-            session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY));
-    if (tokenHolder == null) {
-      tokenHolder = new SecurityTokenHolder();
-      session.setAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY, tokenHolder);
-    }
-    return tokenHolder;
   }
 
   // hack

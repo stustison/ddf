@@ -41,7 +41,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,6 +73,7 @@ import org.apache.wss4j.common.util.DOM2Writer;
 import org.codice.ddf.configuration.SystemBaseUrl;
 import org.codice.ddf.platform.session.api.HttpSessionInvalidator;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.LogoutResponse;
@@ -269,13 +269,9 @@ public class LogoutRequestService {
         .filter(SecurityTokenHolder.class::isInstance)
         .map(SecurityTokenHolder.class::cast)
         .map(SecurityTokenHolder::getPrincipals)
-        .filter(PrincipalCollection.class::isInstance)
+        .filter(Objects::nonNull)
         .map(PrincipalCollection.class::cast)
-        .map(p -> p.byType(SecurityAssertion.class))
-        .flatMap(Collection::stream)
-        .map(SecurityAssertion::getToken)
-        .filter(SecurityToken.class::isInstance)
-        .map(SecurityToken.class::cast)
+        .map(SessionToken::new)
         .map(this::extractSubject)
         .filter(Objects::nonNull)
         .map(SubjectUtils::getName)
@@ -283,9 +279,9 @@ public class LogoutRequestService {
         .orElse(null);
   }
 
-  private Subject extractSubject(SecurityToken securityToken) {
+  private Subject extractSubject(SessionToken sessionToken) {
     try {
-      return securityManager.getSubject(securityToken);
+      return securityManager.getSubject(sessionToken);
     } catch (SecurityServiceException e) {
       LOGGER.debug("Error extracting subject from security token", e);
       return null;
@@ -523,7 +519,8 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return ((PrincipalCollection) getTokenHolder().getPrincipals())
+    return getTokenHolder()
+        .getPrincipals()
         .byType(SecurityAssertion.class)
         .stream()
         .map(SecurityAssertion::getToken)
