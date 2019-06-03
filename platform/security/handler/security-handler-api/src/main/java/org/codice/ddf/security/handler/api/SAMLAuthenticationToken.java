@@ -14,7 +14,6 @@
 package org.codice.ddf.security.handler.api;
 
 import ddf.security.assertion.SecurityAssertion;
-import java.security.Principal;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -32,27 +31,8 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
    * @param principal represents the
    * @param token
    */
-  public SAMLAuthenticationToken(Principal principal, PrincipalCollection token, String ip) {
+  public SAMLAuthenticationToken(Object principal, PrincipalCollection token, String ip) {
     super(principal, token, ip);
-    reference = false;
-  }
-
-  public SAMLAuthenticationToken(Principal principal, String samlRef, String ip) {
-    super(principal, samlRef, ip);
-    reference = true;
-  }
-
-  public boolean isReference() {
-    return reference;
-  }
-
-  public void replaceReference(PrincipalCollection token) {
-    if (reference) {
-      credentials = token;
-      reference = false;
-    } else {
-      LOGGER.debug("Current token is not a reference - call to replace is ignored.");
-    }
   }
 
   /**
@@ -61,11 +41,6 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
    * @return the SAML token as a DOM element or null if it doesn't exist
    */
   public Element getSAMLTokenAsElement() {
-    if (reference) {
-      LOGGER.debug("Attempting to return a SAML token without converting from a reference.");
-      return null;
-    }
-
     SecurityToken token =
         ((PrincipalCollection) getCredentials())
             .byType(SecurityAssertion.class)

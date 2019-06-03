@@ -14,12 +14,14 @@
 package com.connexta.ddf.security.saml.assertion.validator;
 
 import ddf.security.http.SessionFactory;
+import java.security.cert.X509Certificate;
+import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
-import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 
 public interface SamlAssertionValidator {
 
-  void validate(SAMLAuthenticationToken token) throws AuthenticationFailureException;
+  void validate(SecurityToken token, X509Certificate[] certs, String requestUri)
+      throws AuthenticationFailureException;
 
   void setSignatureProperties(String signatureProperties);
 

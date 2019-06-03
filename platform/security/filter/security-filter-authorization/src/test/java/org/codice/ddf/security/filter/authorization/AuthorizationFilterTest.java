@@ -180,5 +180,10 @@ public class AuthorizationFilterTest {
     public boolean getGuestAccess() {
       return true;
     }
+
+    @Override
+    public boolean getSessionAccess() {
+      return true;
+    }
   }
 }

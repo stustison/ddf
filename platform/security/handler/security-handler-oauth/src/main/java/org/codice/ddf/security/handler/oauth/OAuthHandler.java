@@ -79,25 +79,8 @@ public class OAuthHandler implements AuthenticationHandler {
       return processHeadRequest(httpResponse);
     }
 
-    HttpSession session = getOrCreateSessionOnRequest(httpRequest);
-    if (session == null) {
-      LOGGER.error("Unable to get/create session off of incoming request. Cannot continue.");
-      return noActionResult;
-    }
-    SecurityTokenHolder tokenHolder = getOrCreateTokenHolderOnSession(session);
-    if (tokenHolder == null) {
-      LOGGER.error("Unable to get/create token holder off of session. Cannot continue.");
-      return noActionResult;
-    }
-
     J2ESessionStore sessionStore = new J2ESessionStore();
     J2EContext j2EContext = new J2EContext(httpRequest, httpResponse, sessionStore);
-
-    // credentials exist on session
-    if (tokenHolder.getPrincipals() != null
-        && tokenHolder.getPrincipals() instanceof PrincipalCollection) {
-      return getCredentialsFromTokenHolder(tokenHolder, session, j2EContext);
-    }
 
     // at this point, the OAuth Handler must be configured
     if (!configuration.isInitialized()) {

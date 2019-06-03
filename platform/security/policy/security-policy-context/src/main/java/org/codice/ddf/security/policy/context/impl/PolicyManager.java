@@ -62,6 +62,8 @@ public class PolicyManager implements ContextPolicyManager {
 
   private boolean guestAccess;
 
+  private boolean sessionAccess;
+
   public PolicyManager() {
     policyStore.put("/", defaultPolicy);
   }
@@ -435,6 +437,15 @@ public class PolicyManager implements ContextPolicyManager {
   @Override
   public boolean getGuestAccess() {
     return guestAccess;
+  }
+
+  public void setSessionAccess(boolean sessionAccess) {
+    this.sessionAccess = sessionAccess;
+  }
+
+  @Override
+  public boolean getSessionAccess() {
+    return sessionAccess;
   }
 
   /**

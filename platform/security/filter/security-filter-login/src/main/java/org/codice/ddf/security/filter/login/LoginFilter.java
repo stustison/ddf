@@ -39,16 +39,15 @@ import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang.StringUtils;
-import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationException;
-import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.platform.util.XMLUtils;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.policy.context.ContextPolicy;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +74,8 @@ public class LoginFilter implements SecurityFilter {
   private SecurityManager securityManager;
 
   private SessionFactory sessionFactory;
+
+  private ContextPolicyManager contextPolicyManager;
 
   private int expirationTime;
 
@@ -120,27 +121,12 @@ public class LoginFilter implements SecurityFilter {
       return;
     }
 
-    // if token is a reference (eg, JSESSIONID), replace with stored credentials
-    if (token.isReference()) {
-      token.setRetrievedFromReference(true);
-      Object savedToken = resolveReference(token, httpRequest);
-      if (savedToken != null) {
-        token.replaceReference(savedToken);
-      }
-      // ensure that the token now has credentials
-      if (token.isReference()) {
-        String msg = "Missing or invalid assertion for provided reference.";
-        LOGGER.debug(msg);
-        throw new AuthenticationFailureException(msg);
-      }
-    } else {
-      // if it's not a reference, attach x509certs and other httpRequest info to be verified in the
-      // shiro realms
-      token.setRetrievedFromReference(false);
-      token.setX509Certs(
-          (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
-      token.setRequestURI(httpRequest.getRequestURI());
-    }
+    token.setX509Certs(
+        (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
+    token.setRequestURI(httpRequest.getRequestURI());
+
+    // this is temporary
+    token = checkSessionTokenExpiration(token);
 
     // get subject from the token
     Subject subject;
@@ -198,28 +184,27 @@ public class LoginFilter implements SecurityFilter {
         });
   }
 
-  private Object resolveReference(BaseAuthenticationToken token, HttpServletRequest httpRequest) {
-    if (token.isReference()) {
-      LOGGER.trace("Converting reference to assertion");
-      Object sessionTokenHolder =
-          httpRequest.getSession(false).getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-      if (LOGGER.isTraceEnabled()) {
-        LOGGER.trace(
-            "Http Session assertion - class: {}  loader: {}",
-            sessionTokenHolder.getClass().getName(),
-            sessionTokenHolder.getClass().getClassLoader());
-        LOGGER.trace(
-            "SecurityToken class: {}  loader: {}",
-            SecurityToken.class.getName(),
-            SecurityToken.class.getClassLoader());
-      }
-      try {
-        return ((SecurityTokenHolder) sessionTokenHolder).getPrincipals();
-      } catch (ClassCastException e) {
-        httpRequest.getSession(false).invalidate();
-      }
-    }
-    return null;
+  // temporary method
+  private BaseAuthenticationToken checkSessionTokenExpiration(BaseAuthenticationToken token) {
+    //    if (token instanceof SessionToken) {
+    //      Collection<SecurityAssertion> securityAssertions =
+    //          ((PrincipalCollection) token.getCredentials()).byType(SecurityAssertion.class);
+    //      SecurityAssertionSaml securityAssertionSaml =
+    //          (SecurityAssertionSaml) securityAssertions
+    //              .stream()
+    //              .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
+    //              .findFirst()
+    //              .orElse(null);
+    //      if (securityAssertionSaml != null) {
+    //        SAMLAuthenticationToken authToken =
+    //            new SAMLAuthenticationToken(
+    //                null, (PrincipalCollection) token.getCredentials(), token.getIpAddress());
+    //        authToken.setAllowGuest(token.getAllowGuest());
+    //        return authToken;
+    //      }
+    //    }
+    //    return token;
+    return token;
   }
 
   /**
@@ -235,7 +220,7 @@ public class LoginFilter implements SecurityFilter {
     HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
     SecurityTokenHolder holder =
         (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-    PrincipalCollection oldPrincipals = (PrincipalCollection) holder.getPrincipals();
+    PrincipalCollection oldPrincipals = holder.getPrincipals();
     if (!principals.equals(oldPrincipals)) {
       holder.setPrincipals(principals);
     }

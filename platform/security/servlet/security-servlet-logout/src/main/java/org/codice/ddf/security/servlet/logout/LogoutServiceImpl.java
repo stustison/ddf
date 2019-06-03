@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.Subject;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.codice.ddf.security.logout.service.LogoutService;
 import org.codice.gsonsupport.GsonTypeAdapters.LongDoubleTypeAdapter;
 
@@ -56,7 +57,8 @@ public class LogoutServiceImpl implements LogoutService {
     Object token =
         ((SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY))
             .getPrincipals();
-    Subject subject = securityManager.getSubject(token);
+    SessionToken sessionToken = new SessionToken(token);
+    Subject subject = securityManager.getSubject(sessionToken);
 
     Map<String, Object> subjectMap = new HashMap<>();
     subjectMap.put("http_request", request);

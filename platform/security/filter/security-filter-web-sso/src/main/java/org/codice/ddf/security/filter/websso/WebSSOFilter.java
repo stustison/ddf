@@ -15,7 +15,14 @@ package org.codice.ddf.security.filter.websso;
 
 import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
 
+import com.google.common.hash.Hashing;
+import ddf.security.SecurityConstants;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.common.SecurityTokenHolder;
+import ddf.security.common.audit.SecurityLogger;
+import ddf.security.http.SessionFactory;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +30,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.codice.ddf.platform.filter.AuthenticationChallengeException;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
@@ -31,7 +39,9 @@ import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
 import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
+import org.codice.ddf.security.handler.api.HandlerResult.Status;
 import org.codice.ddf.security.handler.api.InvalidSAMLReceivedException;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
@@ -52,6 +62,8 @@ public class WebSSOFilter implements SecurityFilter {
   private List<AuthenticationHandler> handlerList = new ArrayList<>();
 
   private ContextPolicyManager contextPolicyManager;
+
+  private SessionFactory sessionFactory;
 
   @Override
   public void init() {
@@ -133,33 +145,6 @@ public class WebSSOFilter implements SecurityFilter {
     HandlerResult result = null;
     LOGGER.debug("Checking for existing tokens in request.");
 
-    for (AuthenticationHandler auth : handlers) {
-      result = auth.getNormalizedToken(httpRequest, httpResponse, filterChain, false);
-      if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
-        LOGGER.debug(
-            "Handler {} set the result status to {}",
-            auth.getAuthenticationType(),
-            result.getStatus());
-        break;
-      }
-    }
-
-    // If we haven't received usable credentials yet, go get some
-    if (result == null || result.getStatus() == HandlerResult.Status.NO_ACTION) {
-      LOGGER.debug("First pass with no tokens found - requesting tokens");
-      // This pass, tell each handler to do whatever it takes to get a SecurityToken
-      for (AuthenticationHandler auth : handlers) {
-        result = auth.getNormalizedToken(httpRequest, httpResponse, filterChain, true);
-        if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
-          LOGGER.debug(
-              "Handler {} set the result status to {}",
-              auth.getAuthenticationType(),
-              result.getStatus());
-          break;
-        }
-      }
-    }
-
     final String path = httpRequest.getRequestURI();
     String ipAddress = httpRequest.getHeader("X-FORWARDED-FOR");
 
@@ -167,6 +152,94 @@ public class WebSSOFilter implements SecurityFilter {
       ipAddress = httpRequest.getRemoteAddr();
     }
 
+    result = checkForExistingSession(httpRequest, ipAddress);
+
+    if (result == null) {
+      result = getHandlerResult(httpRequest, httpResponse, filterChain, handlers);
+    }
+
+    handleResultStatus(httpRequest, httpResponse, result, path, ipAddress);
+
+    // If we got here, we've received our tokens to continue
+    LOGGER.debug("Invoking the rest of the filter chain");
+    try {
+      filterChain.doFilter(httpRequest, httpResponse);
+    } catch (InvalidSAMLReceivedException e) {
+      // we tried to process an invalid or missing SAML assertion
+      returnSimpleResponse(HttpServletResponse.SC_UNAUTHORIZED, httpResponse);
+      throw new AuthenticationFailureException(e);
+    } catch (Exception e) {
+      LOGGER.debug(
+          "Exception in filter chain - passing off to handlers. Msg: {}", e.getMessage(), e);
+
+      // First pass, see if anyone can come up with proper security token
+      // from the git-go
+      result = null;
+      for (AuthenticationHandler auth : handlers) {
+        result = auth.handleError(httpRequest, httpResponse, filterChain);
+        if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
+          LOGGER.debug(
+              "Handler {} set the status to {}", auth.getAuthenticationType(), result.getStatus());
+          break;
+        }
+      }
+      if (result == null || result.getStatus() == HandlerResult.Status.NO_ACTION) {
+        LOGGER.debug(
+            "Error during authentication - no error recovery attempted - returning bad request.");
+        httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        httpResponse.flushBuffer();
+      }
+      throw new AuthenticationFailureException(e);
+    }
+  }
+
+  private HandlerResult checkForExistingSession(HttpServletRequest httpRequest, String ip) {
+    HandlerResult result = null;
+    HttpSession session = httpRequest.getSession(false);
+    String requestedSessionId = httpRequest.getRequestedSessionId();
+    if (requestedSessionId != null && !httpRequest.isRequestedSessionIdValid()) {
+      SecurityLogger.audit(
+          "Incoming HTTP Request contained possible unknown session ID [{}] for this server.",
+          Hashing.sha256().hashString(requestedSessionId, StandardCharsets.UTF_8).toString());
+    }
+    if (session == null && requestedSessionId != null) {
+      session = sessionFactory.getOrCreateSession(httpRequest);
+    }
+    if (session != null) {
+      SecurityTokenHolder savedToken =
+          (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+      if (savedToken != null && savedToken.getPrincipals() != null) {
+        Collection<SecurityAssertion> assertions =
+            savedToken.getPrincipals().byType(SecurityAssertion.class);
+        SessionToken sessionToken = null;
+        if (!assertions.isEmpty()) {
+          sessionToken =
+              new SessionToken(savedToken.getPrincipals(), savedToken.getPrincipals(), ip);
+        }
+        if (sessionToken != null) {
+          result = new HandlerResult();
+          result.setToken(sessionToken);
+          result.setStatus(HandlerResult.Status.COMPLETED);
+        } else {
+          savedToken.remove();
+        }
+      } else {
+        LOGGER.trace("No principals located in session - returning with no results");
+      }
+    } else {
+      LOGGER.trace("No HTTP Session - returning with no results");
+    }
+    return result;
+  }
+
+  private void handleResultStatus(
+      HttpServletRequest httpRequest,
+      HttpServletResponse httpResponse,
+      HandlerResult result,
+      String path,
+      String ipAddress)
+      throws AuthenticationChallengeException, AuthenticationFailureException {
     if (result != null) {
       switch (result.getStatus()) {
         case REDIRECTED:
@@ -184,8 +257,8 @@ public class WebSSOFilter implements SecurityFilter {
             throw new AuthenticationFailureException(
                 "No handlers were able to determine required credentials");
           }
-          result.setStatus(HandlerResult.Status.COMPLETED);
-          result.setToken(new GuestAuthenticationToken(httpRequest.getRemoteAddr()));
+          result = new HandlerResult(Status.COMPLETED, new GuestAuthenticationToken(ipAddress));
+          result.setSource("default");
           // fall through
         case COMPLETED:
           if (result.getToken() == null) {
@@ -220,39 +293,42 @@ public class WebSSOFilter implements SecurityFilter {
       returnSimpleResponse(HttpServletResponse.SC_BAD_REQUEST, httpResponse);
       throw new AuthenticationFailureException("Didn't find any login credentials");
     }
+  }
 
-    // If we got here, we've received our tokens to continue
-    LOGGER.debug("Invoking the rest of the filter chain");
-    try {
-      filterChain.doFilter(httpRequest, httpResponse);
-    } catch (InvalidSAMLReceivedException e) {
-      // we tried to process an invalid or missing SAML assertion
-      returnSimpleResponse(HttpServletResponse.SC_UNAUTHORIZED, httpResponse);
-      throw new AuthenticationFailureException(e);
-    } catch (Exception e) {
-      LOGGER.debug(
-          "Exception in filter chain - passing off to handlers. Msg: {}", e.getMessage(), e);
+  private HandlerResult getHandlerResult(
+      HttpServletRequest httpRequest,
+      HttpServletResponse httpResponse,
+      FilterChain filterChain,
+      List<AuthenticationHandler> handlers)
+      throws AuthenticationException {
+    HandlerResult result = null;
+    for (AuthenticationHandler auth : handlers) {
+      result = auth.getNormalizedToken(httpRequest, httpResponse, filterChain, false);
+      if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
+        LOGGER.debug(
+            "Handler {} set the result status to {}",
+            auth.getAuthenticationType(),
+            result.getStatus());
+        break;
+      }
+    }
 
-      // First pass, see if anyone can come up with proper security token
-      // from the git-go
-      result = null;
+    // If we haven't received usable credentials yet, go get some
+    if (result == null || result.getStatus() == HandlerResult.Status.NO_ACTION) {
+      LOGGER.debug("First pass with no tokens found - requesting tokens");
+      // This pass, tell each handler to do whatever it takes to get a SecurityToken
       for (AuthenticationHandler auth : handlers) {
-        result = auth.handleError(httpRequest, httpResponse, filterChain);
+        result = auth.getNormalizedToken(httpRequest, httpResponse, filterChain, true);
         if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
           LOGGER.debug(
-              "Handler {} set the status to {}", auth.getAuthenticationType(), result.getStatus());
+              "Handler {} set the result status to {}",
+              auth.getAuthenticationType(),
+              result.getStatus());
           break;
         }
       }
-      if (result == null || result.getStatus() == HandlerResult.Status.NO_ACTION) {
-        LOGGER.debug(
-            "Error during authentication - no error recovery attempted - returning bad request.");
-        httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        httpResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        httpResponse.flushBuffer();
-      }
-      throw new AuthenticationFailureException(e);
     }
+    return result;
   }
 
   private List<AuthenticationHandler> getHandlerList(String path) {
@@ -327,5 +403,9 @@ public class WebSSOFilter implements SecurityFilter {
 
   public void setContextPolicyManager(ContextPolicyManager contextPolicyManager) {
     this.contextPolicyManager = contextPolicyManager;
+  }
+
+  public void setSessionFactory(SessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
   }
 }

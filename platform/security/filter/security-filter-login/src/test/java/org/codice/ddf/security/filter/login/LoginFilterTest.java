@@ -111,8 +111,6 @@ public class LoginFilterTest {
     when(sessionFactory.getOrCreateSession(any())).thenReturn(sessionMock);
 
     when(sessionMock.getAttribute(SECURITY_TOKEN_KEY)).thenReturn(securityTokenHolder);
-
-    when(referenceTokenMock.isReference()).thenReturn(true, true, false);
   }
 
   @Test
