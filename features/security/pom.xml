@@ -217,11 +217,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.security.handler</groupId>
-            <artifactId>security-handler-guest</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.security.filter</groupId>
             <artifactId>security-filter-web-sso</artifactId>
             <version>${project.version}</version>
@@ -234,16 +229,6 @@
         <dependency>
             <groupId>ddf.security.policy</groupId>
             <artifactId>security-policy-context</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.security.sts</groupId>
-            <artifactId>security-sts-guestvalidator</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ddf.security.sts</groupId>
-            <artifactId>security-sts-guestclaimshandler</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
