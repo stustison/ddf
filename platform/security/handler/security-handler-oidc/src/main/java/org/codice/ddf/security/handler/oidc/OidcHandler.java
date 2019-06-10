@@ -121,7 +121,7 @@ public class OidcHandler implements AuthenticationHandler {
       return noActionResult;
     } else { // check for Authorization Code Flow, Implicit Flow, or Hybrid Flow credentials
       try {
-        credentials = getCredentials(j2EContext);
+        credentials = getCredentialsFromRequest(j2EContext);
       } catch (IllegalArgumentException e) {
         LOGGER.debug(e.getMessage(), e);
         LOGGER.error(
@@ -190,7 +190,7 @@ public class OidcHandler implements AuthenticationHandler {
             || userAgentHeader.contains("Chrome"));
   }
 
-  private OidcCredentials getCredentials(J2EContext j2EContext) {
+  private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext) {
     configuration.getOidcClient().setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
 
     OidcExtractor oidcExtractor =
