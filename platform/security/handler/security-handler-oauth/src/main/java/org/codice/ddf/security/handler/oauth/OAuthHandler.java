@@ -17,8 +17,6 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
@@ -27,7 +25,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
@@ -109,7 +106,7 @@ public class OAuthHandler implements AuthenticationHandler {
     // machine to machine, check for Client Credentials Flow credentials
     if (isMachine) {
       try {
-        credentials = getCredentialFlowCredentials(j2EContext);
+        credentials = getCredentialsFromRequest(j2EContext);
       } catch (IllegalArgumentException e) {
         LOGGER.error(
             "Problem with the OAuth Handler's OAuthHandlerConfiguration. "
@@ -169,45 +166,6 @@ public class OAuthHandler implements AuthenticationHandler {
     return noActionResult;
   }
 
-  private HandlerResult getCredentialsFromTokenHolder(
-      SecurityTokenHolder tokenHolder, HttpSession session, J2EContext j2EContext) {
-    // guaranteed non null PrincipalCollection by calling code
-    PrincipalCollection principals = (PrincipalCollection) tokenHolder.getPrincipals();
-
-    OidcCredentials credentials =
-        (OidcCredentials)
-            principals
-                .byType(SecurityAssertion.class)
-                .stream()
-                .filter(sa -> SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(sa.getTokenType()))
-                .map(SecurityAssertion::getToken)
-                .findFirst()
-                .orElse(null);
-
-    if (credentials == null) {
-      LOGGER.debug(
-          "No Oidc Credentials found in token holder principals. Continuing to other handlers.");
-      return noActionResult;
-    }
-
-    if ((credentials.getCode() == null
-        && credentials.getAccessToken() == null
-        && credentials.getIdToken() == null)) {
-      LOGGER.error(
-          "Invalid Oidc Credentials found in token holder principals, invalidating session and continuing to other handlers.",
-          credentials);
-      session.invalidate();
-      return noActionResult;
-    }
-
-    OidcAuthenticationToken token =
-        new OidcAuthenticationToken(credentials, j2EContext, j2EContext.getRemoteAddr());
-
-    HandlerResult handlerResult = new HandlerResult(Status.COMPLETED, token);
-    handlerResult.setSource(SOURCE);
-    return handlerResult;
-  }
-
   private boolean userAgentIsNotBrowser(HttpServletRequest httpRequest) {
     String userAgentHeader = httpRequest.getHeader("User-Agent");
     // basically all browsers support the "Mozilla" way of operating, so they all have "Mozilla"
@@ -222,7 +180,7 @@ public class OAuthHandler implements AuthenticationHandler {
             || userAgentHeader.contains("Chrome"));
   }
 
-  private OidcCredentials getCredentialFlowCredentials(J2EContext j2EContext)
+  private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext)
       throws IllegalArgumentException, OAuthCredentialsException {
     OAuth20CredentialsExtractor credentialsExtractor =
         new CustomOAuthCredentialsExtractor(

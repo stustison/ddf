@@ -152,10 +152,10 @@ public class WebSSOFilter implements SecurityFilter {
       ipAddress = httpRequest.getRemoteAddr();
     }
 
-    result = checkForExistingSession(httpRequest, ipAddress);
+    result = checkForPreviousResultOnSession(httpRequest, ipAddress);
 
     if (result == null) {
-      result = getHandlerResult(httpRequest, httpResponse, filterChain, handlers);
+      result = getResultFromHandlers(httpRequest, httpResponse, filterChain, handlers);
     }
 
     handleResultStatus(httpRequest, httpResponse, result, path, ipAddress);
@@ -194,7 +194,7 @@ public class WebSSOFilter implements SecurityFilter {
     }
   }
 
-  private HandlerResult checkForExistingSession(HttpServletRequest httpRequest, String ip) {
+  private HandlerResult checkForPreviousResultOnSession(HttpServletRequest httpRequest, String ip) {
     HandlerResult result = null;
     HttpSession session = httpRequest.getSession(false);
     String requestedSessionId = httpRequest.getRequestedSessionId();
@@ -295,7 +295,7 @@ public class WebSSOFilter implements SecurityFilter {
     }
   }
 
-  private HandlerResult getHandlerResult(
+  private HandlerResult getResultFromHandlers(
       HttpServletRequest httpRequest,
       HttpServletResponse httpResponse,
       FilterChain filterChain,
