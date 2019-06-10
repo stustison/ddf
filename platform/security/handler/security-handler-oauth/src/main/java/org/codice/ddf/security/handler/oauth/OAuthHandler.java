@@ -17,14 +17,12 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
@@ -200,25 +198,6 @@ public class OAuthHandler implements AuthenticationHandler {
     }
 
     return oidcCredentials;
-  }
-
-  private HttpSession getOrCreateSessionOnRequest(HttpServletRequest httpRequest) {
-    HttpSession session = httpRequest.getSession(false);
-    if (session == null) {
-      session = sessionFactory.getOrCreateSession(httpRequest);
-    }
-    return session;
-  }
-
-  private SecurityTokenHolder getOrCreateTokenHolderOnSession(HttpSession session) {
-    SecurityTokenHolder tokenHolder =
-        ((SecurityTokenHolder)
-            session.getAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY));
-    if (tokenHolder == null) {
-      tokenHolder = new SecurityTokenHolder();
-      session.setAttribute(ddf.security.SecurityConstants.SECURITY_TOKEN_KEY, tokenHolder);
-    }
-    return tokenHolder;
   }
 
   // hack
