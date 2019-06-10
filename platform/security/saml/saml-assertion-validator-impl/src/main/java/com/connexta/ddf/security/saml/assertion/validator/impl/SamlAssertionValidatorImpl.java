@@ -16,6 +16,8 @@ package com.connexta.ddf.security.saml.assertion.validator.impl;
 import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.PropertiesLoader;
+import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityServiceException;
 import java.io.ByteArrayInputStream;
@@ -35,6 +37,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cxf.rs.security.saml.sso.SAMLProtocolResponseValidator;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.CryptoFactory;
 import org.apache.wss4j.common.ext.WSSecurityException;
@@ -50,6 +54,7 @@ import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.util.XMLUtils;
+import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.joda.time.DateTime;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -114,12 +119,17 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
    * Validates a SAML SecurityAssertion by checking it's signature against the configured system
    * certs.
    *
-   * @param securityToken saml BaseAuthenticationToken containing saml assertion to validate
+   * @param token AuthenticationToken containing a saml assertion to validate
    * @throws AuthenticationFailureException thrown when the cert fails to validate
    */
   @Override
-  public void validate(SecurityToken securityToken, X509Certificate[] certs, String requestUri)
-      throws AuthenticationFailureException {
+  public void validate(BaseAuthenticationToken token) throws AuthenticationFailureException {
+    SecurityToken securityToken = getSamlTokenFromAuthenticationToken(token);
+
+    if (securityToken == null) {
+      throw new AuthenticationFailureException(
+          "Problem validating incoming authentication token: could not find saml assertion.");
+    }
 
     try {
       LOGGER.debug("Validation received SAML Assertion");
@@ -129,7 +139,7 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
       Crypto crypto = getSignatureCrypto();
       Response samlResponse =
           createSamlResponse(
-              requestUri,
+              token.getRequestURI(),
               assertionWrapper.getIssuerString(),
               createStatus(SAMLProtocolResponseValidator.SAML2_STATUSCODE_SUCCESS, null));
 
@@ -147,9 +157,9 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
       WSSConfig wssConfig = WSSConfig.getNewInstance();
       requestData.setWssConfig(wssConfig);
 
-      requestData.setTlsCerts(certs);
+      requestData.setTlsCerts(token.getX509Certs());
 
-      validateHolderOfKeyConfirmation(assertionWrapper, certs);
+      validateHolderOfKeyConfirmation(assertionWrapper, token.getX509Certs());
 
       if (assertionWrapper.isSigned()) {
         // Verify the signature
@@ -171,6 +181,33 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
       LOGGER.debug("Unable to read/validate security token from request.", e);
       throw new AuthenticationFailureException(e);
     }
+  }
+
+  private SecurityToken getSamlTokenFromAuthenticationToken(
+      AuthenticationToken authenticationToken) {
+    PrincipalCollection principals = null;
+    if (authenticationToken.getPrincipal() != null
+        && authenticationToken.getPrincipal() instanceof PrincipalCollection) {
+      principals = (PrincipalCollection) authenticationToken.getPrincipal();
+    }
+
+    if (principals != null) {
+      SecurityAssertion samlAssertion =
+          principals
+              .byType(SecurityAssertion.class)
+              .stream()
+              .filter(
+                  assertion ->
+                      SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(assertion.getTokenType()))
+              .findFirst()
+              .orElse(null);
+
+      if (samlAssertion != null) {
+        return (SecurityToken) samlAssertion.getToken();
+      }
+    }
+
+    return null;
   }
 
   /**

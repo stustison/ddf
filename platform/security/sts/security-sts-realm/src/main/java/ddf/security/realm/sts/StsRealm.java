@@ -174,8 +174,7 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
     if (isOldAssertion) { // old saml assertion
       try {
-        samlAssertionValidator.validate(
-            securityToken, authenticationToken.getX509Certs(), authenticationToken.getRequestURI());
+        samlAssertionValidator.validate(authenticationToken);
       } catch (AuthenticationFailureException e) {
         String msg = "Unable to validate request's authentication.";
         LOGGER.info(msg);
