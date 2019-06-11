@@ -28,6 +28,10 @@
             description="Allow guest access to all web contexts. Required attributes can be used to restrict access to contexts from guest users."
             default="true"/>
 
+        <AD id="sessionAccess" type="Boolean" name="Allow Session Storage"
+            description="Allow for session cookies to be used."
+            default="true"/>
+
         <AD description="List of authentication types required for each context. List of default valid authentication types are: IDP, OIDC, SAML, BASIC, PKI. Example: /context=AUTH1|AUTH2|AUTH3"
             name="Authentication Types" id="authenticationTypes" required="true" cardinality="100"
             type="String"
@@ -41,7 +45,7 @@
         <AD description="List of contexts that will not use security. Note that sub-contexts to ones listed here will also skip security, unless authentication types are provided for it. For example: if /foo is listed here, then /foo/bar will also not require any sort of authentication. However, if /foo is listed and /foo/bar has authentication types provided in the 'Authentication Types' field, then that more specific policy will be used."
             name="White Listed Contexts" id="whiteListContexts" required="true" cardinality="100"
             type="String"
-            default="${org.codice.ddf.system.rootContext}/SecurityTokenService,${org.codice.ddf.system.rootContext}/internal/metrics,/proxy,${org.codice.ddf.system.rootContext}/saml,${org.codice.ddf.system.rootContext}/idp,/idp,${org.codice.ddf.system.rootContext}/platform/config/ui,/login,/logout,${org.codice.ddf.system.rootContext}/internal/session,/error,/webjars,/health-check,/readiness-check"/>
+            default="${org.codice.ddf.system.rootContext}/SecurityTokenService,${org.codice.ddf.system.rootContext}/internal/metrics,/proxy,${org.codice.ddf.system.rootContext}/saml,${org.codice.ddf.system.rootContext}/idp,/idp,${org.codice.ddf.system.rootContext}/platform/config/ui,/login,/logout,${org.codice.ddf.system.rootContext}/internal/session,${org.codice.ddf.system.rootContext}/admin/fonts,${org.codice.ddf.system.rootContext}/favicon.ico,/error,/webjars,/health-check,/readiness-check"/>
 
     </OCD>
 

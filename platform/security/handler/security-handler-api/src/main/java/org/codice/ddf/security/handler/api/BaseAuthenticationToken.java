@@ -23,10 +23,6 @@ import org.slf4j.LoggerFactory;
 
 public class BaseAuthenticationToken implements AuthenticationToken {
 
-  boolean reference = false;
-
-  private boolean retrievedFromReference = false;
-
   private X509Certificate[] x509Certs;
 
   private String requestURI;
@@ -113,29 +109,8 @@ public class BaseAuthenticationToken implements AuthenticationToken {
     this.requestURI = requestURI;
   }
 
-  public boolean wasRetrievedFromReference() {
-    return retrievedFromReference;
-  }
-
-  public void setRetrievedFromReference(boolean retrievedFromReference) {
-    this.retrievedFromReference = retrievedFromReference;
-  }
-
   public String getCredentialsAsString() {
     return credentials.toString();
-  }
-
-  public boolean isReference() {
-    return reference;
-  }
-
-  public void replaceReference(Object token) {
-    if (reference) {
-      credentials = token;
-      reference = false;
-    } else {
-      LOGGER.debug("Current token is not a reference - call to replace is ignored.");
-    }
   }
 
   // IPv6 addresses should be contained within brackets to conform

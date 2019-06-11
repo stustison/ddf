@@ -18,6 +18,7 @@ import ddf.security.Subject;
 import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
+import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.net.URI;
@@ -42,9 +43,11 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
   private Clock clock = Clock.systemUTC();
 
+  private SessionFactory sessionFactory;
+
   @Override
   public String getExpiry(HttpServletRequest request) {
-    HttpSession session = request.getSession(false);
+    HttpSession session = sessionFactory.getOrCreateSession(request);
     long timeLeft = 0;
     if (session != null) {
       Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
@@ -57,7 +60,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
   @Override
   public String getRenewal(HttpServletRequest request) {
-    HttpSession session = request.getSession(false);
+    HttpSession session = sessionFactory.getOrCreateSession(request);
 
     String timeLeft = null;
     if (session != null) {
@@ -89,11 +92,10 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   }
 
   private long getTimeLeft(SecurityTokenHolder securityToken) {
-    Object token = securityToken.getPrincipals();
+    PrincipalCollection token = securityToken.getPrincipals();
 
-    if (token instanceof PrincipalCollection) {
-      Collection<SecurityAssertion> securityAssertions =
-          ((PrincipalCollection) token).byType(SecurityAssertion.class);
+    if (token != null) {
+      Collection<SecurityAssertion> securityAssertions = token.byType(SecurityAssertion.class);
       List<SecurityAssertion> assertionList = new ArrayList<>(securityAssertions);
       assertionList.sort(SubjectUtils.getAssertionComparator());
       SecurityAssertion securityAssertion = assertionList.get(0);
@@ -112,11 +114,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
           new SAMLAuthenticationToken(
               null, (PrincipalCollection) securityToken, request.getRemoteAddr());
       Subject subject = securityManager.getSubject(samlToken);
-      for (Object principal : subject.getPrincipals().asList()) {
-        if (principal instanceof SecurityAssertion) {
-          tokenHolder.setPrincipals(((SecurityAssertion) principal).getToken());
-        }
-      }
+      tokenHolder.setPrincipals(subject.getPrincipals());
     }
   }
 
@@ -126,5 +124,9 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
   public void setClock(Clock clock) {
     this.clock = clock;
+  }
+
+  public void setSessionFactory(SessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
   }
 }

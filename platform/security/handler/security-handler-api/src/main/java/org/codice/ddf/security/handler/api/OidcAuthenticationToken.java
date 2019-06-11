@@ -13,14 +13,23 @@
  */
 package org.codice.ddf.security.handler.api;
 
-public class OidcAuthenticationToken extends BaseAuthenticationToken {
+import org.pac4j.core.context.WebContext;
 
-  public OidcAuthenticationToken(Object credentials, String ip) {
+public class OidcAuthenticationToken extends BaseAuthenticationToken {
+  private WebContext webContext;
+
+  public OidcAuthenticationToken(Object credentials, WebContext webContext, String ip) {
     super(null, credentials, ip);
+
+    this.webContext = webContext;
   }
 
   @Override
   public String getCredentialsAsString() {
     return null;
+  }
+
+  public WebContext getWebContext() {
+    return webContext;
   }
 }

@@ -184,6 +184,10 @@ public class SecurityAssertionJwt implements SecurityAssertion {
     return true;
   }
 
+  public OidcCredentials getCredentials() {
+    return credentials;
+  }
+
   private String getMainPrincipalAsString() throws NoSuchElementException {
     final List<String> claimsToCheck = ImmutableList.of("preferred_username", "email", "sub");
 

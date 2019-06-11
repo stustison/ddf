@@ -48,7 +48,7 @@ public class GuestRealm extends AuthenticatingRealm {
   private static final Logger LOGGER = LoggerFactory.getLogger(GuestRealm.class);
 
   private Cache<String, SimplePrincipalCollection> cache =
-      CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
+      CacheBuilder.newBuilder().expireAfterWrite(240, TimeUnit.MINUTES).build();
 
   private Map<URI, List<String>> claimsMap = new HashMap<>();
 
@@ -119,9 +119,8 @@ public class GuestRealm extends AuthenticatingRealm {
     defaultSecurityAssertionBuilder.addPrincipal(new GuestPrincipal(token.getIpAddress()));
     defaultSecurityAssertionBuilder.issuer("local");
     defaultSecurityAssertionBuilder.notBefore(new Date());
-    // add 2 minutes to time, just so that the dates don't collide. We don't really care how long it
-    // is "valid" for
-    defaultSecurityAssertionBuilder.notOnOrAfter(new Date(new Date().getTime() + 120000L));
+    // We don't really care how long it is "valid" for
+    defaultSecurityAssertionBuilder.notOnOrAfter(new Date(new Date().getTime() + 14400000L));
     defaultSecurityAssertionBuilder.token(token);
     defaultSecurityAssertionBuilder.tokenType("guest");
     SecurityAssertion securityAssertion = defaultSecurityAssertionBuilder.build();

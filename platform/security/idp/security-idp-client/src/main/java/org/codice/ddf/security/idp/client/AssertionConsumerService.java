@@ -73,6 +73,7 @@ import org.codice.ddf.security.common.jaxrs.RestSecurity;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.saml.SAMLAssertionHandler;
 import org.codice.ddf.security.policy.context.ContextPolicy;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.saml.saml2.metadata.EntityDescriptor;
 import org.slf4j.Logger;
@@ -113,6 +114,8 @@ public class AssertionConsumerService {
   private SessionFactory sessionFactory;
 
   private SecurityManager securityManager;
+
+  private ContextPolicyManager contextPolicyManager;
 
   static {
     OpenSAMLUtil.initSamlEngine();
@@ -396,6 +399,8 @@ public class AssertionConsumerService {
       return false;
     }
 
+    samlResult.getToken().setAllowGuest(contextPolicyManager.getGuestAccess());
+
     request.setAttribute(AUTHENTICATION_TOKEN_KEY, samlResult);
     request.removeAttribute(ContextPolicy.NO_AUTH_POLICY);
 
@@ -483,5 +488,9 @@ public class AssertionConsumerService {
 
   public void setRequest(HttpServletRequest request) {
     this.request = request;
+  }
+
+  public void setContextPolicyManager(ContextPolicyManager contextPolicyManager) {
+    this.contextPolicyManager = contextPolicyManager;
   }
 }

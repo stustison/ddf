@@ -33,6 +33,7 @@ import org.apache.cxf.ws.security.sts.provider.model.secext.AttributedString;
 import org.apache.cxf.ws.security.sts.provider.model.secext.BinarySecurityTokenType;
 import org.apache.cxf.ws.security.sts.provider.model.secext.PasswordString;
 import org.apache.cxf.ws.security.sts.provider.model.secext.UsernameTokenType;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.common.ext.WSSecurityException;
 import org.apache.wss4j.common.token.BinarySecurity;
@@ -122,7 +123,8 @@ public class STSAuthenticationTokenFactory {
       LOGGER.info("Unable to parse username token.", ex);
     }
 
-    return new STSAuthenticationToken(null, usernameToken, ip);
+    return new STSAuthenticationToken(
+        null, new SimplePrincipalCollection(usernameToken, "IDP"), ip);
   }
 
   /**

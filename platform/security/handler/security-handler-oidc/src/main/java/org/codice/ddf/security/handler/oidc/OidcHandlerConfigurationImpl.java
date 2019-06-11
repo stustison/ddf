@@ -11,10 +11,12 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ddf.security.oidc.client;
+package org.codice.ddf.security.handler.oidc;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.util.Map;
-import java.util.Map.Entry;
+import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.oidc.client.AzureAdClient;
 import org.pac4j.oidc.client.GoogleOidcClient;
 import org.pac4j.oidc.client.KeycloakOidcClient;
@@ -30,7 +32,9 @@ import org.pac4j.oidc.profile.keycloak.KeycloakOidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HandlerConfiguration {
+public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
+  private static final Logger LOGGER = LoggerFactory.getLogger(OidcHandlerConfigurationImpl.class);
+
   private static final String IDP_TYPE = "idpType";
   private static final String CLIENT_ID = "clientId";
   private static final String REALM = "realm";
@@ -43,126 +47,109 @@ public class HandlerConfiguration {
   private static final String RESPONSE_MODE = "responseMode";
   private static final String LOGOUT_URI = "logoutUri";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HandlerConfiguration.class);
+  private static final String DEFAULT_CALLBACK_URL = "https://localhost:8993/admin";
 
-  private OidcClient oidcClient;
   private OidcConfiguration oidcConfiguration;
-
-  private String idpType;
-  private String clientId;
-  private String realm;
-  private String secret;
-  private String discoveryUri;
-  private String baseUri;
-  private String scope;
-  private boolean useNonce;
-  private String responseType;
-  private String responseMode;
-  private String logoutUri;
-
+  private OidcClient oidcClient;
+  private OidcProfileCreator oidcProfileCreator;
   private OidcLogoutActionBuilder logoutActionBuilder;
 
-  private OidcProfileCreator oidcProfileCreator;
+  private boolean initialized = false;
+  private Map<String, Object> properties;
 
+  public OidcHandlerConfigurationImpl(Map<String, Object> properties) {
+    update(properties);
+  }
+
+  @Override
   public OidcClient getOidcClient() {
     return oidcClient;
   }
 
-  public OidcLogoutActionBuilder getLogoutActionBuilder() {
-    return logoutActionBuilder;
-  }
-
-  public OidcProfileCreator getOidcProfileCreator() {
-    return oidcProfileCreator;
-  }
-
-  public String getLogoutUri() {
-    return logoutUri;
-  }
-
+  @Override
   public OidcConfiguration getOidcConfiguration() {
     return oidcConfiguration;
   }
 
-  public void update(Map<String, Object> properties) {
-    for (Entry entry : properties.entrySet()) {
-      String key = (String) entry.getKey();
-      Object value = entry.getValue();
-
-      switch (key) {
-        case IDP_TYPE:
-          idpType = (String) value;
-          break;
-        case REALM:
-          realm = (String) value;
-          break;
-        case CLIENT_ID:
-          clientId = (String) value;
-          break;
-        case SECRET:
-          secret = (String) value;
-          break;
-        case DISCOVERY_URI:
-          discoveryUri = (String) value;
-          break;
-        case BASE_URI:
-          baseUri = (String) value;
-          break;
-        case SCOPE:
-          scope = (String) value;
-          break;
-        case USE_NONCE:
-          useNonce = (boolean) value;
-          break;
-        case RESPONSE_TYPE:
-          responseType = (String) value;
-          break;
-        case RESPONSE_MODE:
-          responseMode = (String) value;
-          break;
-        case LOGOUT_URI:
-          logoutUri = (String) value;
-          break;
-      }
-    }
-    init();
+  @Override
+  public OidcLogoutActionBuilder getLogoutActionBuilder() {
+    return logoutActionBuilder;
   }
 
-  public void init() {
-    if ("Keycloak".equals(idpType)) {
+  @Override
+  public OidcProfileCreator getOidcProfileCreator() {
+    return oidcProfileCreator;
+  }
+
+  @Override
+  public boolean isInitialized() {
+    return initialized;
+  }
+
+  public void update(Map<String, Object> properties) {
+    if (properties == null || properties.isEmpty()) {
+      LOGGER.warn("Received null or empty properties. Can not update.");
+      return;
+    }
+
+    this.properties = properties;
+
+    generateOidcConfiguration();
+    generateOidcClient();
+    generateOidcLogoutAction();
+
+    initialized = true;
+  }
+
+  private void generateOidcConfiguration() {
+    if ("Keycloak".equals(properties.get(IDP_TYPE))) {
       oidcConfiguration = new KeycloakOidcConfiguration();
-      ((KeycloakOidcConfiguration) oidcConfiguration).setRealm(realm);
-      ((KeycloakOidcConfiguration) oidcConfiguration).setBaseUri(baseUri);
-    } else if ("Azure".equals(idpType)) {
+      ((KeycloakOidcConfiguration) oidcConfiguration).setRealm((String) properties.get(REALM));
+      ((KeycloakOidcConfiguration) oidcConfiguration).setBaseUri((String) properties.get(BASE_URI));
+    } else if ("Azure".equals(properties.get(IDP_TYPE))) {
       oidcConfiguration = new AzureAdOidcConfiguration();
-      ((AzureAdOidcConfiguration) oidcConfiguration).setTenant(realm);
+      ((AzureAdOidcConfiguration) oidcConfiguration).setTenant((String) properties.get(REALM));
     } else {
       oidcConfiguration = new OidcConfiguration();
     }
 
-    oidcConfiguration.setClientId(clientId);
-    oidcConfiguration.setDiscoveryURI(discoveryUri);
-    oidcConfiguration.setSecret(secret);
-    oidcConfiguration.setScope(scope);
-    oidcConfiguration.setResponseType(responseType);
-    oidcConfiguration.setResponseMode(responseMode);
-    oidcConfiguration.setUseNonce(useNonce);
-    oidcConfiguration.setLogoutUrl(logoutUri);
+    oidcConfiguration.setClientId((String) properties.get(CLIENT_ID));
+    oidcConfiguration.setDiscoveryURI((String) properties.get(DISCOVERY_URI));
+    oidcConfiguration.setSecret((String) properties.get(SECRET));
+    oidcConfiguration.setScope((String) properties.get(SCOPE));
+    oidcConfiguration.setResponseType((String) properties.get(RESPONSE_TYPE));
+    oidcConfiguration.setResponseMode((String) properties.get(RESPONSE_MODE));
+    oidcConfiguration.setUseNonce((boolean) properties.get(USE_NONCE));
+    oidcConfiguration.setLogoutUrl((String) properties.get(LOGOUT_URI));
+    oidcConfiguration.setWithState(true);
 
-    if ("Keycloak".equals(idpType)) {
+    oidcConfiguration.init();
+  }
+
+  private void generateOidcClient() {
+    if ("Keycloak".equals(properties.get(IDP_TYPE))) {
       oidcClient = new KeycloakOidcClient((KeycloakOidcConfiguration) oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<KeycloakOidcProfile>(oidcConfiguration);
-    } else if ("Azure".equals(idpType)) {
+    } else if ("Azure".equals(properties.get(IDP_TYPE))) {
       oidcClient = new AzureAdClient((AzureAdOidcConfiguration) oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<AzureAdProfile>(oidcConfiguration);
-    } else if ("Google".equals(idpType)) {
+    } else if ("Google".equals(properties.get(IDP_TYPE))) {
       oidcClient = new GoogleOidcClient(oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<GoogleOidcProfile>(oidcConfiguration);
     } else {
       oidcClient = new OidcClient(oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<>(oidcConfiguration);
     }
+    oidcClient.setName(oidcConfiguration.getClientId());
 
+    if (isBlank(oidcClient.getCallbackUrl())) {
+      oidcClient.setCallbackUrl(DEFAULT_CALLBACK_URL);
+    }
+
+    oidcClient.init();
+  }
+
+  private void generateOidcLogoutAction() {
     logoutActionBuilder = new OidcLogoutActionBuilder(oidcConfiguration);
   }
 }

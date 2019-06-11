@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ddf.security.oidc.client;
+package org.codice.ddf.security.handler.oidc;
 
 import ddf.action.Action;
 import ddf.action.ActionProvider;
@@ -27,8 +27,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
+import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.J2ESessionStore;
@@ -52,9 +52,9 @@ public class OidcLogoutActionProvider implements ActionProvider {
   private static final String DESCRIPTION =
       "Logging out of the Identity Provider(IdP) will logout all external clients signed in via that Identity Provider.";
 
-  private final HandlerConfiguration handlerConfiguration;
+  private final OidcHandlerConfiguration handlerConfiguration;
 
-  public OidcLogoutActionProvider(HandlerConfiguration handlerConfiguration) {
+  public OidcLogoutActionProvider(OidcHandlerConfiguration handlerConfiguration) {
     this.handlerConfiguration = handlerConfiguration;
   }
 
@@ -81,16 +81,16 @@ public class OidcLogoutActionProvider implements ActionProvider {
       J2EContext j2EContext = new J2EContext(request, response, sessionStore);
 
       HttpSession session = request.getSession(false);
-      SecurityTokenHolder savedToken = null;
+      SecurityTokenHolder tokenHolder = null;
       if (session != null) {
-        savedToken =
+        tokenHolder =
             (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       }
 
       OidcCredentials credentials = null;
-      if (savedToken != null && savedToken.getPrincipals() != null) {
+      if (tokenHolder != null && tokenHolder.getPrincipals() != null) {
         Collection<SecurityAssertion> securityAssertions =
-            ((PrincipalCollection) savedToken.getPrincipals()).byType(SecurityAssertion.class);
+            tokenHolder.getPrincipals().byType(SecurityAssertion.class);
         for (SecurityAssertion securityAssertion : securityAssertions) {
           if (SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(securityAssertion.getTokenType())) {
             credentials = (OidcCredentials) securityAssertion.getToken();
