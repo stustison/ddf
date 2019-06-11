@@ -13,6 +13,12 @@
  */
 package org.codice.ddf.security.handler.oauth;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -23,6 +29,7 @@ import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.HandlerResult.Status;
+import org.codice.ddf.security.handler.api.OAuthHandlerConfiguration;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.session.J2ESessionStore;
@@ -35,7 +42,7 @@ public class OAuthHandler implements AuthenticationHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(OAuthHandler.class);
 
   private static final String SOURCE = "OAuthHandler";
-  private static final String AUTH_TYPE = "OAUTH";
+  private static final String AUTH_TYPE = "OIDC"; // OIDC covers both oidc and oauth
 
   private static HandlerResult noActionResult;
 
