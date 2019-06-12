@@ -86,7 +86,7 @@ import org.xml.sax.SAXException;
 @ExamReactorStrategy(PerSuite.class)
 public class TestSingleSignOn extends AbstractIntegrationTest {
 
-  private static final String IDP_AUTH_TYPES = "/=IDP|GUEST,/solr=SAML|PKI|basic";
+  private static final String IDP_AUTH_TYPES = "/=SAML|GUEST,/solr=PKI|basic";
 
   private static final String KEY_STORE_PATH = System.getProperty("javax.net.ssl.keyStore");
 
