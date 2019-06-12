@@ -301,7 +301,7 @@ public class WebSSOFilter implements SecurityFilter {
       FilterChain filterChain,
       List<AuthenticationHandler> handlers)
       throws AuthenticationException {
-    HandlerResult result = null;
+    HandlerResult result = new HandlerResult();
     for (AuthenticationHandler auth : handlers) {
       result = auth.getNormalizedToken(httpRequest, httpResponse, filterChain, false);
       if (result.getStatus() != HandlerResult.Status.NO_ACTION) {
@@ -314,7 +314,7 @@ public class WebSSOFilter implements SecurityFilter {
     }
 
     // If we haven't received usable credentials yet, go get some
-    if (result == null || result.getStatus() == HandlerResult.Status.NO_ACTION) {
+    if (result.getStatus() == HandlerResult.Status.NO_ACTION) {
       LOGGER.debug("First pass with no tokens found - requesting tokens");
       // This pass, tell each handler to do whatever it takes to get a SecurityToken
       for (AuthenticationHandler auth : handlers) {

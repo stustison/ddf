@@ -16,6 +16,7 @@ package org.codice.ddf.security.idp.client;
 import static ddf.security.SecurityConstants.AUTHENTICATION_TOKEN_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.http.SessionFactory;
 import ddf.security.samlp.SamlProtocol;
 import ddf.security.samlp.SimpleSign;
@@ -40,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -59,6 +59,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.helpers.DOMUtils;
 import org.apache.cxf.staxutils.StaxUtils;
+import org.apache.cxf.ws.security.tokenstore.SecurityToken;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.CryptoType;
 import org.apache.wss4j.common.ext.WSSecurityException;
@@ -71,7 +73,7 @@ import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.common.HttpUtils;
 import org.codice.ddf.security.common.jaxrs.RestSecurity;
 import org.codice.ddf.security.handler.api.HandlerResult;
-import org.codice.ddf.security.handler.saml.SAMLAssertionHandler;
+import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.opensaml.core.xml.XMLObject;
@@ -365,48 +367,30 @@ public class AssertionConsumerService {
     if (cookieMap.containsKey("JSESSIONID")) {
       sessionFactory.getOrCreateSession(request).invalidate();
     }
-    String assertionValue = DOM2Writer.nodeToString(samlResponse.getAssertions().get(0).getDOM());
 
-    String encodedAssertion;
-    try {
-      encodedAssertion = RestSecurity.deflateAndBase64Encode(assertionValue);
-    } catch (IOException e) {
-      LOGGER.info("Unable to deflate and encode assertion.", e);
-      return false;
-    }
+    HandlerResult handlerResult = new HandlerResult();
+    SecurityToken securityToken = new SecurityToken();
+    securityToken.setToken(samlResponse.getAssertions().get(0).getDOM());
+    SimplePrincipalCollection simplePrincipalCollection = new SimplePrincipalCollection();
+    simplePrincipalCollection.add(new SecurityAssertionSaml(securityToken), "default");
+    SAMLAuthenticationToken samlToken =
+        new SAMLAuthenticationToken(null, simplePrincipalCollection, request.getRemoteAddr());
+    handlerResult.setToken(samlToken);
+    handlerResult.setStatus(HandlerResult.Status.COMPLETED);
 
-    final String authHeader = RestSecurity.SAML_HEADER_PREFIX + encodedAssertion;
-
-    HttpServletRequestWrapper wrappedRequest =
-        new HttpServletRequestWrapper(request) {
-          @Override
-          public String getHeader(String name) {
-            if (RestSecurity.AUTH_HEADER.equals(name)) {
-              return authHeader;
-            }
-            return super.getHeader(name);
-          }
-        };
-
-    SAMLAssertionHandler samlAssertionHandler = new SAMLAssertionHandler();
-
-    LOGGER.trace("Processing SAML assertion with SAML Handler.");
-    HandlerResult samlResult =
-        samlAssertionHandler.getNormalizedToken(wrappedRequest, null, null, false);
-
-    if (samlResult.getStatus() != HandlerResult.Status.COMPLETED) {
+    if (handlerResult.getStatus() != HandlerResult.Status.COMPLETED) {
       LOGGER.debug("Failed to handle SAML assertion.");
       return false;
     }
 
-    samlResult.getToken().setAllowGuest(contextPolicyManager.getGuestAccess());
+    handlerResult.getToken().setAllowGuest(contextPolicyManager.getGuestAccess());
 
-    request.setAttribute(AUTHENTICATION_TOKEN_KEY, samlResult);
+    request.setAttribute(AUTHENTICATION_TOKEN_KEY, handlerResult);
     request.removeAttribute(ContextPolicy.NO_AUTH_POLICY);
 
     try {
       LOGGER.trace("Trying to login with provided SAML assertion.");
-      loginFilter.doFilter(wrappedRequest, null, (servletRequest, servletResponse) -> {});
+      loginFilter.doFilter(request, null, (servletRequest, servletResponse) -> {});
     } catch (IOException | AuthenticationException e) {
       LOGGER.debug("Failed to apply login filter to SAML assertion", e);
       return false;

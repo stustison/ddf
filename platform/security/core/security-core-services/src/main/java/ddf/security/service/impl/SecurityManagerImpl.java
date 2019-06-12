@@ -31,6 +31,7 @@ import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SimpleSession;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,14 +58,14 @@ public class SecurityManagerImpl implements SecurityManager {
 
   public Subject getSubject(Object token) throws SecurityServiceException {
     AuthenticationToken authenticationToken = null;
-    if (token instanceof AuthenticationToken) {
-      authenticationToken = (AuthenticationToken) token;
-    } else if (token instanceof PrincipalCollection) {
+    if (token instanceof SessionToken) {
       return new SubjectImpl(
-          (PrincipalCollection) token,
+          ((PrincipalCollection) ((SessionToken) token).getCredentials()),
           true,
           new SimpleSession(UUID.randomUUID().toString()),
           internalManager);
+    } else if (token instanceof AuthenticationToken) {
+      authenticationToken = (AuthenticationToken) token;
     }
 
     if (authenticationToken != null) {

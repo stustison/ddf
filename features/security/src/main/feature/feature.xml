@@ -421,16 +421,6 @@
         <bundle>mvn:ddf.security.filter/security-filter-authorization/${project.version}</bundle>
     </feature>
 
-    <feature name="security-handler-saml" version="${project.version}"
-             description="SAML Handler for web applications.">
-        <feature>cxf-rs-security-sso-saml</feature>
-        <bundle>mvn:ddf.security.expansion/security-expansion-api/${project.version}</bundle>
-        <feature>javax-validation</feature>
-        <feature>cxf-frontend-javascript</feature>
-        <feature>security-handler-api</feature>
-        <feature>security-core</feature>
-        <bundle>mvn:ddf.security.handler/security-handler-saml/${project.version}</bundle>
-    </feature>
 
     <feature name="security-filter-web-sso" version="${project.version}"
              description="Web SSO Filter for web applications.">
@@ -565,7 +555,6 @@
         <feature>action-core-impl</feature>
         <feature>cxf-rs-security-sso-saml</feature>
         <feature>security-filter-api</feature>
-        <feature>security-handler-saml</feature>
         <feature>session-invalidator</feature>
         <feature>platform-paxweb-jettyconfig</feature>
         <feature>security-filter-login</feature>
@@ -576,12 +565,14 @@
         <feature>security-handler-basic</feature>
         <feature>security-idp-plugin</feature>
         <feature dependency="true">oidc-dependencies</feature>
+        <feature>security-core</feature>
+        <feature>saml-validator</feature>
+        <bundle>mvn:ddf.security/security-saml-util/${project.version}</bundle>
         <bundle>mvn:ddf.security.idp/security-idp-client/${project.version}</bundle>
         <bundle>mvn:ddf.security.encryption/security-encryption-api/${project.version}</bundle>
         <bundle>mvn:ddf.security.expansion/security-expansion-api/${project.version}</bundle>
         <bundle>mvn:ddf.security.idp/security-idp-server/${project.version}</bundle>
         <bundle>mvn:com.google.code.gson/gson/${gson.version}</bundle>
-        <feature>saml-validator</feature>
     </feature>
 
     <feature name="saml-validator" version="${project.version}"
@@ -640,7 +631,6 @@
         <feature>security-sts-server</feature>
         <feature>security-filter-web-sso</feature>
         <feature>security-filter-login</feature>
-        <feature>security-handler-saml</feature>
         <feature>security-handler-basic</feature>
         <feature>security-oidc-realm</feature>
         <feature>security-handler-oidc</feature>

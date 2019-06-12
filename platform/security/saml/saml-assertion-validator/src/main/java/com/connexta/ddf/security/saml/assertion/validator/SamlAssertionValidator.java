@@ -15,11 +15,11 @@ package com.connexta.ddf.security.saml.assertion.validator;
 
 import ddf.security.http.SessionFactory;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
-import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
+import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 
 public interface SamlAssertionValidator {
 
-  void validate(BaseAuthenticationToken token) throws AuthenticationFailureException;
+  void validate(SAMLAuthenticationToken token) throws AuthenticationFailureException;
 
   void setSignatureProperties(String signatureProperties);
 

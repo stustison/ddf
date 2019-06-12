@@ -45,7 +45,6 @@
     <modules>
         <module>security-handler-api</module>
         <module>security-handler-basic</module>
-        <module>security-handler-saml</module>
         <module>security-handler-pki</module>
         <module>security-handler-oauth</module>
         <module>security-handler-oidc</module>

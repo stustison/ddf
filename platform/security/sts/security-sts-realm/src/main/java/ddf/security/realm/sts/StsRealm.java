@@ -13,20 +13,15 @@
  */
 package ddf.security.realm.sts;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.base.Splitter;
 import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.sts.client.configuration.STSClientConfiguration;
-import java.io.IOException;
-import java.io.StringReader;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,9 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -59,7 +51,8 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.configuration.PropertyResolver;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
-import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
+import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
+import org.codice.ddf.security.handler.api.STSAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
@@ -70,8 +63,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 public class StsRealm extends AuthenticatingRealm implements STSClientConfiguration {
   private static final Logger LOGGER = (LoggerFactory.getLogger(StsRealm.class));
@@ -120,8 +111,6 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
   private List<String> usernameAttributeList;
 
-  private Boolean isOldAssertion = false;
-
   public StsRealm() {
     this.bus = getBus();
     setCredentialsMatcher(new STSCredentialsMatcher());
@@ -134,62 +123,64 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
   /** Determine if the supplied token is supported by this realm. */
   @Override
   public boolean supports(AuthenticationToken token) {
-    if (token == null) {
+    boolean supported =
+        token != null && token.getCredentials() != null && token instanceof STSAuthenticationToken;
+
+    if (supported) {
+      LOGGER.debug("Token {} is supported by {}.", token.getClass(), StsRealm.class.getName());
+    } else if (token != null) {
+      LOGGER.debug("Token {} is not supported by {}.", token.getClass(), StsRealm.class.getName());
+    } else {
       LOGGER.debug("The supplied authentication token is null. Sending back not supported.");
-      return false;
     }
 
-    if (!(token instanceof BaseAuthenticationToken)) {
-      LOGGER.debug(
-          "The supplied authentication token is not of type BaseAuthenticationToken. Sending back not supported.");
-      return false;
-    }
-
-    BaseAuthenticationToken authenticationToken = (BaseAuthenticationToken) token;
-
-    Object credential = getSecurityTokenFromAuthenticationToken(authenticationToken);
-
-    if (credential == null) {
-      LOGGER.debug("No saml credentials found in principals of supplied authentication token.");
-      return false;
-    }
-
-    LOGGER.debug("Token {} is supported by {}.", token.getClass(), StsRealm.class.getName());
-    return true;
+    return supported;
   }
 
   /** Perform authentication based on the supplied token. */
   @Override
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) {
-    BaseAuthenticationToken authenticationToken = (BaseAuthenticationToken) token;
+    Object credential;
 
-    SecurityToken securityToken = getSecurityTokenFromAuthenticationToken(authenticationToken);
-
-    if (securityToken == null) {
-      String msg =
-          "Unable to pull saml credentials off of authentication token. This may be due to an error with the SSO server that created the token.";
-      LOGGER.info(msg);
-      throw new AuthenticationException(msg);
-    }
-
-    if (isOldAssertion) { // old saml assertion
+    // perform validation
+    if (token instanceof SAMLAuthenticationToken) {
       try {
-        samlAssertionValidator.validate(authenticationToken);
+        samlAssertionValidator.validate((SAMLAuthenticationToken) token);
+        credential = token.getCredentials();
       } catch (AuthenticationFailureException e) {
         String msg = "Unable to validate request's authentication.";
         LOGGER.info(msg);
         throw new AuthenticationException(msg, e);
       }
-      securityToken = checkRenewSecurityToken(securityToken);
-    } else { // new saml credentials
-      securityToken = requestSecurityToken(securityToken);
+    } else if (token instanceof STSAuthenticationToken) {
+      credential = ((STSAuthenticationToken) token).getCredentialsAsString();
+    } else {
+      credential = token.getCredentials().toString();
+    }
+
+    if (credential == null) {
+      String msg =
+          "Unable to authenticate credential.  A NULL credential was provided in the supplied authentication token. This may be due to an error with the SSO server that created the token.";
+      LOGGER.info(msg);
+      throw new AuthenticationException(msg);
+    } else {
+      // removed the credentials from the log message for now, I don't think we should be dumping
+      // user/pass into log
+      LOGGER.debug("Received credentials.");
+    }
+
+    SecurityToken securityToken;
+    if (token instanceof SAMLAuthenticationToken) {
+      securityToken = checkRenewSecurityToken(credential);
+    } else {
+      securityToken = requestSecurityToken(credential);
     }
 
     LOGGER.debug("Creating token authentication information with SAML.");
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principalCollection = createPrincipalFromToken(securityToken);
-    simpleAuthenticationInfo.setPrincipals(principalCollection);
-    simpleAuthenticationInfo.setCredentials(authenticationToken.getCredentials());
+    SimplePrincipalCollection principals = createPrincipalFromToken(securityToken);
+    simpleAuthenticationInfo.setPrincipals(principals);
+    simpleAuthenticationInfo.setCredentials(credential);
 
     return simpleAuthenticationInfo;
   }
@@ -218,72 +209,6 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
       principals.add(securityAssertion, getName());
     }
     return principals;
-  }
-
-  private SecurityToken getSecurityTokenFromAuthenticationToken(
-      AuthenticationToken authenticationToken) {
-    PrincipalCollection principals = null;
-    if (authenticationToken.getPrincipal() != null
-        && authenticationToken.getPrincipal() instanceof PrincipalCollection) {
-      principals = (PrincipalCollection) authenticationToken.getPrincipal();
-    }
-    PrincipalCollection credentials = null;
-    if (authenticationToken.getCredentials() != null
-        && authenticationToken.getCredentials() instanceof PrincipalCollection) {
-      credentials = (PrincipalCollection) authenticationToken.getCredentials();
-    }
-
-    SecurityAssertion assertionSaml = null;
-    if (principals != null) {
-      assertionSaml =
-          principals
-              .byType(SecurityAssertion.class)
-              .stream()
-              .filter(
-                  assertion ->
-                      SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(assertion.getTokenType()))
-              .findFirst()
-              .orElse(null);
-    }
-
-    String assertionString = null;
-    if (credentials != null) {
-      assertionString = credentials.oneByType(String.class);
-      isOldAssertion = false;
-    }
-
-    return getSecurityTokenFromAssertions(assertionSaml, assertionString);
-  }
-
-  private SecurityToken getSecurityTokenFromAssertions(
-      SecurityAssertion assertionSaml, String assertionString) {
-    SecurityToken securityToken = null;
-
-    if (assertionSaml != null) {
-      securityToken = (SecurityToken) assertionSaml.getToken();
-      if (securityToken != null) {
-        isOldAssertion = true;
-      }
-    }
-
-    if (securityToken == null && isNotBlank(assertionString)) {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      try {
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(new InputSource(new StringReader(assertionString)));
-        securityToken =
-            new SecurityToken(
-                null,
-                doc.getDocumentElement(),
-                Instant.now(),
-                Instant.now().plus(60, ChronoUnit.SECONDS));
-        isOldAssertion = false;
-      } catch (IOException | ParserConfigurationException | SAXException e) {
-        LOGGER.debug("");
-      }
-    }
-
-    return securityToken;
   }
 
   /**
@@ -331,20 +256,30 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
   /**
    * Renew a security token (SAML assertion) from the STS.
    *
-   * @param securityToken The security token being renewed.
+   * @param credential The token being renewed.
    * @return security token (SAML assertion)
    */
-  protected SecurityToken checkRenewSecurityToken(final SecurityToken securityToken) {
+  protected SecurityToken checkRenewSecurityToken(final Object credential) {
     try {
-      if (securityToken == null) {
-        throw new AuthenticationException("Could not pull token off of saml assertion.");
+      SecurityToken securityToken = null;
+      if (credential instanceof PrincipalCollection) {
+        Collection<SecurityAssertion> securityAssertions =
+            ((PrincipalCollection) credential).byType(SecurityAssertion.class);
+        securityToken =
+            securityAssertions
+                .stream()
+                .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
+                .map(SecurityAssertion::getToken)
+                .filter(SecurityToken.class::isInstance)
+                .map(SecurityToken.class::cast)
+                .findFirst()
+                .orElse(null);
+        if (securityToken != null
+            && (securityToken.getExpires() != null
+                && securityToken.getExpires().minus(Duration.ofMinutes(1)).isBefore(Instant.now())))
+          return renewSecurityToken(securityToken);
       }
 
-      if (securityToken.getExpires() == null
-          || securityToken.getExpires().minus(Duration.ofMinutes(1)).isBefore(Instant.now())) {
-        LOGGER.debug("Token about to expire. Requesting new token.");
-        return renewSecurityToken(securityToken);
-      }
       return securityToken;
     } catch (Exception e) {
       String msg = "Error renewing the security token from STS.";
@@ -776,8 +711,19 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
     @Override
     public boolean doCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
-      if (token.getCredentials() != null && info.getCredentials() != null) {
-        return token.getCredentials().equals(info.getCredentials());
+      if (token instanceof SAMLAuthenticationToken) {
+        Object oldToken = token.getCredentials();
+        Object newToken = info.getCredentials();
+        return oldToken.equals(newToken);
+      } else if (token instanceof STSAuthenticationToken) {
+        String xmlCreds = ((STSAuthenticationToken) token).getCredentialsAsString();
+        if (xmlCreds != null && info.getCredentials() != null) {
+          return xmlCreds.equals(info.getCredentials());
+        }
+      } else {
+        if (token.getCredentials() != null && info.getCredentials() != null) {
+          return token.getCredentials().equals(info.getCredentials());
+        }
       }
       return false;
     }
