@@ -41,7 +41,7 @@ public class SecurityPolicyConfigurator {
 
   public static final String SAML_AUTH_TYPES = "/=SAML";
 
-  public static final String BASIC_AUTH_TYPES = "/=basic";
+  public static final String BASIC_AUTH_TYPES = "/=BASIC";
 
   public static final String PKI_AUTH_TYPES = "/=PKI";
 
