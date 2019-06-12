@@ -13,11 +13,6 @@
  */
 package org.codice.ddf.security.handler.oauth;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -31,8 +26,6 @@ import org.codice.ddf.security.handler.api.HandlerResult.Status;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.session.J2ESessionStore;
-import org.pac4j.oauth.credentials.OAuth20Credentials;
-import org.pac4j.oauth.credentials.extractor.OAuth20CredentialsExtractor;
 import org.pac4j.oauth.exception.OAuthCredentialsException;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
@@ -49,13 +42,6 @@ public class OAuthHandler implements AuthenticationHandler {
   static {
     noActionResult = new HandlerResult(Status.NO_ACTION, null);
     noActionResult.setSource(SOURCE);
-  }
-
-  private OAuthHandlerConfigurationImpl configuration;
-  private SessionFactory sessionFactory;
-
-  public OAuthHandler(OAuthHandlerConfigurationImpl configuration) {
-    this.configuration = configuration;
   }
 
   @Override
@@ -77,14 +63,6 @@ public class OAuthHandler implements AuthenticationHandler {
     J2ESessionStore sessionStore = new J2ESessionStore();
     J2EContext j2EContext = new J2EContext(httpRequest, httpResponse, sessionStore);
 
-    // at this point, the OAuth Handler must be configured
-    if (!configuration.isInitialized()) {
-      LOGGER.error(
-          "The OAuth Handler's configuration has not been initialized. "
-              + "Configure \"OAuth Handler Configuration\" in the admin console to initialize.");
-      return noActionResult;
-    }
-
     // time to try and pull credentials off of the request
     LOGGER.debug(
         "Doing OAuth authentication and authorization for path {}.", httpRequest.getContextPath());
@@ -94,10 +72,7 @@ public class OAuthHandler implements AuthenticationHandler {
     StringBuffer requestUrlBuffer = httpRequest.getRequestURL();
     requestUrlBuffer.append(
         httpRequest.getQueryString() == null ? "" : "?" + httpRequest.getQueryString());
-    String requestUrl = requestUrlBuffer.toString();
     String ipAddress = httpRequest.getRemoteAddr();
-
-    configuration.getOAuthClient().setCallbackUrl(requestUrl);
 
     boolean isMachine = userAgentIsNotBrowser(httpRequest);
 
@@ -180,29 +155,8 @@ public class OAuthHandler implements AuthenticationHandler {
 
   private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext)
       throws IllegalArgumentException, OAuthCredentialsException {
-    OAuth20CredentialsExtractor credentialsExtractor =
-        new CustomOAuthCredentialsExtractor(
-            configuration.getOAuthConfiguration(), configuration.getOAuthClient());
+    CustomOAuthCredentialsExtractor credentialsExtractor = new CustomOAuthCredentialsExtractor();
 
-    OAuth20Credentials oAuthCredentials = credentialsExtractor.extract(j2EContext);
-
-    OidcCredentials oidcCredentials = new OidcCredentials();
-
-    if (oAuthCredentials.getAccessToken() != null
-        && isNotBlank(oAuthCredentials.getAccessToken().getAccessToken())) {
-      oidcCredentials.setAccessToken(
-          new BearerAccessToken(oAuthCredentials.getAccessToken().getAccessToken()));
-    }
-    if (isNotBlank(oAuthCredentials.getCode())) {
-      oidcCredentials.setCode(new AuthorizationCode(oAuthCredentials.getCode()));
-    }
-
-    return oidcCredentials;
-  }
-
-  // hack
-
-  public void setSessionFactory(SessionFactory sessionFactory) {
-    this.sessionFactory = sessionFactory;
+    return credentialsExtractor.getOauthCredentialsAsOidcCredentials(j2EContext);
   }
 }
