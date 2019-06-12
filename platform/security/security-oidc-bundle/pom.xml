@@ -75,16 +75,6 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.scribejava</groupId>
-            <artifactId>scribejava-core</artifactId>
-            <version>5.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.scribejava</groupId>
-            <artifactId>scribejava-apis</artifactId>
-            <version>5.6.0</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -148,17 +138,15 @@
                             pac4j-core,
                             pac4j-oauth,
                             pac4j-oidc,
-                            scribejava-apis,
-                            scribejava-core,
                             siv-mode
                         </Embed-Dependency>
                         <Conditional-Package>org.codice.ddf.security.util</Conditional-Package>
                         <Import-Package>
+                            !com.github.scribejava.*,
                             org.springframework.security.crypto.password;resolution:=optional,
                             *
                         </Import-Package>
                         <Export-Package>
-                            com.github.scribejava.*;version="5.6.0",
                             com.nimbusds.*;version="${nimbus.version}",
                             org.pac4j.*;version="3.6.1"
                         </Export-Package>

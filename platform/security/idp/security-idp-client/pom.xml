@@ -74,11 +74,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>ddf.security.handler</groupId>
-            <artifactId>security-handler-saml</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.security.filter</groupId>
             <artifactId>security-filter-login</artifactId>
             <version>${project.version}</version>
@@ -139,6 +134,11 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ddf.security</groupId>
+            <artifactId>security-saml-util</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ddf.security.core</groupId>
