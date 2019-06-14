@@ -510,6 +510,11 @@
             <artifactId>security-guest-realm</artifactId>
             <version>${project.version}</version>
         </dependency>
+      <dependency>
+        <groupId>com.google.crypto.tink</groupId>
+        <artifactId>tink</artifactId>
+        <version>${tink.version}</version>
+      </dependency>
 
         <!--feature dependencies-->
         <dependency>

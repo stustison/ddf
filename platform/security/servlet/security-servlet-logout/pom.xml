@@ -66,6 +66,14 @@
             <version>${json-smart.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -75,7 +83,11 @@
                 <configuration>
                     <instructions>
                         <Embed-Dependency>
-                            gson-support
+                            gson-support,
+                            <!-- Embedding httpclient and httpcore instead of using the bundles -->
+                            <!-- due to a downstream performance issue in itests -->
+                            httpclient,
+                            httpcore
                         </Embed-Dependency>
                         <Import-Package>
                             *
