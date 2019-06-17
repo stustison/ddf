@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import ddf.action.Action;
 import ddf.security.SecurityConstants;
+import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.common.SecurityTokenHolder;
@@ -68,15 +69,17 @@ public class OidcLogoutActionProviderTest {
     HttpServletRequest request = mock(HttpServletRequest.class);
     HttpServletResponse response = mock(HttpServletResponse.class);
     HttpSession session = mock(HttpSession.class);
+    Subject subject = mock(Subject.class);
     SecurityTokenHolder tokenHolder = mock(SecurityTokenHolder.class);
     SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
+    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
     OidcCredentials credentials = mock(OidcCredentials.class);
 
-    SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
     when(securityAssertion.getToken()).thenReturn(credentials);
     when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
+    when(subject.getPrincipals()).thenReturn(principalCollection);
     when(tokenHolder.getPrincipals()).thenReturn(principalCollection);
-    principalCollection.add(securityAssertion, "default");
+    principalCollection.add(securityAssertion, "oidc");
     when(session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY)).thenReturn(tokenHolder);
     when(request.getSession(false)).thenReturn(session);
 
@@ -84,7 +87,7 @@ public class OidcLogoutActionProviderTest {
         oidcLogoutActionProvider.getAction(
             ImmutableMap.of(
                 SecurityConstants.SECURITY_SUBJECT,
-                credentials,
+                subject,
                 "http_request",
                 request,
                 "http_response",
