@@ -17,6 +17,8 @@ import ddf.action.Action;
 import ddf.action.ActionProvider;
 import ddf.action.impl.ActionImpl;
 import ddf.security.SecurityConstants;
+import ddf.security.Subject;
+import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import ddf.security.common.SecurityTokenHolder;
@@ -141,14 +143,12 @@ public class OidcLogoutActionProvider implements ActionProvider {
       return false;
     }
 
-    HttpServletRequest request = (HttpServletRequest) ((Map) subjectMap).get("http_request");
-    HttpServletResponse response = (HttpServletResponse) ((Map) subjectMap).get("http_response");
-
-    if (request == null || response == null) {
+    Object subject = ((Map) subjectMap).get(SecurityConstants.SECURITY_SUBJECT);
+    if (!(subject instanceof Subject)) {
       return false;
     }
 
-    Object credentials = ((Map) subjectMap).get(SecurityConstants.SECURITY_SUBJECT);
-    return credentials instanceof OidcCredentials;
+    String type = SubjectUtils.getType((org.apache.shiro.subject.Subject) subject);
+    return type != null && type.equals(SecurityAssertionJwt.JWT_TOKEN_TYPE);
   }
 }
