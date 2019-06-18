@@ -13,8 +13,10 @@
  */
 package org.codice.ddf.security.oidc.realm;
 
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.PlainJWT;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -51,10 +53,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CustomOidcAuthenticator extends OidcAuthenticator {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcAuthenticator.class);
+
+  private OidcTokenValidator oidcTokenValidator;
 
   public CustomOidcAuthenticator(OidcConfiguration configuration, OidcClient client) {
     super(configuration, client);
+    oidcTokenValidator = new OidcTokenValidator(configuration);
   }
 
   /* This methods job is to try and get an id token from a
@@ -85,7 +91,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     // try to get credentials using refresh token and authorization code
     for (AuthorizationGrant grant : grantList) {
       try {
-        trySendingGrantAndPopulatingCredentials(grant, credentials);
+        trySendingGrantAndPopulatingCredentials(grant, credentials, webContext);
 
         if (credentials.getIdToken() != null) {
           break;
@@ -98,10 +104,12 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     // try to get credentials using access token
     final AccessToken accessToken = credentials.getAccessToken();
     if (credentials.getIdToken() == null && accessToken != null) {
+      oidcTokenValidator.validateAccessToken(credentials.getAccessToken(), null);
+
       final UserInfoRequest userInfoRequest =
           new UserInfoRequest(
               configuration.findProviderMetadata().getUserInfoEndpointURI(),
-              Method.POST,
+              Method.GET,
               new BearerAccessToken(accessToken.toString()));
       final HTTPRequest userInfoHttpRequest = userInfoRequest.toHTTPRequest();
 
@@ -128,7 +136,8 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   }
 
   private void trySendingGrantAndPopulatingCredentials(
-      AuthorizationGrant grant, OidcCredentials credentials) throws IOException, ParseException {
+      AuthorizationGrant grant, OidcCredentials credentials, WebContext webContext)
+      throws IOException, ParseException {
     final TokenRequest request =
         new TokenRequest(
             configuration.findProviderMetadata().getTokenEndpointURI(),
@@ -151,9 +160,19 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     }
     LOGGER.debug("Token response successful");
     final OIDCTokenResponse tokenSuccessResponse = (OIDCTokenResponse) response;
+    final OIDCTokens oidcTokens = tokenSuccessResponse.getOIDCTokens();
+
+    JWT idToken = oidcTokens.getIDToken();
+    if (idToken != null) {
+      oidcTokenValidator.validateIdTokens(idToken, webContext);
+    }
+
+    AccessToken accessToken = oidcTokens.getAccessToken();
+    if (accessToken != null) {
+      oidcTokenValidator.validateAccessToken(accessToken, idToken);
+    }
 
     // save tokens to credentials
-    final OIDCTokens oidcTokens = tokenSuccessResponse.getOIDCTokens();
     credentials.setAccessToken(oidcTokens.getAccessToken());
     credentials.setRefreshToken(oidcTokens.getRefreshToken());
     credentials.setIdToken(oidcTokens.getIDToken());

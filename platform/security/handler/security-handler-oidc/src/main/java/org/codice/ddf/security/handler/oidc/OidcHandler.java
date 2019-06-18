@@ -15,6 +15,7 @@ package org.codice.ddf.security.handler.oidc;
 
 import ddf.security.http.SessionFactory;
 import java.io.IOException;
+import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -130,6 +131,7 @@ public class OidcHandler implements AuthenticationHandler {
         return noActionResult;
       } catch (TechnicalException e) {
         LOGGER.debug("Problem extracting Oidc credentials from incoming user request.", e);
+        return redirectForCredentials(j2EContext, requestUrl);
       }
     }
 
@@ -139,9 +141,9 @@ public class OidcHandler implements AuthenticationHandler {
         || credentials.getIdToken() != null) {
       LOGGER.info(
           "Oidc credentials found/retrieved. Saving to session and continuing filter chain.");
+
       OidcAuthenticationToken token =
           new OidcAuthenticationToken(credentials, j2EContext, ipAddress);
-
       HandlerResult handlerResult = new HandlerResult(Status.COMPLETED, token);
       handlerResult.setSource(SOURCE);
       return handlerResult;
@@ -191,6 +193,13 @@ public class OidcHandler implements AuthenticationHandler {
   }
 
   private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext) {
+    // Check that the request contains a code, an access token or an id token
+    Map<String, String[]> requestParams = j2EContext.getRequestParameters();
+    if (!requestParams.containsKey("code")
+        && !requestParams.containsKey("access_token")
+        && !requestParams.containsKey("id_token")) {
+      return new OidcCredentials();
+    }
     configuration.getOidcClient().setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
 
     OidcExtractor oidcExtractor =
@@ -200,9 +209,7 @@ public class OidcHandler implements AuthenticationHandler {
 
   private HandlerResult redirectForCredentials(J2EContext j2EContext, String requestUrl) {
     j2EContext.getSessionStore().set(j2EContext, Pac4jConstants.REQUESTED_URL, requestUrl);
-
     configuration.getOidcClient().redirect(j2EContext);
-
     return redirectedResult;
   }
 
