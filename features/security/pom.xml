@@ -462,11 +462,6 @@
             <version>4.5.6</version>
         </dependency>
         <dependency>
-            <groupId>com.google.crypto.tink</groupId>
-            <artifactId>tink</artifactId>
-            <version>${tink.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ddf.security.handler</groupId>
             <artifactId>security-handler-oidc</artifactId>
             <version>${project.version}</version>
