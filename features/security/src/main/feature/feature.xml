@@ -139,6 +139,7 @@
              description="API for authentication handlers for web applications.">
         <feature>security-core-api</feature>
         <feature>parser-xml</feature>
+        <feature>oidc-dependencies</feature>
         <bundle>mvn:org.apache.cxf/cxf-rt-rs-security-jose/${cxf.version}</bundle>
         <bundle>mvn:org.apache.cxf/cxf-rt-rs-security-jose-jaxrs/${cxf.version}</bundle>
         <bundle>mvn:org.apache.cxf.services.sts/cxf-services-sts-core/${cxf.version}</bundle>
@@ -343,49 +344,39 @@
 
     <feature name="security-oidc-realm" version="${project.version}"
              description="OIDC Authentication Handler for web applications.">
-        <feature>jackson</feature>
-        <feature dependency="true">oidc-dependencies</feature>
+        <feature>oidc-dependencies</feature>
         <feature>security-core</feature>
+        <feature>security-handler-oidc</feature>
         <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
     </feature>
 
     <feature name="oidc-dependencies" version="${project.version}"
-             description="All OIDC third party dependencies">
-        <feature dependency="true">jackson</feature>
+      description="All OIDC third party dependencies">
+        <feature>jackson</feature>
         <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
         <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
         <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
         <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
         <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
         <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/oauth2-oidc-sdk/${nimbus.version}</bundle>
+        <bundle dependency="true">mvn:com.nimbusds/lang-tag/1.4.3</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
         <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
     </feature>
 
     <feature name="security-handler-oidc" version="${project.version}"
              description="OIDC Authentication Handler for web applications.">
-        <feature>jackson</feature>
+        <feature>oidc-dependencies</feature>
         <feature>action-core-impl</feature>
         <feature>security-core</feature>
-        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
-        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
-        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
-        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
         <bundle>mvn:ddf.security.handler/security-handler-oidc/${project.version}</bundle>
     </feature>
 
     <feature name="security-handler-oauth" version="${project.version}"
       description="OIDC Authentication Handler for web applications.">
-        <feature>jackson</feature>
-        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
-        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
-        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
-        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
+        <feature>oidc-dependencies</feature>
+        <feature>security-core</feature>
         <bundle>mvn:ddf.security.handler/security-handler-oauth/${project.version}</bundle>
     </feature>
 
@@ -424,6 +415,7 @@
 
     <feature name="security-filter-web-sso" version="${project.version}"
              description="Web SSO Filter for web applications.">
+        <feature>security-core</feature>
         <feature>security-filter-api</feature>
         <feature>security-handler-api</feature>
         <feature>security-policy-context</feature>
