@@ -28,8 +28,6 @@ public class CustomOAuthCredentialsExtractor {
   private static final Logger LOGGER =
       LoggerFactory.getLogger(CustomOAuthCredentialsExtractor.class);
 
-  public CustomOAuthCredentialsExtractor() {}
-
   public OidcCredentials getOauthCredentialsAsOidcCredentials(final WebContext context) {
     OidcCredentials credentials = new OidcCredentials();
 
@@ -60,7 +58,7 @@ public class CustomOAuthCredentialsExtractor {
     }
 
     if (authorizationArray != null
-        && "bearer".equals(authorizationArray[0].toLowerCase())
+        && "bearer".equalsIgnoreCase(authorizationArray[0])
         && authorizationArray.length == 2) {
       return authorizationArray[1];
     }

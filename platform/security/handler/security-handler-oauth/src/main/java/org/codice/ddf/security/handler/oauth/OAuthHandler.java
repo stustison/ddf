@@ -153,8 +153,7 @@ public class OAuthHandler implements AuthenticationHandler {
             || userAgentHeader.contains("Chrome"));
   }
 
-  private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext)
-      throws IllegalArgumentException, OAuthCredentialsException {
+  private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext) {
     CustomOAuthCredentialsExtractor credentialsExtractor = new CustomOAuthCredentialsExtractor();
 
     return credentialsExtractor.getOauthCredentialsAsOidcCredentials(j2EContext);

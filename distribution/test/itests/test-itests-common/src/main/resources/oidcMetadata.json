@@ -29,33 +29,37 @@
     "pairwise"
   ],
   "id_token_signing_alg_values_supported": [
+    "RS256",
     "ES384",
     "RS384",
     "HS256",
     "HS512",
     "ES256",
-    "RS256",
     "HS384",
     "ES512",
     "RS512"
   ],
   "userinfo_signing_alg_values_supported": [
+    "RS256",
     "ES384",
     "RS384",
     "HS256",
     "HS512",
     "ES256",
-    "RS256",
     "HS384",
     "ES512",
     "RS512",
     "none"
   ],
+  "userinfo_encryption_alg_values_supported": [
+    "A128KW",
+    "RSA1_5"
+  ],
   "request_object_signing_alg_values_supported": [
+    "RS256",
     "ES384",
     "RS384",
     "ES256",
-    "RS256",
     "ES512",
     "RS512",
     "none"
