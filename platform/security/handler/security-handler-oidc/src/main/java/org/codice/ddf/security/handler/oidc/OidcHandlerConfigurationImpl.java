@@ -17,6 +17,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.util.Map;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
+import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.client.AzureAdClient;
 import org.pac4j.oidc.client.GoogleOidcClient;
 import org.pac4j.oidc.client.KeycloakOidcClient;
@@ -35,19 +36,19 @@ import org.slf4j.LoggerFactory;
 public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
   private static final Logger LOGGER = LoggerFactory.getLogger(OidcHandlerConfigurationImpl.class);
 
-  private static final String IDP_TYPE = "idpType";
-  private static final String CLIENT_ID = "clientId";
-  private static final String REALM = "realm";
-  private static final String SECRET = "secret";
-  private static final String DISCOVERY_URI = "discoveryUri";
-  private static final String BASE_URI = "baseUri";
-  private static final String SCOPE = "scope";
-  private static final String USE_NONCE = "useNonce";
-  private static final String RESPONSE_TYPE = "responseType";
-  private static final String RESPONSE_MODE = "responseMode";
-  private static final String LOGOUT_URI = "logoutUri";
+  public static final String IDP_TYPE = "idpType";
+  public static final String CLIENT_ID = "clientId";
+  public static final String REALM = "realm";
+  public static final String SECRET = "secret";
+  public static final String DISCOVERY_URI = "discoveryUri";
+  public static final String BASE_URI = "baseUri";
+  public static final String SCOPE = "scope";
+  public static final String USE_NONCE = "useNonce";
+  public static final String RESPONSE_TYPE = "responseType";
+  public static final String RESPONSE_MODE = "responseMode";
+  public static final String LOGOUT_URI = "logoutUri";
 
-  private static final String DEFAULT_CALLBACK_URL = "https://localhost:8993/admin";
+  public static final String DEFAULT_CALLBACK_URL = "https://localhost:8993/admin";
 
   private OidcConfiguration oidcConfiguration;
   private OidcClient oidcClient;
@@ -94,9 +95,14 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
 
     this.properties = properties;
 
-    generateOidcConfiguration();
-    generateOidcClient();
-    generateOidcLogoutAction();
+    try {
+      generateOidcConfiguration();
+      generateOidcClient();
+      generateOidcLogoutAction();
+    } catch (TechnicalException e) {
+      LOGGER.warn("Problem initializing Oidc configuration.");
+      return;
+    }
 
     initialized = true;
   }

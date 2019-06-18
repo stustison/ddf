@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package org.codice.ddf.security.oidc.client;
+package org.codice.ddf.security.handler.oidc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
-import org.codice.ddf.security.handler.oidc.OidcLogoutActionProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.core.redirect.RedirectAction;
