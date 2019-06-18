@@ -134,15 +134,8 @@ public class WebSSOFilter implements SecurityFilter {
       List<AuthenticationHandler> handlers)
       throws AuthenticationException, IOException {
 
-    if (handlers.isEmpty()) {
-      LOGGER.warn(
-          "Handlers not ready. Returning status code 503, Service Unavailable. Check system configuration and bundle state.");
-      returnSimpleResponse(HttpServletResponse.SC_SERVICE_UNAVAILABLE, httpResponse);
-      return;
-    }
-
     // First pass, see if anyone can come up with proper security token from the get-go
-    HandlerResult result = null;
+    HandlerResult result;
     LOGGER.debug("Checking for existing tokens in request.");
 
     final String path = httpRequest.getRequestURI();
@@ -154,8 +147,23 @@ public class WebSSOFilter implements SecurityFilter {
 
     result = checkForPreviousResultOnSession(httpRequest, ipAddress);
 
+    // no result found on session, try and get result from handlers
     if (result == null) {
-      result = getResultFromHandlers(httpRequest, httpResponse, filterChain, handlers);
+      if (!handlers.isEmpty()) {
+        result = getResultFromHandlers(httpRequest, httpResponse, filterChain, handlers);
+      } else { // no configured handlers
+        if (contextPolicyManager.getGuestAccess()) {
+          LOGGER.info(
+              "No configured handlers found, but guest access is enabled. Continuing with an empty handler result for guest login.");
+          result = new HandlerResult(Status.NO_ACTION, null);
+          result.setSource("default");
+        } else {
+          LOGGER.warn(
+              "No configured handler found and guest access is disabled. Returning status code 503, Service Unavailable. Check system configuration and bundle state.");
+          returnSimpleResponse(HttpServletResponse.SC_SERVICE_UNAVAILABLE, httpResponse);
+          return;
+        }
+      }
     }
 
     handleResultStatus(httpRequest, httpResponse, result, path, ipAddress);
