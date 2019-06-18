@@ -36,6 +36,18 @@ public class OidcCallbackEndpoint {
   @Path("/logout")
   public Response logout(
       @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    if (request == null) {
+      throw new IllegalArgumentException("Passed in request cannot be null.");
+    }
+    if (response == null) {
+      throw new IllegalArgumentException("Passed in response cannot be null.");
+    }
+
+    if (request.getSession(false) == null) {
+      throw new IllegalArgumentException(
+          "Passed in request must have a corresponding session to logout.");
+    }
+
     J2ESessionStore sessionStore = new J2ESessionStore();
 
     J2EContext j2EContext = new J2EContext(request, response, sessionStore);

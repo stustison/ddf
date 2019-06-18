@@ -35,7 +35,7 @@ public class OAuthHandler implements AuthenticationHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(OAuthHandler.class);
 
   private static final String SOURCE = "OAuthHandler";
-  private static final String AUTH_TYPE = "OAUTH";
+  private static final String AUTH_TYPE = "OIDC"; // OIDC covers both oidc and oauth
 
   private static HandlerResult noActionResult;
 
