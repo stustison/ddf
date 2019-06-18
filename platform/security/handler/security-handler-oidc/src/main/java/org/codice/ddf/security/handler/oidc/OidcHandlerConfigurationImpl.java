@@ -58,9 +58,17 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
   private boolean initialized = false;
   private Map<String, Object> properties;
 
-  public OidcHandlerConfigurationImpl(Map<String, Object> properties) {
-    update(properties);
-  }
+  private String idpType;
+  private String clientId;
+  private String realm;
+  private String secret;
+  private String discoveryUri;
+  private String baseUri;
+  private String scope;
+  private boolean useNonce;
+  private String responseType;
+  private String responseMode;
+  private String logoutUri;
 
   @Override
   public OidcClient getOidcClient() {
@@ -96,49 +104,97 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
     this.properties = properties;
 
     try {
-      generateOidcConfiguration();
-      generateOidcClient();
-      generateOidcLogoutAction();
-    } catch (TechnicalException e) {
-      LOGGER.warn("Problem initializing Oidc configuration.");
-      return;
-    }
+      updateOidcConfiguration();
+      initOidcConfiguration();
+      updateOidcClient();
+      updateOidcLogoutAction();
+      initialized = true;
 
-    initialized = true;
+    } catch (TechnicalException e) {
+      LOGGER.error("Problem initializing Oidc configuration.", e);
+      initialized = false;
+    }
   }
 
-  private void generateOidcConfiguration() {
-    if ("Keycloak".equals(properties.get(IDP_TYPE))) {
-      oidcConfiguration = new KeycloakOidcConfiguration();
-      ((KeycloakOidcConfiguration) oidcConfiguration).setRealm((String) properties.get(REALM));
-      ((KeycloakOidcConfiguration) oidcConfiguration).setBaseUri((String) properties.get(BASE_URI));
+  private void updateOidcConfiguration() {
+    for (Map.Entry entry : properties.entrySet()) {
+      String key = (String) entry.getKey();
+      Object value = entry.getValue();
+
+      switch (key) {
+        case IDP_TYPE:
+          idpType = (String) value;
+          break;
+        case REALM:
+          realm = (String) value;
+          break;
+        case CLIENT_ID:
+          clientId = (String) value;
+          break;
+        case SECRET:
+          secret = (String) value;
+          break;
+        case DISCOVERY_URI:
+          discoveryUri = (String) value;
+          break;
+        case BASE_URI:
+          baseUri = (String) value;
+          break;
+        case SCOPE:
+          scope = (String) value;
+          break;
+        case USE_NONCE:
+          useNonce = (boolean) value;
+          break;
+        case RESPONSE_TYPE:
+          responseType = (String) value;
+          break;
+        case RESPONSE_MODE:
+          responseMode = (String) value;
+          break;
+        case LOGOUT_URI:
+          logoutUri = (String) value;
+          break;
+      }
+    }
+  }
+
+  private void initOidcConfiguration() {
+    if ("Keycloak".equals(idpType)) {
+      KeycloakOidcConfiguration keycloakOidcConfiguration = new KeycloakOidcConfiguration();
+      keycloakOidcConfiguration.setRealm(realm);
+      keycloakOidcConfiguration.setBaseUri(baseUri);
+      oidcConfiguration = keycloakOidcConfiguration;
+
     } else if ("Azure".equals(properties.get(IDP_TYPE))) {
-      oidcConfiguration = new AzureAdOidcConfiguration();
-      ((AzureAdOidcConfiguration) oidcConfiguration).setTenant((String) properties.get(REALM));
+      AzureAdOidcConfiguration azureAdOidcConfiguration = new AzureAdOidcConfiguration();
+      azureAdOidcConfiguration.setTenant(realm);
+      oidcConfiguration = azureAdOidcConfiguration;
     } else {
       oidcConfiguration = new OidcConfiguration();
     }
 
-    oidcConfiguration.setClientId((String) properties.get(CLIENT_ID));
-    oidcConfiguration.setDiscoveryURI((String) properties.get(DISCOVERY_URI));
-    oidcConfiguration.setSecret((String) properties.get(SECRET));
-    oidcConfiguration.setScope((String) properties.get(SCOPE));
-    oidcConfiguration.setResponseType((String) properties.get(RESPONSE_TYPE));
-    oidcConfiguration.setResponseMode((String) properties.get(RESPONSE_MODE));
-    oidcConfiguration.setUseNonce((boolean) properties.get(USE_NONCE));
-    oidcConfiguration.setLogoutUrl((String) properties.get(LOGOUT_URI));
+    oidcConfiguration.setClientId(clientId);
+    oidcConfiguration.setDiscoveryURI(discoveryUri);
+    oidcConfiguration.setSecret(secret);
+    oidcConfiguration.setScope(scope);
+    oidcConfiguration.setResponseType(responseType);
+    oidcConfiguration.setResponseMode(responseMode);
+    oidcConfiguration.setUseNonce(useNonce);
+    oidcConfiguration.setLogoutUrl(logoutUri);
     oidcConfiguration.setWithState(true);
-
     oidcConfiguration.init();
   }
 
-  private void generateOidcClient() {
+  private void updateOidcClient() {
     if ("Keycloak".equals(properties.get(IDP_TYPE))) {
       oidcClient = new KeycloakOidcClient((KeycloakOidcConfiguration) oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<KeycloakOidcProfile>(oidcConfiguration);
+
     } else if ("Azure".equals(properties.get(IDP_TYPE))) {
       oidcClient = new AzureAdClient((AzureAdOidcConfiguration) oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<AzureAdProfile>(oidcConfiguration);
+
     } else if ("Google".equals(properties.get(IDP_TYPE))) {
       oidcClient = new GoogleOidcClient(oidcConfiguration);
       oidcProfileCreator = new OidcProfileCreator<GoogleOidcProfile>(oidcConfiguration);
@@ -155,7 +211,12 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
     oidcClient.init();
   }
 
-  private void generateOidcLogoutAction() {
+  private void updateOidcLogoutAction() {
     logoutActionBuilder = new OidcLogoutActionBuilder(oidcConfiguration);
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+    updateOidcConfiguration();
   }
 }

@@ -41,6 +41,11 @@
             <version>${pac4j.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-jwt</artifactId>
+            <version>${pac4j.version}</version>
+        </dependency>
+        <dependency>
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
         </dependency>
@@ -135,6 +140,7 @@
                             pac4j-core,
                             pac4j-oauth,
                             pac4j-oidc,
+                            pac4j-jwt,
                             siv-mode
                         </Embed-Dependency>
                         <Conditional-Package>org.codice.ddf.security.util</Conditional-Package>

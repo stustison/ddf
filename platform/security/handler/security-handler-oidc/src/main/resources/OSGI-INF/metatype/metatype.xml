@@ -54,9 +54,6 @@
       <Option label="Authorization Code Flow - code" value="code"/>
       <Option label="Implicit Flow - id_token" value="id_token" />
       <Option label="Implicit Flow - id_token token" value="id_token token" />
-      <Option label="Hybrid Flow - code id_token" value="code id_token" />
-      <Option label="Hybrid Flow - code token" value="code token" />
-      <Option label="Hybrid Flow - code id_token token" value="code id_token token" />
     </AD>
 
     <AD name="Mode" id="responseMode" type="String" default="form_post"

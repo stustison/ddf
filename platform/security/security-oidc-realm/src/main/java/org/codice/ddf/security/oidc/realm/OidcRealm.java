@@ -76,15 +76,18 @@ public class OidcRealm extends AuthenticatingRealm {
   @Override
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken)
       throws AuthenticationException {
-    // token is guaranteed to by of type OidcAuthenticationToken by the supports() method
-    return handleOidcToken((OidcAuthenticationToken) authenticationToken);
-  }
-
-  private AuthenticationInfo handleOidcToken(OidcAuthenticationToken oidcAuthenticationToken) {
+    // token is guaranteed to be of type OidcAuthenticationToken by the supports() method
+    OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
     OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
+    OidcTokenValidator oidcTokenValidator =
+        new OidcTokenValidator(oidcHandlerConfiguration.getOidcConfiguration());
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
-    if (credentials.getIdToken() == null) {
+    if (credentials.getIdToken() != null) {
+      oidcTokenValidator.validateIdTokens(credentials.getIdToken(), webContext);
+      oidcTokenValidator.validateAccessToken(
+          credentials.getAccessToken(), credentials.getIdToken());
+    } else {
       try {
         OidcAuthenticator authenticator =
             new CustomOidcAuthenticator(
