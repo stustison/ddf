@@ -50,8 +50,10 @@
                 <value>${org.codice.ddf.system.rootContext}/platform/config/ui</value>
                 <value>${org.codice.ddf.system.rootContext}/login</value>
                 <value>${org.codice.ddf.system.rootContext}/logout</value>
-                <value>${org.codice.ddf.system.rootContext}/internal/session</value>
                 <value>/logout</value>
+                <value>${org.codice.ddf.system.rootContext}/internal/session</value>
+                <value>${org.codice.ddf.system.rootContext}/admin/fonts</value>
+                <value>${org.codice.ddf.system.rootContext}/favicon.ico</value>
                 <value>/error</value>
                 <value>/webjars</value>
                 <value>/health-check</value>
