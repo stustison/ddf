@@ -133,7 +133,7 @@ grant codeBase "file:/spatial-csw-source/spatial-csw-endpoint/org.apache.camel.c
     permission java.io.FilePermission "${ddf.home.perm}etc${/}ws-security${/}issuer${/}-", "read";
 }
 
-grant codeBase "file:/org.apache.servicemix.bundles.commons-httpclient/org.apache.camel.camel-http/spatial-wfs-v1_0_0-source/spatial-wfs-v2_0_0-source/spatial-wfs-v1_1_0-source/org.apache.ws.xmlschema.core/security-rest-cxfwrapper/catalog-core-urlresourcereader/org.codice.thirdparty.commons-httpclient" {
+grant codeBase "file:/org.apache.servicemix.bundles.commons-httpclient/org.apache.camel.camel-http/spatial-wfs-v1_0_0-source/spatial-wfs-v2_0_0-source/spatial-wfs-v1_1_0-source/org.apache.ws.xmlschema.core/security-rest-cxfwrapper/catalog-core-urlresourcereader/org.codice.thirdparty.commons-httpclient/org.apache.cxf.services.sts.core" {
     permission java.io.FilePermission "${ddf.home.perm}etc${/}keystores${/}-", "read";
 }
 
@@ -412,7 +412,7 @@ grant codeBase "file:/catalog-plugin-videothumbnail/catalog-rest-endpoint/catalo
     permission java.io.FilePermission "${ddf.home.perm}bin_third_party${/}ffmpeg${/}-", "read,write,execute";
 }
 
-grant codeBase "file:/catalog-transformer-zip/org.apache.commons.net/catalog-core-camelcomponent/org.apache.camel.camel-sjms/org.apache.commons.pool" {
+grant codeBase "file:/catalog-transformer-zip/org.apache.commons.net/catalog-core-camelcomponent/org.apache.camel.camel-sjms/org.apache.commons.pool/saml-assertion-validator-impl" {
     permission java.io.FilePermission "${ddf.home.perm}etc${/}ws-security${/}server${/}-", "read";
     permission java.io.FilePermission "${ddf.home.perm}etc${/}keystores${/}-", "read";
 }
