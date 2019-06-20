@@ -28,6 +28,7 @@ import org.apache.ftpserver.ftplet.AuthenticationFailedException;
 import org.apache.ftpserver.usermanager.AnonymousAuthentication;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
 import org.apache.ftpserver.usermanager.impl.UserMetadata;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,10 +42,14 @@ public class UserManagerImplTest {
 
   private SecurityManager securityManager;
 
+  private ContextPolicyManager contextPolicyManager;
+
   @Before
   public void setUp() {
     securityManager = mock(SecurityManager.class);
-    userManager = new UserManagerImpl(securityManager);
+    contextPolicyManager = mock(ContextPolicyManager.class);
+    when(contextPolicyManager.getGuestAccess()).thenReturn(true);
+    userManager = new UserManagerImpl(securityManager, contextPolicyManager);
   }
 
   @Test(expected = AuthenticationFailedException.class)
