@@ -48,6 +48,7 @@ import org.apache.http.HttpStatus;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -92,6 +93,7 @@ public class AssertionConsumerServiceTest {
   @Mock private Subject subject;
   @Mock private SecurityAssertion securityAssertion;
   @Mock private SecurityManager securityManager;
+  @Mock private ContextPolicyManager contextPolicyManager;
 
   @BeforeClass
   public static void setupClass() throws Exception {
@@ -159,6 +161,7 @@ public class AssertionConsumerServiceTest {
     assertionConsumerService.setRequest(httpRequest);
     assertionConsumerService.setLoginFilter(loginFilter);
     assertionConsumerService.setSessionFactory(sessionFactory);
+    assertionConsumerService.setContextPolicyManager(contextPolicyManager);
   }
 
   @Test

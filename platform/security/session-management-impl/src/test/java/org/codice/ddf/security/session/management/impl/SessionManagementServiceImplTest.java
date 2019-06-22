@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
+import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.io.IOException;
@@ -68,6 +70,8 @@ public class SessionManagementServiceImplTest {
 
   private PrincipalCollection principalCollection;
 
+  private SessionFactory sessionFactory;
+
   @Before
   public void setup()
       throws ParserConfigurationException, SAXException, IOException, SecurityServiceException {
@@ -99,6 +103,10 @@ public class SessionManagementServiceImplTest {
     SecurityAssertion securityAssertion = new SecurityAssertionSaml(securityToken);
     assertionList.add(securityAssertion);
     when(principalCollection.byType(SecurityAssertion.class)).thenReturn(assertionList);
+
+    sessionFactory = mock(SessionFactory.class);
+    when(sessionFactory.getOrCreateSession(any())).thenReturn(session);
+    sessionManagementServiceImpl.setSessionFactory(sessionFactory);
   }
 
   @Test

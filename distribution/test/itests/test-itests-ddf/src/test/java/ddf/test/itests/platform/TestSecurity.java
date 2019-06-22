@@ -629,7 +629,6 @@ public class TestSecurity extends AbstractIntegrationTest {
     String recordId =
         ingest(
             getFileContent(JSON_RECORD_RESOURCE_PATH + "/SimpleGeoJsonRecord"), "application/json");
-    configureRestForBasic(SDK_SOAP_CONTEXT);
 
     // Creating a new OpenSearch source with no username/password.
     // When an OpenSearch source attempts to authenticate without a username/password it will
@@ -644,10 +643,7 @@ public class TestSecurity extends AbstractIntegrationTest {
     String openSearchQuery =
         SERVICE_ROOT.getUrl() + "/catalog/query?q=*&src=" + OPENSEARCH_SAML_SOURCE_ID;
     waitForSecurityHandlers(openSearchQuery);
-    getSecurityPolicy().waitForBasicAuthReady(openSearchQuery);
     given()
-        .auth()
-        .basic("admin", "admin")
         .when()
         .get(openSearchQuery)
         .then()
@@ -659,8 +655,6 @@ public class TestSecurity extends AbstractIntegrationTest {
         .body(
             hasXPath("//metacard/string[@name='" + Metacard.TITLE + "']/value[text()='myTitle']"));
 
-    configureRestForGuest(SDK_SOAP_CONTEXT);
-    getSecurityPolicy().waitForGuestAuthReady(openSearchQuery);
     delete(recordId);
   }
 
@@ -1104,6 +1098,9 @@ public class TestSecurity extends AbstractIntegrationTest {
 
     LOGGER.trace(assertionHeader);
 
+    configureRestForSaml(SDK_SOAP_CONTEXT);
+    getSecurityPolicy().waitForSamlAuthReady(ADMIN_PATH.getUrl());
+
     // try that admin level assertion token on a restricted resource
     given()
         .header(
@@ -1148,6 +1145,9 @@ public class TestSecurity extends AbstractIntegrationTest {
             assertionHeader.indexOf("</saml2:Assertion>") + "</saml2:Assertion>".length());
 
     LOGGER.trace(assertionHeader);
+
+    configureRestForSaml(SDK_SOAP_CONTEXT);
+    getSecurityPolicy().waitForSamlAuthReady(ADMIN_PATH.getUrl());
 
     // try that admin level assertion token on a restricted resource
     given()
@@ -1199,6 +1199,9 @@ public class TestSecurity extends AbstractIntegrationTest {
 
     LOGGER.trace(assertionHeader);
 
+    configureRestForSaml(SDK_SOAP_CONTEXT);
+    getSecurityPolicy().waitForSamlAuthReady(ADMIN_PATH.getUrl());
+
     // try that admin level assertion token on a restricted resource
     given()
         .auth()
@@ -1215,7 +1218,7 @@ public class TestSecurity extends AbstractIntegrationTest {
         .log()
         .all()
         .assertThat()
-        .statusCode(equalTo(401));
+        .statusCode(equalTo(400));
   }
 
   private String getSoapEnvelope(String onBehalfOf) {
@@ -1374,7 +1377,10 @@ public class TestSecurity extends AbstractIntegrationTest {
 
   // ApplicationService tests
   @Test
-  public void testAdminConfigPolicyGetAllFeaturesAndApps() {
+  public void testAdminConfigPolicyGetAllFeaturesAndApps() throws Exception {
+
+    configureRestForBasic();
+    getSecurityPolicy().waitForBasicAuthReady(ADMIN_PATH.getUrl());
 
     String getAllFeaturesResponseNotPermitted =
         sendNotPermittedRequest(
@@ -1509,10 +1515,14 @@ public class TestSecurity extends AbstractIntegrationTest {
     Dictionary authZProperties = null;
     Dictionary metacardAttributeSecurityFilterProperties = null;
 
+    String url = SERVICE_ROOT.getUrl() + "/catalog/query?q=*&src=local";
+
+    configureRestForGuest(SDK_SOAP_CONTEXT);
+    getSecurityPolicy().waitForGuestAuthReady(url);
+
     String testData = getFileContent(XML_RECORD_RESOURCE_PATH + "/accessGroupTokenMetacard.xml");
     testData = testData.replace(ACCESS_GROUP_REPLACE_TOKEN, "B");
     String id = CatalogTestCommons.ingest(testData, MediaType.TEXT_XML);
-    String url = SERVICE_ROOT.getUrl() + "/catalog/query?q=" + id + "&src=local";
 
     try {
       authZProperties =
