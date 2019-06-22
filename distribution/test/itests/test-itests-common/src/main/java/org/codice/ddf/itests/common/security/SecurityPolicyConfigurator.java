@@ -13,6 +13,7 @@
  */
 package org.codice.ddf.itests.common.security;
 
+import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static org.codice.ddf.itests.common.WaitCondition.expect;
 
@@ -35,7 +36,14 @@ public class SecurityPolicyConfigurator {
   private static final String FACTORY_PID =
       "org.codice.ddf.security.policy.context.impl.PolicyManager";
 
+  public static final String BROWSER_USER_AGENT =
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
+
+  public static final String SAML_AUTH_TYPES = "/=SAML";
+
   public static final String BASIC_AUTH_TYPES = "/=basic";
+
+  public static final String PKI_AUTH_TYPES = "/=PKI";
 
   public static final String GUEST_AUTH_TYPES = "/=,/admin=basic,/system=basic";
 
@@ -67,6 +75,14 @@ public class SecurityPolicyConfigurator {
     configureWebContextPolicy(BASIC_AUTH_TYPES, null, createWhitelist(whitelist));
   }
 
+  public void configureRestForSaml(String whitelist) throws Exception {
+    configureWebContextPolicy(SAML_AUTH_TYPES, null, createWhitelist(whitelist));
+  }
+
+  public void configureRestForPki(String whitelist) throws Exception {
+    configureWebContextPolicy(PKI_AUTH_TYPES, null, createWhitelist(whitelist));
+  }
+
   public void waitForBasicAuthReady(String url) {
     expect("Waiting for basic auth")
         .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -74,11 +90,46 @@ public class SecurityPolicyConfigurator {
         .until(() -> when().get(url).then().extract().statusCode() == 401);
   }
 
+  public void waitForPkiAuthReady(String url) {
+    expect("Waiting for basic auth")
+        .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .checkEvery(1, TimeUnit.SECONDS)
+        .until(() -> when().get(url).then().extract().statusCode() == 403);
+  }
+
   public void waitForGuestAuthReady(String url) {
     expect("Waiting for guest auth")
         .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .checkEvery(1, TimeUnit.SECONDS)
         .until(() -> when().get(url).then().extract().statusCode() == 200);
+  }
+
+  public void waitForSamlAuthReady(String url) {
+    expect("Waiting for guest auth")
+        .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .checkEvery(1, TimeUnit.SECONDS)
+        .until(
+            () ->
+                given()
+                            .header("User-Agent", BROWSER_USER_AGENT)
+                            .redirects()
+                            .follow(false)
+                            .when()
+                            .get(url)
+                            .then()
+                            .extract()
+                            .statusCode()
+                        == 302
+                    || given()
+                            .header("User-Agent", BROWSER_USER_AGENT)
+                            .redirects()
+                            .follow(false)
+                            .when()
+                            .get(url)
+                            .then()
+                            .extract()
+                            .statusCode()
+                        == 303);
   }
 
   public static String createWhitelist(String whitelist) {

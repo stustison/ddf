@@ -22,11 +22,9 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.realm.AuthenticatingRealm;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
-import org.codice.ddf.security.handler.api.SessionToken;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.credentials.OidcCredentials;
@@ -44,17 +42,6 @@ public class OidcRealm extends AuthenticatingRealm {
   /** Determine if the supplied token is supported by this realm. */
   @Override
   public boolean supports(AuthenticationToken token) {
-    if (token instanceof SessionToken) {
-      OidcCredentials credentials = getOidcCredentialsFromSessionToken((SessionToken) token);
-
-      if (credentials == null || credentials.getIdToken() == null) {
-        LOGGER.debug(
-            "The supplied session token didn't have any oidc credentials. Sending back not supported.");
-        return false;
-      }
-      return true;
-    }
-
     if (!(token instanceof OidcAuthenticationToken)) {
       LOGGER.debug(
           "The supplied authentication token is not an instance of SessionToken or OidcAuthenticationToken. Sending back not supported.");
@@ -74,7 +61,7 @@ public class OidcRealm extends AuthenticatingRealm {
       return false;
     }
 
-    WebContext webContext = oidcToken.getWebContext();
+    WebContext webContext = (WebContext) oidcToken.getContext();
     if (webContext == null) {
       LOGGER.debug(
           "The supplied authentication token has null web context. Sending back not supported.");
@@ -88,27 +75,13 @@ public class OidcRealm extends AuthenticatingRealm {
   @Override
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken)
       throws AuthenticationException {
-    if (authenticationToken instanceof SessionToken) {
-      return handleSessionToken((SessionToken) authenticationToken);
-    }
     // token is guaranteed to by of type OidcAuthenticationToken by the supports() method
     return handleOidcToken((OidcAuthenticationToken) authenticationToken);
   }
 
-  private AuthenticationInfo handleSessionToken(SessionToken sessionToken) {
-    OidcCredentials credentials = getOidcCredentialsFromSessionToken(sessionToken);
-    SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-    SimplePrincipalCollection principalCollection =
-        createPrincipalCollectionFromCredentials(credentials);
-    simpleAuthenticationInfo.setPrincipals(principalCollection);
-    simpleAuthenticationInfo.setCredentials(sessionToken.getCredentials());
-
-    return simpleAuthenticationInfo;
-  }
-
   private AuthenticationInfo handleOidcToken(OidcAuthenticationToken oidcAuthenticationToken) {
     OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
-    WebContext webContext = oidcAuthenticationToken.getWebContext();
+    WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
     if (credentials.getIdToken() == null) {
       try {
@@ -168,29 +141,6 @@ public class OidcRealm extends AuthenticatingRealm {
       principals.add(securityAssertion, getName());
     }
     return principals;
-  }
-
-  private OidcCredentials getOidcCredentialsFromSessionToken(SessionToken sessionToken) {
-    OidcCredentials credentials = null;
-
-    PrincipalCollection principals = (PrincipalCollection) sessionToken.getPrincipal();
-
-    SecurityAssertionJwt assertionJwt =
-        (SecurityAssertionJwt)
-            principals
-                .byType(SecurityAssertion.class)
-                .stream()
-                .filter(
-                    assertion ->
-                        SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(assertion.getTokenType()))
-                .findFirst()
-                .orElse(null);
-
-    if (assertionJwt != null && assertionJwt.getCredentials() != null) {
-      credentials = assertionJwt.getCredentials();
-    }
-
-    return credentials;
   }
 
   public List<String> getUsernameAttributeList() {
