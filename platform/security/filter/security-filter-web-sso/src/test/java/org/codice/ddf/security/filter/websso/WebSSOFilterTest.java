@@ -13,6 +13,7 @@
  */
 package org.codice.ddf.security.filter.websso;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -34,11 +35,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.AuthenticationHandler;
+import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.HandlerResult.Status;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 
 public class WebSSOFilterTest {
@@ -46,6 +49,8 @@ public class WebSSOFilterTest {
   private static final String DDF_AUTHENTICATION_TOKEN = "ddf.security.token";
 
   private static final String MOCK_CONTEXT = "/test";
+
+  private WebSSOFilter webSSOFilter;
 
   @Test
   public void testInit() {
@@ -211,9 +216,14 @@ public class WebSSOFilterTest {
   }
 
   @Test
-  public void testDoFilterReturnsStatusCode503WhenNoHandlersRegistered()
+  public void testDoFilterReturnsStatusCode503WhenNoHandlersRegisteredAndGuestAccessDisabled()
       throws IOException, AuthenticationException {
+    ContextPolicyManager contextPolicyManager = mock(ContextPolicyManager.class);
+    when(contextPolicyManager.isWhiteListed(any(String.class))).thenReturn(false);
+    when(contextPolicyManager.getGuestAccess()).thenReturn(false);
     WebSSOFilter filter = new WebSSOFilter();
+    filter.setContextPolicyManager(contextPolicyManager);
+
     FilterChain filterChain = mock(FilterChain.class);
     HttpServletRequest request = mock(HttpServletRequest.class);
     HttpServletResponse response = mock(HttpServletResponse.class);
@@ -222,5 +232,24 @@ public class WebSSOFilterTest {
     verify(response).setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
     verify(response).flushBuffer();
     verify(filterChain, never()).doFilter(request, response);
+  }
+
+  @Test
+  public void testDoFilterReturnsGuestTokenWhenNoHandlersRegisteredAndGuestAccessEnabled()
+      throws IOException, AuthenticationException {
+    ContextPolicyManager contextPolicyManager = mock(ContextPolicyManager.class);
+    when(contextPolicyManager.isWhiteListed(any(String.class))).thenReturn(false);
+    when(contextPolicyManager.getGuestAccess()).thenReturn(true);
+    WebSSOFilter filter = new WebSSOFilter();
+    filter.setContextPolicyManager(contextPolicyManager);
+
+    FilterChain filterChain = mock(FilterChain.class);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    filter.doFilter(request, response, filterChain);
+
+    ArgumentCaptor<HandlerResult> handlerResult = ArgumentCaptor.forClass(HandlerResult.class);
+    verify(request).setAttribute(eq(DDF_AUTHENTICATION_TOKEN), handlerResult.capture());
+    assertTrue(handlerResult.getValue().getToken() instanceof GuestAuthenticationToken);
   }
 }
