@@ -34,10 +34,6 @@
             default="30"
             description="Sets the cookie expiration time for single sign on. This value should match the lifetime of SAML assertions"/>
 
-        <AD name="Allow Guest Access" id="guestAccess" required="false" type="Boolean"
-            default="true"
-            description="Toggle whether or not to allow Guest access. The default is 'true'."/>
-
     </OCD>
 
     <Designate pid="org.codice.ddf.security.idp.server.IdpEndpoint">
