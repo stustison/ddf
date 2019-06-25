@@ -43,6 +43,8 @@ public class GuestInterceptor extends AbstractWSS4JInterceptor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GuestInterceptor.class);
 
+  private static final String WSS4J_CHECK_STRING = WSS4JInInterceptor.class.getName() + ".DONE";
+
   private SecurityManager securityManager;
 
   private Map<String, Subject> cachedGuestSubjectMap = new HashMap<>();
@@ -81,6 +83,7 @@ public class GuestInterceptor extends AbstractWSS4JInterceptor {
       }
 
       message.put(SecurityContext.class, new DefaultSecurityContext(principal, null));
+      message.put(WSS4J_CHECK_STRING, Boolean.TRUE);
 
     } else {
       LOGGER.debug("Incoming SOAP message is null - guest interceptor makes no sense.");
