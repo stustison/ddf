@@ -28,17 +28,17 @@
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-oidc</artifactId>
-            <version>3.6.1</version>
+            <version>${pac4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-oauth</artifactId>
-            <version>3.6.1</version>
+            <version>${pac4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.pac4j</groupId>
             <artifactId>pac4j-core</artifactId>
-            <version>3.6.1</version>
+            <version>${pac4j.version}</version>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>lang-tag</artifactId>
-            <version>1.4.4</version>
+            <version>1.4.3</version>
         </dependency>
         <dependency>
             <groupId>org.cryptomator</groupId>
@@ -132,9 +132,6 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Embed-Dependency>
                             jbcrypt,
-                            lang-tag,
-                            nimbus-jose-jwt,
-                            oauth2-oidc-sdk,
                             pac4j-core,
                             pac4j-oauth,
                             pac4j-oidc,
@@ -143,12 +140,20 @@
                         <Conditional-Package>org.codice.ddf.security.util</Conditional-Package>
                         <Import-Package>
                             !com.github.scribejava.*,
+                            !com.google.common.*,
+                            !org.bouncycastle.*,
+                            !org.joda.time,
+                            !org.pac4j.*,
+                            com.google.crypto.tink.*;resolution:=optional,
+                            net.shibboleth.utilities.java.support.*;resolution:=optional,
+                            org.apache.shiro.*;resolution:=optional,
+                            org.opensaml.*;resolution:=optional,
                             org.springframework.security.crypto.password;resolution:=optional,
                             *
                         </Import-Package>
                         <Export-Package>
                             com.nimbusds.*;version="${nimbus.version}",
-                            org.pac4j.*;version="3.6.1"
+                            org.pac4j.*;version="${pac4j.version}"
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -183,7 +188,6 @@
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.0</minimum>
                                         </limit>
-
                                     </limits>
                                 </rule>
                             </rules>

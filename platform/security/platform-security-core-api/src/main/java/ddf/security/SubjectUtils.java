@@ -357,6 +357,14 @@ public final class SubjectUtils {
     return assertionList.get(0).getTokenType();
   }
 
+  public static boolean isGuest(Subject subject) {
+    Collection<SecurityAssertion> securityAssertions =
+        subject.getPrincipals().byType(SecurityAssertion.class);
+    List<SecurityAssertion> assertionList = new ArrayList<>(securityAssertions);
+    assertionList.sort(SubjectUtils.getAssertionComparator());
+    return assertionList.get(0).getWeight() == SecurityAssertion.NO_AUTH_WEIGHT;
+  }
+
   private static SortedSet<String> getAttributeValues(Attribute attribute) {
     return new TreeSet<>(attribute.getValues());
   }
