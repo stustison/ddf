@@ -19,7 +19,9 @@ import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.sts.client.configuration.STSClientConfiguration;
+import java.security.AccessController;
 import java.security.Principal;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -171,9 +173,14 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
     SecurityToken securityToken;
     if (token instanceof SAMLAuthenticationToken) {
-      securityToken = checkRenewSecurityToken(credential);
+
+      securityToken =
+          AccessController.doPrivileged(
+              (PrivilegedAction<SecurityToken>) () -> checkRenewSecurityToken(credential));
     } else {
-      securityToken = requestSecurityToken(credential);
+      securityToken =
+          AccessController.doPrivileged(
+              (PrivilegedAction<SecurityToken>) () -> requestSecurityToken(credential));
     }
 
     LOGGER.debug("Creating token authentication information with SAML.");

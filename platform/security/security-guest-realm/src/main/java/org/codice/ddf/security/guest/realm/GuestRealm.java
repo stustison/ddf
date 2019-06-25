@@ -13,8 +13,6 @@
  */
 package org.codice.ddf.security.guest.realm;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.impl.AttributeDefault;
 import ddf.security.assertion.impl.AttributeStatementDefault;
@@ -31,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -46,9 +43,6 @@ import org.slf4j.LoggerFactory;
 public class GuestRealm extends AuthenticatingRealm {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GuestRealm.class);
-
-  private Cache<String, SimplePrincipalCollection> cache =
-      CacheBuilder.newBuilder().expireAfterWrite(240, TimeUnit.MINUTES).build();
 
   private Map<URI, List<String>> claimsMap = new HashMap<>();
 
@@ -78,23 +72,12 @@ public class GuestRealm extends AuthenticatingRealm {
   protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken)
       throws AuthenticationException {
     BaseAuthenticationToken baseAuthenticationToken = (BaseAuthenticationToken) authenticationToken;
-    SimplePrincipalCollection simplePrincipalCollection =
-        cache.getIfPresent(baseAuthenticationToken.getIpAddress());
-    if (simplePrincipalCollection != null) {
-      SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
-      SimplePrincipalCollection returnedCollection = new SimplePrincipalCollection();
-      returnedCollection.addAll(simplePrincipalCollection);
-      simpleAuthenticationInfo.setPrincipals(returnedCollection);
-      simpleAuthenticationInfo.setCredentials(authenticationToken.getCredentials());
-      return simpleAuthenticationInfo;
-    }
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
     SimplePrincipalCollection principals = createPrincipalFromToken(baseAuthenticationToken);
     simpleAuthenticationInfo.setPrincipals(principals);
     simpleAuthenticationInfo.setCredentials(authenticationToken.getCredentials());
     SimplePrincipalCollection cachedCollection = new SimplePrincipalCollection();
     cachedCollection.addAll(principals);
-    cache.put(baseAuthenticationToken.getIpAddress(), cachedCollection);
 
     SecurityLogger.audit(
         "Guest assertion generated for IP address: " + baseAuthenticationToken.getIpAddress());
