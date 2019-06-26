@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package ddf.security.service.impl;
+package ddf.security.pep.interceptor;
 
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.SecurityAssertionPrincipal;

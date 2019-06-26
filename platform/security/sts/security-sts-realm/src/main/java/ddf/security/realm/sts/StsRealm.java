@@ -22,7 +22,6 @@ import ddf.security.sts.client.configuration.STSClientConfiguration;
 import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -270,31 +269,31 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
    */
   protected SecurityToken checkRenewSecurityToken(final Object credential) {
     try {
-      SecurityToken securityToken = null;
       if (credential instanceof PrincipalCollection) {
         Collection<SecurityAssertion> securityAssertions =
             ((PrincipalCollection) credential).byType(SecurityAssertion.class);
-        securityToken =
+        SecurityToken securityToken =
             securityAssertions
                 .stream()
                 .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
+                .filter(
+                    sa -> Instant.now().plusSeconds(60).isAfter(sa.getNotOnOrAfter().toInstant()))
                 .map(SecurityAssertion::getToken)
                 .filter(SecurityToken.class::isInstance)
                 .map(SecurityToken.class::cast)
                 .findFirst()
                 .orElse(null);
-        if (securityToken != null
-            && (securityToken.getExpires() != null
-                && securityToken.getExpires().minus(Duration.ofMinutes(1)).isBefore(Instant.now())))
+        if (securityToken != null) {
           return renewSecurityToken(securityToken);
+        }
       }
-
-      return securityToken;
     } catch (Exception e) {
       String msg = "Error renewing the security token from STS.";
       LOGGER.debug(msg, e);
       throw new AuthenticationException(msg, e);
     }
+
+    return null;
   }
 
   private SecurityToken renewSecurityToken(final SecurityToken securityToken) throws Exception {

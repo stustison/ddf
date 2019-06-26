@@ -229,7 +229,6 @@
                             platform-util,
                             antlr4-runtime,
                             commons-lang3,
-                            security-core-impl,
                             gson-support,
                             httpcore,
                             httpclient

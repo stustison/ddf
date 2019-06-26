@@ -156,7 +156,6 @@
                             httpcore,
                             httpclient,
                             google-http-client,
-                            security-core-impl,
                             ddf-security-common,
                             platform-util,
                             platform-util-unavailableurls

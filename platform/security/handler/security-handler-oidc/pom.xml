@@ -120,6 +120,10 @@
             <artifactId>action-core-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ddf.security.core</groupId>
+            <artifactId>security-core-impl</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

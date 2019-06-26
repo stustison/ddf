@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
-import org.codice.ddf.platform.util.DateUtils;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,12 +147,14 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public Date getNotBefore() {
-    return DateUtils.copy(jwtClaimsSet.getNotBeforeTime());
+    Date notBefore = jwtClaimsSet.getNotBeforeTime();
+    return notBefore == null ? null : Date.from(notBefore.toInstant());
   }
 
   @Override
   public Date getNotOnOrAfter() {
-    return DateUtils.copy(jwtClaimsSet.getExpirationTime());
+    Date expiration = jwtClaimsSet.getExpirationTime();
+    return expiration == null ? null : Date.from(expiration.toInstant());
   }
 
   @Override

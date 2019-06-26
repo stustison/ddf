@@ -76,8 +76,6 @@ public class GuestRealm extends AuthenticatingRealm {
     SimplePrincipalCollection principals = createPrincipalFromToken(baseAuthenticationToken);
     simpleAuthenticationInfo.setPrincipals(principals);
     simpleAuthenticationInfo.setCredentials(authenticationToken.getCredentials());
-    SimplePrincipalCollection cachedCollection = new SimplePrincipalCollection();
-    cachedCollection.addAll(principals);
 
     SecurityLogger.audit(
         "Guest assertion generated for IP address: " + baseAuthenticationToken.getIpAddress());
