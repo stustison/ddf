@@ -40,7 +40,6 @@ import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.wss4j.common.saml.builder.SAML2Constants;
-import org.codice.ddf.platform.util.DateUtils;
 import org.joda.time.DateTime;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.AttributeValue;
@@ -428,12 +427,12 @@ public class SecurityAssertionSaml implements SecurityAssertion {
 
   @Override
   public Date getNotBefore() {
-    return DateUtils.copy(notBefore);
+    return notBefore == null ? null : Date.from(notBefore.toInstant());
   }
 
   @Override
   public Date getNotOnOrAfter() {
-    return DateUtils.copy(notOnOrAfter);
+    return notOnOrAfter == null ? null : Date.from(notOnOrAfter.toInstant());
   }
 
   /*

@@ -27,6 +27,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class GuestRealmTest {
@@ -88,6 +89,7 @@ public class GuestRealmTest {
     assertFalse(supports);
   }
 
+  @Ignore
   @Test
   public void testDoGetAuthenticationInfo() {
     BaseAuthenticationToken baseAuthenticationToken =

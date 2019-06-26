@@ -22,7 +22,6 @@ import ddf.security.permission.CollectionPermission;
 import ddf.security.permission.KeyValueCollectionPermission;
 import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
-import ddf.security.service.impl.SecurityAssertionStore;
 import java.util.function.Function;
 import javax.xml.namespace.QName;
 import javax.xml.ws.handler.MessageContext;

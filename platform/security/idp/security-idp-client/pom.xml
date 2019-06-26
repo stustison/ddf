@@ -201,7 +201,6 @@
                             ddf-security-common,
                             platform-util-unavailableurls,
                             platform-util,
-                            security-core-impl,
                             httpclient,
                             httpcore
                         </Embed-Dependency>
