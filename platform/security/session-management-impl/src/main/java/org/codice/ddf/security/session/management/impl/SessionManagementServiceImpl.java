@@ -14,9 +14,10 @@
 package org.codice.ddf.security.session.management.impl;
 
 import ddf.security.SecurityConstants;
-import ddf.security.Subject;
 import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.impl.SecurityAssertionDefault;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityManager;
@@ -28,8 +29,10 @@ import java.util.Collection;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.configuration.SystemBaseUrl;
+import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.session.management.service.SessionManagementService;
 import org.slf4j.Logger;
@@ -48,38 +51,40 @@ public class SessionManagementServiceImpl implements SessionManagementService {
   @Override
   public String getExpiry(HttpServletRequest request) {
     HttpSession session = sessionFactory.getOrCreateSession(request);
-    long timeLeft = 0;
-    if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-      if (securityToken instanceof SecurityTokenHolder) {
-        timeLeft = getTimeLeft((SecurityTokenHolder) securityToken);
-      }
+    if (session == null) {
+      return null;
     }
+
+    Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+    if (!(securityToken instanceof SecurityTokenHolder)) {
+      return null;
+    }
+
+    long timeLeft = getTimeLeft((SecurityTokenHolder) securityToken);
     return Long.toString(timeLeft);
   }
 
   @Override
   public String getRenewal(HttpServletRequest request) {
     HttpSession session = sessionFactory.getOrCreateSession(request);
-
-    String timeLeft = null;
-    if (session != null) {
-      Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-      if (securityToken instanceof SecurityTokenHolder) {
-        SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
-        Object token = tokenHolder.getPrincipals();
-
-        try {
-          doRenew(token, tokenHolder, request);
-        } catch (SecurityServiceException e) {
-          LOGGER.error("Failed to renew", e);
-          return null;
-        }
-
-        timeLeft = Long.toString(getTimeLeft(tokenHolder));
-      }
+    if (session == null) {
+      return null;
     }
-    return timeLeft;
+
+    Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
+    if (!(securityToken instanceof SecurityTokenHolder)) {
+      return null;
+    }
+
+    SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
+    try {
+      tokenHolder.setPrincipals(renewSecurityAssertions(tokenHolder, request));
+    } catch (SecurityServiceException e) {
+      LOGGER.error("Failed to renew", e);
+      return null;
+    }
+    long timeLeft = getTimeLeft(tokenHolder);
+    return Long.toString(timeLeft);
   }
 
   @Override
@@ -106,16 +111,46 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     return 0L;
   }
 
-  private void doRenew(
-      Object securityToken, SecurityTokenHolder tokenHolder, HttpServletRequest request)
-      throws SecurityServiceException {
-    if (securityToken instanceof PrincipalCollection) {
-      SAMLAuthenticationToken samlToken =
-          new SAMLAuthenticationToken(
-              null, (PrincipalCollection) securityToken, request.getRemoteAddr());
-      Subject subject = securityManager.getSubject(samlToken);
-      tokenHolder.setPrincipals(subject.getPrincipals());
+  private PrincipalCollection renewSecurityAssertions(
+      SecurityTokenHolder tokenHolder, HttpServletRequest request) throws SecurityServiceException {
+    AuthenticationToken token;
+
+    Collection<SecurityAssertion> assertions =
+        tokenHolder.getPrincipals().byType(SecurityAssertion.class);
+    if (assertions.isEmpty()) {
+      return tokenHolder.getPrincipals();
+    } else if (assertions.size() == 1) {
+      /*
+       * Only guest and SAML assertions can be renewed. If there's exactly one assertion and it's
+       * one of these types, renew it. Otherwise, ignore it.
+       */
+      SecurityAssertion assertion = assertions.iterator().next();
+      if (assertion instanceof SecurityAssertionDefault) {
+        token = new GuestAuthenticationToken(assertion.getPrincipal().getName());
+      } else if (assertion instanceof SecurityAssertionSaml) {
+        token =
+            new SAMLAuthenticationToken(null, tokenHolder.getPrincipals(), request.getRemoteAddr());
+      } else {
+        return tokenHolder.getPrincipals();
+      }
+      return securityManager.getSubject(token).getPrincipals();
+    } else {
+      /*
+       * If there are multiple assertions, user must have signed in with guest auth enabled, and
+       * the assertions comprise a guest assertion and an assertion for the auth type they used.
+       * If the auth type was SAML, renew them both. Otherwise, do nothing.
+       *
+       * Assumption: users can't sign in with multiple different auth types simultaneously.
+       */
+      if (!tokenHolder.getPrincipals().byType(SecurityAssertionSaml.class).isEmpty()) {
+        token =
+            new SAMLAuthenticationToken(null, tokenHolder.getPrincipals(), request.getRemoteAddr());
+      } else {
+        return tokenHolder.getPrincipals();
+      }
     }
+
+    return securityManager.getSubject(token).getPrincipals();
   }
 
   public void setSecurityManager(SecurityManager securityManager) {
