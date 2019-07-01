@@ -33,20 +33,17 @@ Any web context that allows or requires specific authentication types should be 
 |Authentication Type
 |Description
 
-|`saml`
-|Activates single-sign on (SSO) across all REST endpoints that use SAML.
-
-|`basic`
+|`BASIC`
 |Activates basic authentication.
 
 |`PKI`
 |Activates public key infrastructure authentication.
 
-|`IdP`
-|Activates SAML Web SSO authentication support. Additional configuration is necessary.
+|`SAML`
+|Activates single-sign on (SSO) across all REST endpoints that use SAML.
 
-|`guest`
-|provides guest access
+|`OIDC`
+|Activates single-sign on (SSO) across all REST endpoints that use OIDC.
 
 |===
 
