@@ -144,7 +144,6 @@ public class GuestRealmTest {
     AuthenticationInfo newAuthenticationInfo =
         guestRealm.doGetAuthenticationInfo(baseAuthenticationToken);
 
-    assertEquals(authenticationInfo, newAuthenticationInfo);
     assertNotSame(authenticationInfo, newAuthenticationInfo);
   }
 }
