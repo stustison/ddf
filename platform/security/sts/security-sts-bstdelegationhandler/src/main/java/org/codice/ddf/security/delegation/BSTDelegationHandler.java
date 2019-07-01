@@ -19,8 +19,6 @@ import org.apache.cxf.sts.token.delegation.TokenDelegationParameters;
 import org.apache.cxf.sts.token.delegation.TokenDelegationResponse;
 import org.apache.cxf.ws.security.sts.provider.model.secext.BinarySecurityTokenType;
 import org.apache.wss4j.dom.WSConstants;
-import org.codice.ddf.security.handler.api.BSTAuthenticationToken;
-import org.slf4j.LoggerFactory;
 
 /**
  * The SAML TokenDelegationHandler implementation. It disallows ActAs or OnBehalfOf for all cases
@@ -30,19 +28,13 @@ import org.slf4j.LoggerFactory;
  */
 public class BSTDelegationHandler implements TokenDelegationHandler {
 
-  public static final String X509_PKI_PATH = WSConstants.X509TOKEN_NS + "#X509PKIPathv1";
-
-  public static final String X509_V3 = WSConstants.X509TOKEN_NS + "#X509v3";
-
   public static final String BASE64_ENCODING = WSConstants.SOAPMESSAGE_NS + "#Base64Binary";
 
-  public static final String BST_VALUE_TYPE =
-      BSTAuthenticationToken.BST_NS + "#" + BSTAuthenticationToken.BST_LN;
+  public static final String BST_NS = "urn:org:codice:security:sso";
 
-  private static final org.slf4j.Logger LOGGER =
-      LoggerFactory.getLogger(BSTDelegationHandler.class);
+  public static final String BST_LN = "Token";
 
-  // private boolean checkAudienceRestriction;
+  public static final String BST_VALUE_TYPE = BST_NS + "#" + BST_LN;
 
   public boolean canHandleToken(ReceivedToken delegateTarget) {
     Object token = delegateTarget.getToken();

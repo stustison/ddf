@@ -31,11 +31,6 @@ public class GuestAuthenticationToken extends BaseAuthenticationToken {
 
   public static final String GUEST_CREDENTIALS = "Guest";
 
-  public static final String BST_GUEST_LN = "Guest";
-
-  public static final String GUEST_TOKEN_VALUE_TYPE =
-      BSTAuthenticationToken.BST_NS + BSTAuthenticationToken.TOKEN_VALUE_SEPARATOR + BST_GUEST_LN;
-
   public GuestAuthenticationToken(String name) {
     super(new GuestPrincipal(name), GUEST_CREDENTIALS, parseAddressFromName(name));
 
@@ -76,6 +71,11 @@ public class GuestAuthenticationToken extends BaseAuthenticationToken {
       ip = parseAddressFromName((String) principal);
     }
     return ip;
+  }
+
+  @Override
+  public String getCredentialsAsString() {
+    return credentials.toString();
   }
 
   @Override

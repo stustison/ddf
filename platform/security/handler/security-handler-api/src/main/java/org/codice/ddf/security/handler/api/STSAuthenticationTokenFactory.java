@@ -14,8 +14,6 @@
 package org.codice.ddf.security.handler.api;
 
 import static org.apache.wss4j.common.WSS4JConstants.X509TOKEN_NS;
-import static org.codice.ddf.security.handler.api.BSTAuthenticationToken.BASE64_ENCODING;
-import static org.codice.ddf.security.handler.api.BSTAuthenticationToken.TOKEN_VALUE_SEPARATOR;
 
 import ddf.security.PropertiesLoader;
 import java.io.ByteArrayOutputStream;
@@ -52,6 +50,10 @@ import org.w3c.dom.Node;
 public class STSAuthenticationTokenFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(STSAuthenticationTokenFactory.class);
+
+  public static final String BASE64_ENCODING = WSConstants.SOAPMESSAGE_NS + "#Base64Binary";
+
+  public static final String TOKEN_VALUE_SEPARATOR = "#";
 
   public static final String PKI_TOKEN_ID = "X509PKIPathv1";
 
