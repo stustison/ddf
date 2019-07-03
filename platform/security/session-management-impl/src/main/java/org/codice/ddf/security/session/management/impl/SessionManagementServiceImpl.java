@@ -14,7 +14,6 @@
 package org.codice.ddf.security.session.management.impl;
 
 import ddf.security.SecurityConstants;
-import ddf.security.SubjectUtils;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.impl.SecurityAssertionDefault;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
@@ -24,9 +23,9 @@ import ddf.security.service.SecurityManager;
 import ddf.security.service.SecurityServiceException;
 import java.net.URI;
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Comparator;
+import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -60,7 +59,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
       return null;
     }
 
-    long timeLeft = getTimeLeft((SecurityTokenHolder) securityToken);
+    long timeLeft = getTimeLeft(((SecurityTokenHolder) securityToken).getPrincipals(), session);
     return Long.toString(timeLeft);
   }
 
@@ -77,13 +76,18 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     }
 
     SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
+    PrincipalCollection renewedPrincipals;
     try {
-      tokenHolder.setPrincipals(renewSecurityAssertions(tokenHolder, request));
+      renewedPrincipals = renewSecurityAssertions(tokenHolder, request);
     } catch (SecurityServiceException e) {
       LOGGER.error("Failed to renew", e);
       return null;
     }
-    long timeLeft = getTimeLeft(tokenHolder);
+
+    if (renewedPrincipals != null) {
+      tokenHolder.setPrincipals(renewedPrincipals);
+    }
+    long timeLeft = getTimeLeft(renewedPrincipals, session);
     return Long.toString(timeLeft);
   }
 
@@ -96,19 +100,22 @@ public class SessionManagementServiceImpl implements SessionManagementService {
             .concat(requestQueryString != null ? "?" + requestQueryString : ""));
   }
 
-  private long getTimeLeft(SecurityTokenHolder securityToken) {
-    PrincipalCollection token = securityToken.getPrincipals();
+  private long getTimeLeft(PrincipalCollection principals, HttpSession session) {
+    long timeLeft = session.getMaxInactiveInterval() * 1000L;
 
-    if (token != null) {
-      Collection<SecurityAssertion> securityAssertions = token.byType(SecurityAssertion.class);
-      List<SecurityAssertion> assertionList = new ArrayList<>(securityAssertions);
-      assertionList.sort(SubjectUtils.getAssertionComparator());
-      SecurityAssertion securityAssertion = assertionList.get(0);
-      long time = securityAssertion.getNotOnOrAfter().getTime();
-      return Math.max(time - clock.millis(), 0);
+    if (principals != null) {
+      long earliestAssertionExpiration =
+          principals
+              .byType(SecurityAssertion.class)
+              .stream()
+              .map(SecurityAssertion::getNotOnOrAfter)
+              .map(Date::getTime)
+              .min(Comparator.naturalOrder())
+              .orElse(Long.MAX_VALUE);
+      timeLeft = Math.min(earliestAssertionExpiration - clock.millis(), timeLeft);
     }
 
-    return 0L;
+    return Math.max(timeLeft, 0);
   }
 
   private PrincipalCollection renewSecurityAssertions(
@@ -118,7 +125,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
     Collection<SecurityAssertion> assertions =
         tokenHolder.getPrincipals().byType(SecurityAssertion.class);
     if (assertions.isEmpty()) {
-      return tokenHolder.getPrincipals();
+      return null;
     } else if (assertions.size() == 1) {
       /*
        * Only guest and SAML assertions can be renewed. If there's exactly one assertion and it's
@@ -131,9 +138,8 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         token =
             new SAMLAuthenticationToken(null, tokenHolder.getPrincipals(), request.getRemoteAddr());
       } else {
-        return tokenHolder.getPrincipals();
+        return null;
       }
-      return securityManager.getSubject(token).getPrincipals();
     } else {
       /*
        * If there are multiple assertions, user must have signed in with guest auth enabled, and
@@ -146,7 +152,7 @@ public class SessionManagementServiceImpl implements SessionManagementService {
         token =
             new SAMLAuthenticationToken(null, tokenHolder.getPrincipals(), request.getRemoteAddr());
       } else {
-        return tokenHolder.getPrincipals();
+        return null;
       }
     }
 
