@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import javax.xml.stream.XMLStreamException;
@@ -270,21 +271,17 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
   protected SecurityToken checkRenewSecurityToken(final Object credential) {
     try {
       if (credential instanceof PrincipalCollection) {
-        Collection<SecurityAssertion> securityAssertions =
-            ((PrincipalCollection) credential).byType(SecurityAssertion.class);
-        SecurityToken securityToken =
-            securityAssertions
+        Optional<SecurityAssertionSaml> assertionSamlOptional =
+            ((PrincipalCollection) credential)
+                .byType(SecurityAssertionSaml.class)
                 .stream()
-                .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
-                .filter(
-                    sa -> Instant.now().plusSeconds(60).isAfter(sa.getNotOnOrAfter().toInstant()))
-                .map(SecurityAssertion::getToken)
-                .filter(SecurityToken.class::isInstance)
-                .map(SecurityToken.class::cast)
-                .findFirst()
-                .orElse(null);
-        if (securityToken != null) {
-          return renewSecurityToken(securityToken);
+                .filter(sa -> sa.getToken() instanceof SecurityToken)
+                .findFirst();
+        if (assertionSamlOptional.isPresent()) {
+          SecurityAssertionSaml assertion = assertionSamlOptional.get();
+          return (Instant.now().plusSeconds(60).isAfter(assertion.getNotOnOrAfter().toInstant()))
+              ? renewSecurityToken((SecurityToken) assertion.getToken())
+              : (SecurityToken) assertion.getToken();
         }
       }
     } catch (Exception e) {
