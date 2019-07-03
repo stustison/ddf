@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -63,8 +62,6 @@ import org.xml.sax.SAXException;
 public class SessionManagementServiceImplTest {
   private HttpServletRequest request;
 
-  private HttpServletResponse response;
-
   private SecurityTokenHolder tokenHolder;
 
   private SecurityToken securityToken;
@@ -81,7 +78,6 @@ public class SessionManagementServiceImplTest {
   public void setup()
       throws ParserConfigurationException, SAXException, IOException, SecurityServiceException {
     request = mock(HttpServletRequest.class);
-    response = mock(HttpServletResponse.class);
     HttpSession session = mock(HttpSession.class);
     tokenHolder = mock(SecurityTokenHolder.class);
     securityToken = mock(SecurityToken.class);
@@ -118,7 +114,7 @@ public class SessionManagementServiceImplTest {
   @Test
   public void testGetExpiry() {
     sessionManagementServiceImpl.setClock(Clock.fixed(Instant.EPOCH, ZoneId.of("UTC")));
-    String expiryString = sessionManagementServiceImpl.getExpiry(request, response);
+    String expiryString = sessionManagementServiceImpl.getExpiry(request);
     assertThat(expiryString, is("4522435794788"));
   }
 
@@ -145,14 +141,14 @@ public class SessionManagementServiceImplTest {
     SecurityAssertion securityAssertion = new SecurityAssertionSaml(soonerToken);
     assertionList.add(securityAssertion);
 
-    String expiryString = sessionManagementServiceImpl.getExpiry(request, response);
+    String expiryString = sessionManagementServiceImpl.getExpiry(request);
 
     assertThat(expiryString, is("4206816594788"));
   }
 
   @Test
   public void testGetRenewal() {
-    String renewalString = sessionManagementServiceImpl.getRenewal(request, response);
+    String renewalString = sessionManagementServiceImpl.getRenewal(request);
     assertNotNull(renewalString);
     verify(tokenHolder).setPrincipals(principalCollection);
   }
@@ -161,7 +157,7 @@ public class SessionManagementServiceImplTest {
   public void testGetRenewalFails() throws SecurityServiceException {
     when(manager.getSubject(isA(SAMLAuthenticationToken.class)))
         .thenThrow(new SecurityServiceException());
-    String renewalString = sessionManagementServiceImpl.getRenewal(request, response);
+    String renewalString = sessionManagementServiceImpl.getRenewal(request);
     assertNull(renewalString);
   }
 
@@ -171,7 +167,7 @@ public class SessionManagementServiceImplTest {
         .thenReturn(
             new StringBuffer("https://localhost:8993/services/internal/session/invalidate"));
     when(request.getQueryString()).thenReturn(null);
-    URI invalidateUri = sessionManagementServiceImpl.getInvalidate(request, response);
+    URI invalidateUri = sessionManagementServiceImpl.getInvalidate(request);
     assertThat(
         invalidateUri, is(equalTo(URI.create("https://localhost:8993/logout?noPrompt=true"))));
   }
@@ -183,7 +179,7 @@ public class SessionManagementServiceImplTest {
             new StringBuffer(
                 "https://localhost:8993/services/internal/session/invalidate?prevurl=/admin/"));
     when(request.getQueryString()).thenReturn("prevurl=/admin/");
-    URI invalidateUri = sessionManagementServiceImpl.getInvalidate(request, response);
+    URI invalidateUri = sessionManagementServiceImpl.getInvalidate(request);
     assertThat(
         invalidateUri,
         is(equalTo(URI.create("https://localhost:8993/logout?noPrompt=true&prevurl=/admin/"))));
