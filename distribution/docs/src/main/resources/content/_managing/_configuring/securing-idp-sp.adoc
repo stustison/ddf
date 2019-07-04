@@ -120,7 +120,7 @@ An internal Identity Provider solution.
 </md:EntityDescriptor>
 ----
 
-=== Configuring Authentication Types for IdP
+=== Configuring Authentication Types for SAML IdP
 
 Set the authentication types in the `WebContextPolicyManager` to SAML.
 

@@ -68,8 +68,8 @@ Run the command `feature:install security-idp` from the ${command-console}.
 </md:EntityDescriptor>
 ----
 
-.Configuring Authentication Types to use IdP
-To use the IdP for authentication,
+.Configuring Authentication Types to use SAML IdP
+To use the SAML IdP for authentication,
 
 . Navigate to the *${admin-console}*.
 . Select the *${ddf-security}* application.
@@ -79,7 +79,7 @@ To use the IdP for authentication,
 For example:
 * `/search=SAML`
 
-Other authentication types can also be used in conjunction with the IdP type.
+Other authentication types can also be used in conjunction with the SAML type.
 For example, if you wanted to secure the entire system with the IdP, but still allow legacy clients that don’t understand the SAML ECP specification to connect, you could set `/=SAML|PKI`.
 With that configuration, any clients that failed to connect using either the SAML 2.0 Web SSO Profile or the SAML ECP specification would fall back to 2-way TLS for authentication.
 

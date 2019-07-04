@@ -29,7 +29,7 @@ A Subject represents the application user and contains all available security-re
 |This realm checks if Guest access is allowed on the incoming Authentication Token, and if so the Guest realm returns the Guest Authentication Info.
 
 |org.codice.ddf.security.oidc.realm.OidcRealm
-|This realm takes in any Oidc/OAuth credentials found on the incoming Authentication Token, and if so does its best to resolve an ID_Token using said credentials. The ID_Token is then used to put together the resulting Authentication Info.
+|This realm takes in any OIDC/OAuth credentials found on the incoming Authentication Token, and if so resolves the ID_Token using those credentials. The ID_Token is then used to put together the resulting Authentication Info.
 
 |ddf.security.realm.sts.StsRealm
 |This realm delegates authentication to the Secure Token Service (STS). It creates a `RequestSecurityToken` message from the incoming Authentication Token and converts a successful STS response into Authentication Info.
@@ -71,8 +71,8 @@ X509 chain will be extracted from the HTTP request.
 If no credentials are found, it supports the acquisition of credentials through the configured SAML IdP.
 
 |org.codice.ddf.security.handler.oidc.OidcHandler
-|Handler for Oidc based authentication.
-If no credentials are found, and is a user-agent request, this handler supports the acquisition of credentials through the configured Oidc IdP.
+|Handler for OIDC based authentication.
+If no credentials are found, and is a user-agent request, this handler supports the acquisition of credentials through the configured OIDC IdP.
 
 |org.codice.ddf.security.handler.oauth.OAuthHandler
 |Handler for OAuth based authentication.
