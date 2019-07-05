@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,18 +47,22 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private final OidcCredentials credentials;
 
+  private final OidcProfile profile;
+
   private JWTClaimsSet jwtClaimsSet;
 
   private List<AttributeStatement> attributeStatements;
 
   private List<AuthenticationStatement> authenticationStatements = new ArrayList<>();
 
-  public SecurityAssertionJwt(OidcCredentials credentials) {
-    this(credentials, new ArrayList<>());
+  public SecurityAssertionJwt(OidcCredentials credentials, OidcProfile profile) {
+    this(credentials, profile, new ArrayList<>());
   }
 
-  public SecurityAssertionJwt(OidcCredentials credentials, List<String> usernameAttributeList) {
+  public SecurityAssertionJwt(
+      OidcCredentials credentials, OidcProfile profile, List<String> usernameAttributeList) {
     this.credentials = credentials;
+    this.profile = profile;
     this.usernameAttributeList = usernameAttributeList;
     try {
       jwtClaimsSet = credentials.getIdToken().getJWTClaimsSet();
@@ -143,6 +148,10 @@ public class SecurityAssertionJwt implements SecurityAssertion {
   @Override
   public Object getToken() {
     return credentials;
+  }
+
+  public OidcProfile getProfile() {
+    return profile;
   }
 
   @Override

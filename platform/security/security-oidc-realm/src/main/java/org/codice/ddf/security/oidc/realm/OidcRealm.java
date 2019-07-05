@@ -30,6 +30,8 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
+import org.pac4j.oidc.profile.OidcProfile;
+import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +86,6 @@ public class OidcRealm extends AuthenticatingRealm {
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
     if (credentials.getIdToken() != null) {
-      oidcTokenValidator.validateIdTokens(credentials.getIdToken(), webContext);
       oidcTokenValidator.validateAccessToken(
           credentials.getAccessToken(), credentials.getIdToken());
     } else {
@@ -117,9 +118,13 @@ public class OidcRealm extends AuthenticatingRealm {
       throw new AuthenticationException(msg);
     }
 
+    OidcProfileCreator oidcProfileCreator =
+        new CustomOidcProfileCreator(oidcHandlerConfiguration.getOidcConfiguration());
+    OidcProfile profile = oidcProfileCreator.create(credentials, webContext);
+
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
     SimplePrincipalCollection principalCollection =
-        createPrincipalCollectionFromCredentials(credentials);
+        createPrincipalCollectionFromCredentials(credentials, profile);
     simpleAuthenticationInfo.setPrincipals(principalCollection);
     simpleAuthenticationInfo.setCredentials(credentials);
 
@@ -127,11 +132,11 @@ public class OidcRealm extends AuthenticatingRealm {
   }
 
   private SimplePrincipalCollection createPrincipalCollectionFromCredentials(
-      OidcCredentials credentials) {
+      OidcCredentials credentials, OidcProfile profile) {
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
     SecurityAssertion securityAssertion = null;
     try {
-      securityAssertion = new SecurityAssertionJwt(credentials, usernameAttributeList);
+      securityAssertion = new SecurityAssertionJwt(credentials, profile, usernameAttributeList);
       Principal principal = securityAssertion.getPrincipal();
       if (principal != null) {
         principals.add(principal.getName(), getName());
