@@ -53,7 +53,7 @@
                 <value>/logout</value>
                 <value>${org.codice.ddf.system.rootContext}/internal/session</value>
                 <value>${org.codice.ddf.system.rootContext}/admin/fonts</value>
-                <value>${org.codice.ddf.system.rootContext}/favicon.ico</value>
+                <value>/favicon.ico</value>
                 <value>/error</value>
                 <value>/webjars</value>
                 <value>/health-check</value>
