@@ -39,7 +39,6 @@ import org.pac4j.core.redirect.RedirectAction;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
 import org.pac4j.oidc.profile.OidcProfile;
-import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,12 +89,14 @@ public class OidcLogoutActionProvider implements ActionProvider {
       }
 
       OidcCredentials credentials = null;
+      OidcProfile oidcProfile = null;
       if (tokenHolder != null && tokenHolder.getPrincipals() != null) {
         Collection<SecurityAssertion> securityAssertions =
             tokenHolder.getPrincipals().byType(SecurityAssertion.class);
         for (SecurityAssertion securityAssertion : securityAssertions) {
           if (SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(securityAssertion.getTokenType())) {
             credentials = (OidcCredentials) securityAssertion.getToken();
+            oidcProfile = ((SecurityAssertionJwt) securityAssertion).getProfile();
             break;
           }
         }
@@ -113,10 +114,6 @@ public class OidcLogoutActionProvider implements ActionProvider {
               return false;
             }
           });
-
-      OidcProfileCreator oidcProfileCreator = handlerConfiguration.getOidcProfileCreator();
-
-      OidcProfile oidcProfile = oidcProfileCreator.create(credentials, j2EContext);
 
       RedirectAction logoutAction =
           logoutActionBuilder.getLogoutAction(

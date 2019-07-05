@@ -18,24 +18,28 @@ import static org.pac4j.oidc.config.OidcConfiguration.IMPLICIT_FLOWS;
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.Header;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.factories.DefaultJWSVerifierFactory;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
+import com.nimbusds.jose.proc.JWSVerifierFactory;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.claims.AccessTokenHash;
+import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.validators.AccessTokenValidator;
-import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
+import java.security.Key;
 import java.util.List;
+import java.util.ListIterator;
 import net.minidev.json.JSONObject;
 import org.apache.shiro.authc.AuthenticationException;
 import org.pac4j.core.context.WebContext;
@@ -76,7 +80,7 @@ public class OidcTokenValidator {
    * @param idToken - id token to validate
    * @param webContext - the web context used to get the session information
    */
-  public void validateIdTokens(JWT idToken, WebContext webContext) {
+  public IDTokenClaimsSet validateIdTokens(JWT idToken, WebContext webContext) {
     if (!(idToken instanceof SignedJWT)) {
       LOGGER.error("Error validating id token. ID token was not signed.");
       throw new AuthenticationException("Error validating id token. ID token was not signed.");
@@ -94,7 +98,7 @@ public class OidcTokenValidator {
       }
 
       TokenValidator tokenValidator = new TokenValidator(configuration);
-      tokenValidator.validate(idToken, nonce);
+      return tokenValidator.validate(idToken, nonce);
     } catch (Exception e) {
       LOGGER.error("Error validating id token.", e);
       throw new AuthenticationException("Error validating id token.", e);
@@ -120,7 +124,7 @@ public class OidcTokenValidator {
     try {
 
       if (!(idToken instanceof SignedJWT)) {
-        LOGGER.warn("ID token received from the userinfo endpoint was not signed.");
+        LOGGER.info("ID token received from the userinfo endpoint was not signed.");
         return;
       }
 
@@ -142,14 +146,40 @@ public class OidcTokenValidator {
       }
 
       JWSKeySelector jwsKeySelector = new JWSVerificationKeySelector(jwsAlgorithm, jwkSource);
-      IDTokenValidator tokenValidator =
-          new IDTokenValidator(
-              metadata.getIssuer(),
-              new ClientID(configuration.getClientId()),
-              jwsKeySelector,
-              null);
+      JWSVerifierFactory jwsVerifierFactory = new DefaultJWSVerifierFactory();
 
-      tokenValidator.validate(idToken, null);
+      List<? extends Key> keyCandidates = jwsKeySelector.selectJWSKeys(signedJWT.getHeader(), null);
+
+      if (keyCandidates == null || keyCandidates.isEmpty()) {
+        throw new AuthenticationException(
+            "Error Validating userinfo ID token. No matching key(s) found");
+      }
+
+      ListIterator<? extends Key> it = keyCandidates.listIterator();
+
+      while (it.hasNext()) {
+
+        JWSVerifier verifier =
+            jwsVerifierFactory.createJWSVerifier(signedJWT.getHeader(), it.next());
+
+        if (verifier == null) {
+          continue;
+        }
+
+        final boolean validSignature = signedJWT.verify(verifier);
+
+        if (validSignature) {
+          return;
+        }
+
+        if (!it.hasNext()) {
+          throw new AuthenticationException(
+              "Error Validating userinfo ID token. Invalid signature");
+        }
+      }
+
+      throw new AuthenticationException(
+          "Error Validating userinfo ID token. No matching verifier(s) found");
     } catch (Exception e) {
       LOGGER.error("Error validating id token.", e);
       throw new AuthenticationException("Error validating id token.", e);
@@ -235,19 +265,21 @@ public class OidcTokenValidator {
 
     try {
       Object atHash = idToken.getJWTClaimsSet().getClaim("at_hash");
-      if (IMPLICIT_FLOWS.contains(configuration.getResponseType())) {
-        if (atHash == null) {
-          String errorMessage =
-              "at_hash value not found in response. If the ID Token is issued from the Authorization Endpoint with "
-                  + "an access_token value, which is the case for the response_type value id_token token, this is REQUIRED";
-          LOGGER.error(errorMessage);
-          throw new AuthenticationException(errorMessage);
-        }
-
-        JWSAlgorithm jwsAlgorithm = new JWSAlgorithm(idToken.getHeader().getAlgorithm().getName());
-        AccessTokenHash accessTokenHash = new AccessTokenHash((String) atHash);
-        AccessTokenValidator.validate(accessToken, jwsAlgorithm, accessTokenHash);
+      if (atHash == null && !IMPLICIT_FLOWS.contains(configuration.getResponseType())) {
+        return;
       }
+
+      if (atHash == null) {
+        String errorMessage =
+            "at_hash value not found in response. If the ID Token is issued from the Authorization Endpoint with "
+                + "an access_token value, which is the case for the response_type value id_token token, this is REQUIRED";
+        LOGGER.error(errorMessage);
+        throw new AuthenticationException(errorMessage);
+      }
+
+      JWSAlgorithm jwsAlgorithm = new JWSAlgorithm(idToken.getHeader().getAlgorithm().getName());
+      AccessTokenHash accessTokenHash = new AccessTokenHash((String) atHash);
+      AccessTokenValidator.validate(accessToken, jwsAlgorithm, accessTokenHash);
     } catch (Exception e) {
       LOGGER.error("Error validating access token.", e);
       throw new AuthenticationException("Error validating access token.", e);

@@ -847,6 +847,36 @@ public class TestOidc extends AbstractIntegrationTest {
   }
 
   @Test
+  public void testSignedUserInfoResponseCredentialFlow() throws Exception {
+    String accessToken = createAccessToken(true);
+    String signedUserInfo = createUserInfoJson(true, true);
+
+    Response response =
+        processCredentialFlow(accessToken, signedUserInfo, HttpStatus.SC_MOVED_TEMPORARILY, true);
+
+    assertThat(response.header(LOCATION), is(SEARCH_URL.getUrl()));
+
+    // Verify that we're logged in as admin
+    Map<String, Object> userInfoList = getUserInfo(response.cookies().get(JSESSIONID));
+    assertThat(userInfoList.get("name"), is(ADMIN));
+
+    logout(response.cookies().get(JSESSIONID));
+  }
+
+  @Test
+  public void testInvalidUserInfoSignatureCredentialFlow() throws Exception {
+    String accessToken = createAccessToken(true);
+    String invalidSigUserInfo = createUserInfoJson(false, true);
+
+    Response response =
+        processCredentialFlow(accessToken, invalidSigUserInfo, HttpStatus.SC_BAD_REQUEST, true);
+
+    // Verify that we're logged in as admin
+    Map<String, Object> userInfoList = getUserInfo(response.cookies().get(JSESSIONID));
+    assertThat(userInfoList.get("isGuest"), is(true));
+  }
+
+  @Test
   public void testInvalidAccessTokenCredentialFlow() throws Exception {
     String invalidAccessToken = createAccessToken(false);
     String userInfo = createUserInfoJson(true, false);

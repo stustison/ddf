@@ -13,10 +13,8 @@
  */
 package org.codice.ddf.security.oidc.realm;
 
-import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.PlainJWT;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -125,6 +123,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
             idToken = new PlainJWT(userInfoSuccessResponse.getUserInfo().toJWTClaimsSet());
           }
 
+          oidcTokenValidator.validateUserInfoIdToken(idToken);
           credentials.setIdToken(idToken);
         } else {
           throw new AuthenticationException("Received a non-successful UserInfoResponse.");
@@ -163,10 +162,6 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     final OIDCTokens oidcTokens = tokenSuccessResponse.getOIDCTokens();
 
     JWT idToken = oidcTokens.getIDToken();
-    if (idToken != null) {
-      oidcTokenValidator.validateIdTokens(idToken, webContext);
-    }
-
     AccessToken accessToken = oidcTokens.getAccessToken();
     if (accessToken != null) {
       oidcTokenValidator.validateAccessToken(accessToken, idToken);
