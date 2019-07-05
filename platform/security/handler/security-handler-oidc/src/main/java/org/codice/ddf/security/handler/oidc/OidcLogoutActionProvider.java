@@ -36,7 +36,6 @@ import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.J2ESessionStore;
 import org.pac4j.core.http.ajax.DefaultAjaxRequestResolver;
 import org.pac4j.core.redirect.RedirectAction;
-import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
@@ -88,22 +87,20 @@ public class OidcLogoutActionProvider implements ActionProvider {
             (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
       }
 
-      OidcCredentials credentials = null;
       OidcProfile oidcProfile = null;
       if (tokenHolder != null && tokenHolder.getPrincipals() != null) {
         Collection<SecurityAssertion> securityAssertions =
             tokenHolder.getPrincipals().byType(SecurityAssertion.class);
         for (SecurityAssertion securityAssertion : securityAssertions) {
           if (SecurityAssertionJwt.JWT_TOKEN_TYPE.equals(securityAssertion.getTokenType())) {
-            credentials = (OidcCredentials) securityAssertion.getToken();
-            oidcProfile = ((SecurityAssertionJwt) securityAssertion).getProfile();
+            oidcProfile = (OidcProfile) securityAssertion.getToken();
             break;
           }
         }
       }
 
-      if (credentials == null) {
-        throw new IllegalStateException("Unable to determine credentials of client for logout");
+      if (oidcProfile == null) {
+        throw new IllegalStateException("Unable to determine OIDC profile for logout");
       }
 
       OidcLogoutActionBuilder logoutActionBuilder = handlerConfiguration.getLogoutActionBuilder();

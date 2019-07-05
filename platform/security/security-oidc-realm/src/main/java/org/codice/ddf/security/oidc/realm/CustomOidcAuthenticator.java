@@ -89,7 +89,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     // try to get credentials using refresh token and authorization code
     for (AuthorizationGrant grant : grantList) {
       try {
-        trySendingGrantAndPopulatingCredentials(grant, credentials, webContext);
+        trySendingGrantAndPopulatingCredentials(grant, credentials);
 
         if (credentials.getIdToken() != null) {
           break;
@@ -135,8 +135,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   }
 
   private void trySendingGrantAndPopulatingCredentials(
-      AuthorizationGrant grant, OidcCredentials credentials, WebContext webContext)
-      throws IOException, ParseException {
+      AuthorizationGrant grant, OidcCredentials credentials) throws IOException, ParseException {
     final TokenRequest request =
         new TokenRequest(
             configuration.findProviderMetadata().getTokenEndpointURI(),

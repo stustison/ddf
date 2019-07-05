@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
-import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +44,6 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private final List<String> usernameAttributeList;
 
-  private final OidcCredentials credentials;
-
   private final OidcProfile profile;
 
   private JWTClaimsSet jwtClaimsSet;
@@ -55,17 +52,15 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private List<AuthenticationStatement> authenticationStatements = new ArrayList<>();
 
-  public SecurityAssertionJwt(OidcCredentials credentials, OidcProfile profile) {
-    this(credentials, profile, new ArrayList<>());
+  public SecurityAssertionJwt(OidcProfile profile) {
+    this(profile, new ArrayList<>());
   }
 
-  public SecurityAssertionJwt(
-      OidcCredentials credentials, OidcProfile profile, List<String> usernameAttributeList) {
-    this.credentials = credentials;
+  public SecurityAssertionJwt(OidcProfile profile, List<String> usernameAttributeList) {
     this.profile = profile;
     this.usernameAttributeList = usernameAttributeList;
     try {
-      jwtClaimsSet = credentials.getIdToken().getJWTClaimsSet();
+      jwtClaimsSet = profile.getIdToken().getJWTClaimsSet();
       Map<String, Object> claims = jwtClaimsSet.getClaims();
       attributeStatements = new ArrayList<>();
       AttributeStatement attributeStatement = new AttributeStatementJwt();
@@ -147,10 +142,6 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public Object getToken() {
-    return credentials;
-  }
-
-  public OidcProfile getProfile() {
     return profile;
   }
 
@@ -192,10 +183,6 @@ public class SecurityAssertionJwt implements SecurityAssertion {
     }
 
     return true;
-  }
-
-  public OidcCredentials getCredentials() {
-    return credentials;
   }
 
   private String getMainPrincipalAsString() throws NoSuchElementException {

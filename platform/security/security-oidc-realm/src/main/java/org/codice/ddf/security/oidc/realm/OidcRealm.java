@@ -124,19 +124,18 @@ public class OidcRealm extends AuthenticatingRealm {
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
     SimplePrincipalCollection principalCollection =
-        createPrincipalCollectionFromCredentials(credentials, profile);
+        createPrincipalCollectionFromCredentials(profile);
     simpleAuthenticationInfo.setPrincipals(principalCollection);
     simpleAuthenticationInfo.setCredentials(credentials);
 
     return simpleAuthenticationInfo;
   }
 
-  private SimplePrincipalCollection createPrincipalCollectionFromCredentials(
-      OidcCredentials credentials, OidcProfile profile) {
+  private SimplePrincipalCollection createPrincipalCollectionFromCredentials(OidcProfile profile) {
     SimplePrincipalCollection principals = new SimplePrincipalCollection();
     SecurityAssertion securityAssertion = null;
     try {
-      securityAssertion = new SecurityAssertionJwt(credentials, profile, usernameAttributeList);
+      securityAssertion = new SecurityAssertionJwt(profile, usernameAttributeList);
       Principal principal = securityAssertion.getPrincipal();
       if (principal != null) {
         principals.add(principal.getName(), getName());
