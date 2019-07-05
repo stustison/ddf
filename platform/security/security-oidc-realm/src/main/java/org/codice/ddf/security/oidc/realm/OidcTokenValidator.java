@@ -60,7 +60,7 @@ public class OidcTokenValidator {
     this.configuration = configuration;
     this.metadata = configuration.findProviderMetadata();
 
-    userInfoSigAlgList = configuration.findProviderMetadata().getUserInfoJWSAlgs();
+    userInfoSigAlgList = metadata.getUserInfoJWSAlgs();
   }
 
   /**
