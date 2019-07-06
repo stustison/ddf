@@ -59,7 +59,7 @@ Enabling CRL revocation or modifying the CRL file will require a restart of ${br
 Adding this property will also enable CRL revocation for any context policy implementing PKI authentication.
 For example, adding an authentication policy in the Web Context Policy Manager of `/search=PKI` will disable basic authentication and require a certificate for the search UI.
 If a certificate is not in the CRL, it will be allowed through, otherwise it will get a 401 error.
-If no certificate is provided, the guest handler will grant guest access.
+If no certificate is provided, and guest access is enabled on the web context policy, guest access will be granted.
 
 This also enables CRL revocation for the STS endpoint.
 The STS CRL Interceptor monitors the same `encryption.properties` file and operates in an identical manner to the PKI Authenication's CRL handler. Enabling the CRL via the `encryption.properties` file will also enable it for the STS, and also requires a restart.
