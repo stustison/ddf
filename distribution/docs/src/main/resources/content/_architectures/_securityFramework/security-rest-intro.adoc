@@ -61,15 +61,18 @@ The Jetty Authenticator is the topmost handler of all requests.
 It initializes all Security Filters and runs them in order according to service ranking:
 
 . The *Web SSO Filter* reads from the web context policy manager and functions as the first decision point.
-If the request is from a whitelisted context, no further authentication is needed and the request goes directly to the desired endpoint.
-If the context is not on the whitelist, the filter will attempt to get a claims handler for the context.
+If the request is from a whitelisted context, no further authentication is needed and the request skips through the rest of the security filters to the desired endpoint.
+
+If the context is not on the whitelist, the filter will first attempt to pull authentication information off of the session.
+If authentication information cannot be found on the session, the filter will then attempt to get an authentication handler for the context.
 The filter loops through all configured context handlers until one signals that it has found authentication information that it can use to build a token.
 This configuration can be changed by modifying the web context policy manager configuration.
 If unable to resolve the context, the filter will return an authentication error and the process stops.
 If a handler is successfully found, an auth token is assigned and the request continues to the login filter.
 
-. The *Login Filter* receives a token and returns a subject.
-To retrieve the subject, the token is sent through Shiro to the STS Realm where the token will be exchanged for a SAML assertion through a SOAP call to an STS server.
+. The *Login Filter* receives an authentication token and returns a subject.
+To retrieve the subject, the authentication token is sent through Shiro to the configured authenticating realms.
+The realms will take the authentication token and attempt to return authentication info to the Shiro framework in order to put together a subject.
 
 . If the Subject is returned, the request moves to the *AuthZ Filter* to check permissions on the user.
 If the user has the correct permissions to access that web context, the request can hit the endpoint.
@@ -125,7 +128,7 @@ The IdP Handler and the Assertion Consumer Service are both part of the IdP clie
 The Metadata Exchange happens asynchronously from any login event.
 The exchange can happen via HTTP or File, or the metadata XML itself can be pasted into the configuration for either the IdP client or the IdP server that the system ships with.
 The metadata contains information about what bindings are accepted by the client or server and whether or not either expects messages to be signed, etc.
-The redirect from the Assertion Consumer Service to the Endpoint will cause the client to pass back through the entire filter chain, which will get caught at the `Has Session` point of the IdP Handler.
+The redirect from the Assertion Consumer Service to the Endpoint will cause the client to pass back through the entire filter chain, which will get caught at the `Has Session` point of the `WebSsoFilter`.
 The request will proceed through the rest of the filters as any other connection would in the previous diagram.
 
 Unauthenticated non-browser clients that pass the HTTP headers signaling that they understand SAML ECP can authenticate via that mechanism as explained below.

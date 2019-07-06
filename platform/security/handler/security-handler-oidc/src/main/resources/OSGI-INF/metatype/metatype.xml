@@ -18,7 +18,7 @@
   <OCD name="OIDC Handler Configuration" id="org.codice.ddf.security.handler.api.OidcHandlerConfiguration">
 
     <AD name="IdP Type" id="idpType" type="String" default="Keycloak"
-        description="IdP type to use">
+        description="IdP type to use.">
         <Option label="Keycloak" value="Keycloak"/>
         <Option label="Google" value="Google"/>
         <Option label="Azure" value="Azure"/>
@@ -29,13 +29,13 @@
         description="Unique ID for the client, this may be provided by the Identity Provider."/>
 
     <AD name="Realm/Tenant" id="realm" type="String" default="master"
-        description="Realm to use for a multi-tenant environment. This is required for Keycloak or Azure"/>
+        description="Realm to use for a multi-tenant environment. This is required for Keycloak or Azure."/>
 
     <AD name="Secret" id="secret" type="String" default="secret"
       description="This value must match the value set on the Identity Provider."/>
 
     <AD name="Discovery URI" id="discoveryUri" type="String" default="http://localhost:8080/auth/realms/master/.well-known/openid-configuration"
-        description="Discovery URI for fetching OP metadata (http://openid.net/specs/openid-connect-discovery-1_0.html)"/>
+        description="Discovery URI for fetching OP metadata (http://openid.net/specs/openid-connect-discovery-1_0.html)."/>
 
     <AD name="Base URI" id="baseUri" type="String" default="http://localhost:8080/auth"
         description="Base URI for IdP. Do not fill out both this and the Discovery URI. Only one is needed depending on the IdP in use."/>
@@ -44,10 +44,10 @@
         description="URI directing to single logout service of the IdP in use."/>
 
     <AD name="Scope" id="scope" type="String" default="openid profile email resource.read"
-        description="OIDC scopes"/>
+        description="OIDC scopes."/>
 
     <AD name="Use Nonce" id="useNonce" type="Boolean" default="true"
-        description="Whether or not to use nonce in JWT"/>
+        description="Whether or not to use nonce in JWT."/>
 
     <AD name="Response Type" id="responseType" type="String" default="code"
       description="Response type to use.">
