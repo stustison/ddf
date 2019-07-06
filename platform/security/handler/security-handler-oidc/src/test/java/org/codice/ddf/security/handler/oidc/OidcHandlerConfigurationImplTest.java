@@ -65,21 +65,24 @@ public class OidcHandlerConfigurationImplTest {
 
   @Test
   public void constructWithNull() {
-    handlerConfiguration = new OidcHandlerConfigurationImpl(null);
+    handlerConfiguration = new OidcHandlerConfigurationImpl();
+    handlerConfiguration.update(null);
 
     assertThat(handlerConfiguration.isInitialized(), is(false));
   }
 
   @Test
   public void constructWithEmptyProperties() {
-    handlerConfiguration = new OidcHandlerConfigurationImpl(emptyProperties);
+    handlerConfiguration = new OidcHandlerConfigurationImpl();
+    handlerConfiguration.update(emptyProperties);
 
     assertThat(handlerConfiguration.isInitialized(), is(false));
   }
 
   @Test(expected = ClassCastException.class)
   public void constructWithInvalidProperties() {
-    handlerConfiguration = new OidcHandlerConfigurationImpl(invalidProperties);
+    handlerConfiguration = new OidcHandlerConfigurationImpl();
+    handlerConfiguration.update(invalidProperties);
 
     assertThat(handlerConfiguration.isInitialized(), is(false));
   }
@@ -88,7 +91,8 @@ public class OidcHandlerConfigurationImplTest {
   @Ignore
   @Test
   public void constructWithValidProperties() {
-    handlerConfiguration = new OidcHandlerConfigurationImpl(validProperties);
+    handlerConfiguration = new OidcHandlerConfigurationImpl();
+    handlerConfiguration.update(validProperties);
 
     assertThat(handlerConfiguration.isInitialized(), is(false));
   }
