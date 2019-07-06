@@ -129,7 +129,8 @@ public class OidcHandlerTest {
 
   @Test
   public void constructWithEmptyConfiguration() {
-    OidcHandlerConfiguration emptyConfiguration = new OidcHandlerConfigurationImpl(new HashMap<>());
+    OidcHandlerConfigurationImpl emptyConfiguration = new OidcHandlerConfigurationImpl();
+    emptyConfiguration.update(new HashMap<>());
     handler = new OidcHandler(emptyConfiguration);
 
     assertThat(handler.getConfiguration(), is(emptyConfiguration));
