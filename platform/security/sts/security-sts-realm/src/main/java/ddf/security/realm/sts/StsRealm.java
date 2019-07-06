@@ -113,8 +113,6 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
   private List<String> usernameAttributeList;
 
-  private List<String> usernameAttributeList;
-
   public StsRealm() {
     this.bus = getBus();
     setCredentialsMatcher(new STSCredentialsMatcher());

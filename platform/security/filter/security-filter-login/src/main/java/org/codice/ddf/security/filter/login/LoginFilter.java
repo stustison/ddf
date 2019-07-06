@@ -40,7 +40,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.AuthenticationException;
 import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.platform.filter.SecurityFilter;
@@ -222,33 +221,6 @@ public class LoginFilter implements SecurityFilter {
     SecurityTokenHolder holder =
         (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
     PrincipalCollection oldPrincipals = holder.getPrincipals();
-    if (!principals.equals(oldPrincipals)) {
-      holder.setPrincipals(principals);
-    }
-
-    if (nullSession) {
-      SecurityLogger.audit(
-          "Added token for user [{}] to session [{}]",
-          principals.getPrimaryPrincipal(),
-          Hashing.sha256().hashString(session.getId(), StandardCharsets.UTF_8).toString());
-      session.setMaxInactiveInterval(expirationTime * 60);
-    }
-  }
-
-  /**
-   * Attaches a subject to the HttpSession associated with an HttpRequest. If a session does not
-   * already exist, one will be created.
-   *
-   * @param httpRequest HttpRequest associated with an HttpSession to attach the Subject to
-   * @param subject Subject to attach to request
-   */
-  private void addToSession(HttpServletRequest httpRequest, Subject subject) {
-    boolean nullSession = httpRequest.getSession(false) == null;
-    PrincipalCollection principals = subject.getPrincipals();
-    HttpSession session = sessionFactory.getOrCreateSession(httpRequest);
-    SecurityTokenHolder holder =
-        (SecurityTokenHolder) session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
-    PrincipalCollection oldPrincipals = (PrincipalCollection) holder.getPrincipals();
     if (!principals.equals(oldPrincipals)) {
       holder.setPrincipals(principals);
     }

@@ -29,7 +29,6 @@ import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.http.SessionFactory;
 import ddf.security.impl.SubjectImpl;
-import ddf.security.impl.SubjectImpl;
 import ddf.security.service.SecurityManager;
 import java.util.Arrays;
 import java.util.Collections;

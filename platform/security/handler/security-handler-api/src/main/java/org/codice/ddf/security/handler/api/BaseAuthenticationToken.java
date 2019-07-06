@@ -21,15 +21,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseAuthenticationToken implements AuthenticationToken {
-
-  private X509Certificate[] x509Certs;
-
-  private String requestURI;
-
-  boolean reference = false;
-
-  private boolean retrievedFromReference = false;
+public class BaseAuthenticationToken implements AuthenticationToken {
 
   private X509Certificate[] x509Certs;
 
@@ -117,24 +109,8 @@ public abstract class BaseAuthenticationToken implements AuthenticationToken {
     this.requestURI = requestURI;
   }
 
-  public abstract String getCredentialsAsString();
-
-  // IPv6 addresses should be contained within brackets to conform
-  // to the spec IETF RFC 2732
-  private static String formatIpAddress(String ipAddress) {
-    try {
-      if (InetAddress.getByName(ipAddress) instanceof Inet6Address && !ipAddress.contains("[")) {
-        ipAddress = "[" + ipAddress + "]";
-      }
-    } catch (UnknownHostException e) {
-      LOGGER.debug("Error formatting the ip address, using the unformatted ipaddress", e);
-    }
-
-    return ipAddress;
-  }
-
-  public String getIpAddress() {
-    return ip;
+  public String getCredentialsAsString() {
+    return credentials.toString();
   }
 
   // IPv6 addresses should be contained within brackets to conform
