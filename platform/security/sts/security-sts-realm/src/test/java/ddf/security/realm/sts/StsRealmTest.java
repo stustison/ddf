@@ -32,7 +32,6 @@ import org.apache.cxf.ws.security.trust.STSClient;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.wss4j.common.saml.OpenSAMLUtil;
-import org.codice.ddf.security.handler.api.BSTAuthenticationToken;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.handler.api.STSAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
@@ -74,10 +73,10 @@ public class StsRealmTest {
     boolean supports = realm.supports(authenticationToken);
     assertTrue(supports);
 
-    authenticationToken = mock(BSTAuthenticationToken.class);
-    when(authenticationToken.getCredentials()).thenReturn("creds");
+    authenticationToken = mock(SAMLAuthenticationToken.class);
+    when(authenticationToken.getCredentials()).thenReturn(null);
     supports = realm.supports(authenticationToken);
-    assertTrue(supports);
+    assertFalse(supports);
 
     authenticationToken = mock(STSAuthenticationToken.class);
     when(authenticationToken.getCredentials()).thenReturn("creds");
