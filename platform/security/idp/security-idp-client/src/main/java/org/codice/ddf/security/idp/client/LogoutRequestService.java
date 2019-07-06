@@ -41,7 +41,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -273,8 +272,6 @@ public class LogoutRequestService {
         .filter(Objects::nonNull)
         .map(PrincipalCollection.class::cast)
         .map(SessionToken::new)
-        .filter(SecurityToken.class::isInstance)
-        .map(SecurityToken.class::cast)
         .map(this::extractSubject)
         .filter(Objects::nonNull)
         .map(SubjectUtils::getName)
@@ -522,7 +519,7 @@ public class LogoutRequestService {
   }
 
   private SecurityToken getIdpSecurityToken() {
-    return (SecurityToken) getTokenHolder()
+    return getTokenHolder()
         .getPrincipals()
         .byType(SecurityAssertion.class)
         .stream()

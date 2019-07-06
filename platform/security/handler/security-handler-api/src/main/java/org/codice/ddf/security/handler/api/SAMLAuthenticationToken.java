@@ -14,7 +14,6 @@
 package org.codice.ddf.security.handler.api;
 
 import ddf.security.assertion.SecurityAssertion;
-import ddf.security.assertion.SecurityAssertion;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
