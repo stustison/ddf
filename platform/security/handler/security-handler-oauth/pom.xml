@@ -184,7 +184,6 @@
                             ddf-security-common,
                             platform-util,
                             platform-util-unavailableurls,
-                            lang-tag,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>
