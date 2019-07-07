@@ -53,12 +53,6 @@
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
             <version>${nimbus.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.nimbusds</groupId>
-                    <artifactId>nimbus-jose-jwt</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -137,6 +131,9 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Embed-Dependency>
                             jbcrypt,
+                            lang-tag,
+                            nimbus-jose-jwt,
+                            oauth2-oidc-sdk,
                             pac4j-core,
                             pac4j-oauth,
                             pac4j-oidc,
@@ -145,6 +142,7 @@
                         </Embed-Dependency>
                         <Conditional-Package>org.codice.ddf.security.util</Conditional-Package>
                         <Import-Package>
+                            !com.nimbusds.*,
                             !com.github.scribejava.*,
                             !com.google.common.*,
                             !org.bouncycastle.*,
@@ -158,7 +156,11 @@
                             *
                         </Import-Package>
                         <Export-Package>
-                            com.nimbusds.*;version="${nimbus.version}",
+                            com.nimbusds.jose.*;version="${nimbus.version}",
+                            com.nimbusds.jwt.*;version="${nimbus.version}",
+                            com.nimbusds.langtag.*;version="1.4.3",
+                            com.nimbusds.oauth2.*;version="${nimbus.version}",
+                            com.nimbusds.openid.*;version="${nimbus.version}",
                             org.pac4j.*;version="${pac4j.version}"
                         </Export-Package>
                     </instructions>
