@@ -29,6 +29,7 @@ import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.IDTokenClaimsSet;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.shiro.authc.AuthenticationException;
@@ -47,10 +48,13 @@ public class CustomOidcProfileCreator<U extends OidcProfile> extends OidcProfile
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcProfileCreator.class);
 
   private OidcTokenValidator validator;
+  private OIDCProviderMetadata metadata;
 
-  public CustomOidcProfileCreator(OidcConfiguration configuration) {
+  public CustomOidcProfileCreator(
+      OidcConfiguration configuration, OIDCProviderMetadata oidcProviderMetadata) {
     super(configuration);
-    validator = new OidcTokenValidator(configuration);
+    metadata = oidcProviderMetadata;
+    validator = new OidcTokenValidator(configuration, oidcProviderMetadata);
   }
 
   @Override
@@ -75,13 +79,10 @@ public class CustomOidcProfileCreator<U extends OidcProfile> extends OidcProfile
     }
 
     try {
-      if (configuration.findProviderMetadata().getUserInfoEndpointURI() != null
-          && accessToken != null) {
+      if (metadata.getUserInfoEndpointURI() != null && accessToken != null) {
 
         final UserInfoRequest userInfoRequest =
-            new UserInfoRequest(
-                configuration.findProviderMetadata().getUserInfoEndpointURI(),
-                (BearerAccessToken) accessToken);
+            new UserInfoRequest(metadata.getUserInfoEndpointURI(), (BearerAccessToken) accessToken);
         final HTTPRequest userInfoHttpRequest = userInfoRequest.toHTTPRequest();
         userInfoHttpRequest.setConnectTimeout(configuration.getConnectTimeout());
         userInfoHttpRequest.setReadTimeout(configuration.getReadTimeout());

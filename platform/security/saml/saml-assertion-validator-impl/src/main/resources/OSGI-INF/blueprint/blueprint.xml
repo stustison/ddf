@@ -23,7 +23,7 @@
     filter="(id=http)"/>
 
   <bean id="samlAssertionValidator"
-    class="com.connexta.ddf.security.saml.assertion.validator.impl.SamlAssertionValidatorImpl">
+    class="org.codice.ddf.security.saml.assertion.validator.impl.SamlAssertionValidatorImpl">
     <property name="signatureProperties"
       value="${ddf.etc}/ws-security/server/signature.properties"/>
     <property name="sessionFactory"
@@ -31,6 +31,6 @@
   </bean>
 
   <service ref="samlAssertionValidator"
-    interface="com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator"/>
+    interface="org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator"/>
 
 </blueprint>

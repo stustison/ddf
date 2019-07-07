@@ -13,7 +13,6 @@
  */
 package ddf.security.realm.sts;
 
-import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.base.Splitter;
 import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
@@ -57,6 +56,7 @@ import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.handler.api.STSAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
+import org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.DOMImplementation;

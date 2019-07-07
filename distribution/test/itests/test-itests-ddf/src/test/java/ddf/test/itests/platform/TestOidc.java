@@ -162,7 +162,6 @@ public class TestOidc extends AbstractIntegrationTest {
   private static final String FORM_POST = "form_post";
 
   private static final String ADMIN = "admin";
-  private static final String LOCALHOST = "localhost";
   private static final String JSESSIONID = "JSESSIONID";
   private static final Gson GSON =
       new GsonBuilder()

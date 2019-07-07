@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.common.SecurityTokenHolder;
@@ -43,6 +42,7 @@ import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.policy.context.ContextPolicy;
+import org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

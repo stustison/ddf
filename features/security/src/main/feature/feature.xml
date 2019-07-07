@@ -287,19 +287,7 @@
     <feature name="security-guest-realm" version="${project.version}"
              description="Security Guest Realm.">
         <bundle>mvn:ddf.security.expansion/security-expansion-api/${project.version}</bundle>
-        <feature>javax-validation</feature>
-        <feature>security-handler-api</feature>
-        <feature>security-policy-context</feature>
-        <feature>cxf-frontend-javascript</feature>
-        <feature>cxf-jaxrs</feature>
-        <feature dependency="true">oidc-dependencies</feature>
         <feature>security-core</feature>
-        <bundle>mvn:ddf.security/security-guest-realm/${project.version}</bundle>
-    </feature>
-
-    <feature name="security-guest-realm" version="${project.version}"
-             description="Security Guest Realm.">
-        <bundle>mvn:ddf.security.expansion/security-expansion-api/${project.version}</bundle>
         <feature>javax-validation</feature>
         <feature>security-handler-api</feature>
         <feature>security-policy-context</feature>
@@ -357,14 +345,6 @@
         <bundle>mvn:ddf.security.handler/security-handler-basic/${project.version}</bundle>
     </feature>
 
-    <feature name="security-oidc-realm" version="${project.version}"
-             description="OIDC Authentication Handler for web applications.">
-        <feature>oidc-dependencies</feature>
-        <feature>security-core</feature>
-        <feature>security-handler-oidc</feature>
-        <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
-    </feature>
-
     <feature name="oidc-dependencies" version="${project.version}"
       description="All OIDC third party dependencies">
         <feature prerequisite="true">wrap</feature>
@@ -404,6 +384,8 @@
         <feature>jackson</feature>
         <feature dependency="true">oidc-dependencies</feature>
         <feature>security-core</feature>
+        <feature>security-handler-api</feature>
+        <feature>security-handler-oidc</feature>
         <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
     </feature>
 
@@ -424,6 +406,7 @@
         <feature>jackson</feature>
         <feature>action-core-impl</feature>
         <feature>security-core</feature>
+        <feature>security-handler-api</feature>
         <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
         <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
         <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
@@ -621,15 +604,7 @@
         <bundle>mvn:com.google.code.gson/gson/${gson.version}</bundle>
     </feature>
 
-    <feature name="saml-validator" version="${project.version}"
-             description="TODO">
-        <feature>security-core</feature>
-        <bundle>mvn:ddf.security.saml/saml-assertion-validator/${project.version}</bundle>
-        <bundle>mvn:ddf.security.saml/saml-assertion-validator-impl/${project.version}</bundle>
-    </feature>
-
-    <feature name="saml-validator" version="${project.version}"
-             description="TODO">
+    <feature name="saml-validator" version="${project.version}" description="Saml token validator">
         <feature>security-core</feature>
         <bundle>mvn:ddf.security.saml/saml-assertion-validator/${project.version}</bundle>
         <bundle>mvn:ddf.security.saml/saml-assertion-validator-impl/${project.version}</bundle>

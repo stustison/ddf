@@ -72,9 +72,9 @@ public class OidcLogoutActionProviderTest {
     SecurityTokenHolder tokenHolder = mock(SecurityTokenHolder.class);
     SimplePrincipalCollection principalCollection = new SimplePrincipalCollection();
     SecurityAssertion securityAssertion = mock(SecurityAssertion.class);
-    OidcCredentials credentials = mock(OidcCredentials.class);
+    OidcProfile profile = mock(OidcProfile.class);
 
-    when(securityAssertion.getToken()).thenReturn(credentials);
+    when(securityAssertion.getToken()).thenReturn(profile);
     when(securityAssertion.getTokenType()).thenReturn(SecurityAssertionJwt.JWT_TOKEN_TYPE);
     when(subject.getPrincipals()).thenReturn(principalCollection);
     when(tokenHolder.getPrincipals()).thenReturn(principalCollection);

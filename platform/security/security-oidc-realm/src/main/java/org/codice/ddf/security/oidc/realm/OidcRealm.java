@@ -13,6 +13,7 @@
  */
 package org.codice.ddf.security.oidc.realm;
 
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.jwt.impl.SecurityAssertionJwt;
 import java.security.Principal;
@@ -80,8 +81,11 @@ public class OidcRealm extends AuthenticatingRealm {
     // token is guaranteed to be of type OidcAuthenticationToken by the supports() method
     OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
     OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
+    OIDCProviderMetadata oidcProviderMetadata =
+        oidcHandlerConfiguration.getOidcConfiguration().findProviderMetadata();
     OidcTokenValidator oidcTokenValidator =
-        new OidcTokenValidator(oidcHandlerConfiguration.getOidcConfiguration());
+        new OidcTokenValidator(
+            oidcHandlerConfiguration.getOidcConfiguration(), oidcProviderMetadata);
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
     if (credentials.getIdToken() != null) {
@@ -92,7 +96,8 @@ public class OidcRealm extends AuthenticatingRealm {
         OidcAuthenticator authenticator =
             new CustomOidcAuthenticator(
                 oidcHandlerConfiguration.getOidcConfiguration(),
-                oidcHandlerConfiguration.getOidcClient());
+                oidcHandlerConfiguration.getOidcClient(),
+                oidcProviderMetadata);
         authenticator.validate(credentials, webContext);
       } catch (TechnicalException e) {
         LOGGER.debug(
@@ -118,7 +123,8 @@ public class OidcRealm extends AuthenticatingRealm {
     }
 
     OidcProfileCreator oidcProfileCreator =
-        new CustomOidcProfileCreator(oidcHandlerConfiguration.getOidcConfiguration());
+        new CustomOidcProfileCreator(
+            oidcHandlerConfiguration.getOidcConfiguration(), oidcProviderMetadata);
     OidcProfile profile = oidcProfileCreator.create(credentials, webContext);
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();

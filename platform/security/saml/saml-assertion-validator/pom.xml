@@ -33,9 +33,6 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Export-Package>
-                            com.connexta.ddf.security.saml.assertion.validator
-                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>

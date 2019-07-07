@@ -34,6 +34,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import java.io.IOException;
 import java.net.URI;
@@ -55,10 +56,13 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcAuthenticator.class);
 
   private OidcTokenValidator oidcTokenValidator;
+  private OIDCProviderMetadata metadata;
 
-  public CustomOidcAuthenticator(OidcConfiguration configuration, OidcClient client) {
+  public CustomOidcAuthenticator(
+      OidcConfiguration configuration, OidcClient client, OIDCProviderMetadata metadata) {
     super(configuration, client);
-    oidcTokenValidator = new OidcTokenValidator(configuration);
+    this.metadata = metadata;
+    oidcTokenValidator = new OidcTokenValidator(configuration, metadata);
   }
 
   /* This methods job is to try and get an id token from a
@@ -106,7 +110,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
 
       final UserInfoRequest userInfoRequest =
           new UserInfoRequest(
-              configuration.findProviderMetadata().getUserInfoEndpointURI(),
+              metadata.getUserInfoEndpointURI(),
               Method.GET,
               new BearerAccessToken(accessToken.toString()));
       final HTTPRequest userInfoHttpRequest = userInfoRequest.toHTTPRequest();
@@ -137,10 +141,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   private void trySendingGrantAndPopulatingCredentials(
       AuthorizationGrant grant, OidcCredentials credentials) throws IOException, ParseException {
     final TokenRequest request =
-        new TokenRequest(
-            configuration.findProviderMetadata().getTokenEndpointURI(),
-            getClientAuthentication(),
-            grant);
+        new TokenRequest(metadata.getTokenEndpointURI(), getClientAuthentication(), grant);
     HTTPRequest tokenHttpRequest = request.toHTTPRequest();
     tokenHttpRequest.setConnectTimeout(configuration.getConnectTimeout());
     tokenHttpRequest.setReadTimeout(configuration.getReadTimeout());

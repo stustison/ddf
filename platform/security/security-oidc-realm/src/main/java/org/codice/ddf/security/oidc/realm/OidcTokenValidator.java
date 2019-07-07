@@ -27,6 +27,7 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.JWSVerifierFactory;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import com.nimbusds.jose.util.ResourceRetriever;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
@@ -55,11 +56,13 @@ public class OidcTokenValidator {
 
   private OidcConfiguration configuration;
   private OIDCProviderMetadata metadata;
+  private ResourceRetriever resourceRetriever;
 
-  public OidcTokenValidator(OidcConfiguration configuration) {
+  public OidcTokenValidator(OidcConfiguration configuration, OIDCProviderMetadata metadata) {
     this.configuration = configuration;
-    this.metadata = configuration.findProviderMetadata();
+    this.metadata = metadata;
 
+    resourceRetriever = configuration.findResourceRetriever();
     userInfoSigAlgList = metadata.getUserInfoJWSAlgs();
   }
 
@@ -128,7 +131,7 @@ public class OidcTokenValidator {
         return;
       }
 
-      JWKSource jwkSource = new RemoteJWKSet(metadata.getJWKSetURI().toURL());
+      JWKSource jwkSource = new RemoteJWKSet(metadata.getJWKSetURI().toURL(), resourceRetriever);
 
       SignedJWT signedJWT = ((SignedJWT) idToken);
       JWSAlgorithm jwsAlgorithm = signedJWT.getHeader().getAlgorithm();
@@ -216,8 +219,7 @@ public class OidcTokenValidator {
     try {
       ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
 
-      JWKSource keySource =
-          new RemoteJWKSet(configuration.findProviderMetadata().getJWKSetURI().toURL());
+      JWKSource keySource = new RemoteJWKSet(metadata.getJWKSetURI().toURL(), resourceRetriever);
 
       // Get signature algorithm, if ID token is given get algorithm from ID Token otherwise
       // get algorithm from access token header
