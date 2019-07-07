@@ -11,9 +11,8 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ddf.security.saml.assertion.validator.impl;
+package org.codice.ddf.security.saml.assertion.validator.impl;
 
-import com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import com.google.common.annotations.VisibleForTesting;
 import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
@@ -55,6 +54,7 @@ import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.platform.util.XMLUtils;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
+import org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import org.joda.time.DateTime;
 import org.opensaml.core.xml.XMLObjectBuilderFactory;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -107,11 +107,11 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
 
   private Crypto signatureCrypto;
 
+  private String signatureProperties;
+
   private Validator assertionValidator = new org.apache.wss4j.dom.validate.SamlAssertionValidator();
 
   private SessionFactory sessionFactory;
-
-  String signatureProperties = null;
 
   /**
    * Validates a SAMLAuthenticationToken by checking it's signature against the configured system

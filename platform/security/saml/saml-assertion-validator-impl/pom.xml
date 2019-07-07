@@ -32,7 +32,6 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Export-Package/>
                         <Embed-Dependency>
                             ddf-security-common,
                             platform-util,

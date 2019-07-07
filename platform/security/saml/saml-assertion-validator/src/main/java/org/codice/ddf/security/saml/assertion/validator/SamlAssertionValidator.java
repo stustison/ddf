@@ -11,7 +11,7 @@
  * License is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  */
-package com.connexta.ddf.security.saml.assertion.validator;
+package org.codice.ddf.security.saml.assertion.validator;
 
 import ddf.security.http.SessionFactory;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;

@@ -162,7 +162,7 @@ public class SecurityPolicyConfigurator {
       putPolicyValues(policyProperties, "whiteListContexts", whitelist);
     }
 
-    putPolicyValues(policyProperties, "guestAccess", "true");
+    putPolicyValues(policyProperties, "guestAccess", true);
 
     new SynchronizedConfiguration(
             FACTORY_PID, null, policyProperties, createChecker(policyProperties), configAdmin)
@@ -175,6 +175,10 @@ public class SecurityPolicyConfigurator {
     if (StringUtils.isNotBlank(value)) {
       properties.put(key, StringUtils.split(value, ","));
     }
+  }
+
+  private void putPolicyValues(Map<String, Object> properties, String key, Object value) {
+    properties.put(key, value);
   }
 
   private Callable<Boolean> createChecker(final Map<String, Object> policyProperties) {

@@ -24,7 +24,7 @@
                availability="optional"/>
 
     <reference id="samlAssertionValidator"
-               interface="com.connexta.ddf.security.saml.assertion.validator.SamlAssertionValidator"/>
+               interface="org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator"/>
 
     <bean id="stsRealm" class="ddf.security.realm.sts.StsRealm">
         <property name="samlAssertionValidator"
