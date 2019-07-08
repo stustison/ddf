@@ -93,7 +93,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     // try to get credentials using refresh token and authorization code
     for (AuthorizationGrant grant : grantList) {
       try {
-        trySendingGrantAndPopulatingCredentials(grant, credentials);
+        trySendingGrantAndPopulatingCredentials(grant, credentials, webContext);
 
         if (credentials.getIdToken() != null) {
           break;
@@ -106,7 +106,6 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     // try to get credentials using access token
     final AccessToken accessToken = credentials.getAccessToken();
     if (credentials.getIdToken() == null && accessToken != null) {
-      oidcTokenValidator.validateAccessToken(credentials.getAccessToken(), null);
 
       final UserInfoRequest userInfoRequest =
           new UserInfoRequest(
@@ -139,7 +138,8 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   }
 
   private void trySendingGrantAndPopulatingCredentials(
-      AuthorizationGrant grant, OidcCredentials credentials) throws IOException, ParseException {
+      AuthorizationGrant grant, OidcCredentials credentials, WebContext webContext)
+      throws IOException, ParseException {
     final TokenRequest request =
         new TokenRequest(metadata.getTokenEndpointURI(), getClientAuthentication(), grant);
     HTTPRequest tokenHttpRequest = request.toHTTPRequest();
@@ -162,6 +162,10 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     final OIDCTokens oidcTokens = tokenSuccessResponse.getOIDCTokens();
 
     JWT idToken = oidcTokens.getIDToken();
+    if (idToken != null) {
+      oidcTokenValidator.validateIdTokens(idToken, webContext);
+    }
+
     AccessToken accessToken = oidcTokens.getAccessToken();
     if (accessToken != null) {
       oidcTokenValidator.validateAccessToken(accessToken, idToken);

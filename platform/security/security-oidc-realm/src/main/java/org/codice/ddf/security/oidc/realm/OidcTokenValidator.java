@@ -196,6 +196,10 @@ public class OidcTokenValidator {
    * @param idToken - the corresponding id token or null if one is not available
    */
   public void validateAccessToken(AccessToken accessToken, JWT idToken) {
+    if (accessToken == null) {
+      return;
+    }
+
     validateAccessTokenSignature(accessToken, idToken);
 
     if (idToken != null) {
@@ -212,10 +216,6 @@ public class OidcTokenValidator {
    *     in the header of the access token is used.
    */
   private void validateAccessTokenSignature(AccessToken accessToken, JWT idToken) {
-    if (accessToken == null) {
-      return;
-    }
-
     try {
       ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
 
@@ -261,10 +261,6 @@ public class OidcTokenValidator {
    * @param idToken - the corresponding ID token
    */
   private void validateAccessTokenAtHash(AccessToken accessToken, JWT idToken) {
-    if (accessToken == null || idToken == null) {
-      return;
-    }
-
     try {
       Object atHash = idToken.getJWTClaimsSet().getClaim("at_hash");
       if (atHash == null && !IMPLICIT_FLOWS.contains(configuration.getResponseType())) {
