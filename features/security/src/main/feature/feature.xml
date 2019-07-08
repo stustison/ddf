@@ -349,13 +349,16 @@
       description="All OIDC third party dependencies">
         <feature prerequisite="true">wrap</feature>
         <feature>jackson</feature>
-        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
-        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
-        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
-        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
+        <bundle>mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
+        <bundle>mvn:org.ow2.asm/asm/5.2</bundle>
+        <bundle>mvn:net.minidev/accessors-smart/1.2</bundle>
+        <bundle>mvn:net.minidev/json-smart/2.3</bundle>
+        <bundle>wrap:mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
+        <bundle>wrap:mvn:com.nimbusds/oauth2-oidc-sdk/${nimbus.version}</bundle>
+        <bundle>mvn:com.nimbusds/lang-tag/${nimbus.langtag.version}</bundle>
+        <bundle>wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
+        <bundle>mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
+        <bundle>mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
     </feature>
 
     <feature name="security-handler-oidc" version="${project.version}"
@@ -387,34 +390,6 @@
         <feature>security-handler-api</feature>
         <feature>security-handler-oidc</feature>
         <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
-    </feature>
-
-    <feature name="oidc-dependencies" version="${project.version}"
-             description="All OIDC third party dependencies">
-        <feature dependency="true">jackson</feature>
-        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
-        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
-        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
-        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
-    </feature>
-
-    <feature name="security-handler-oidc" version="${project.version}"
-             description="OIDC Authentication Handler for web applications.">
-        <feature>jackson</feature>
-        <feature>action-core-impl</feature>
-        <feature>security-core</feature>
-        <feature>security-handler-api</feature>
-        <bundle dependency="true">mvn:com.sun.mail/javax.mail/${javax-mail.version}</bundle>
-        <bundle dependency="true">mvn:org.ow2.asm/asm/5.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/accessors-smart/1.2</bundle>
-        <bundle dependency="true">mvn:net.minidev/json-smart/2.3</bundle>
-        <bundle dependency="true">wrap:mvn:com.github.stephenc.jcip/jcip-annotations/1.0-1</bundle>
-        <bundle dependency="true">mvn:com.nimbusds/nimbus-jose-jwt/${nimbus.version}</bundle>
-        <bundle dependency="true">mvn:ddf.platform.security/security-oidc-bundle/${project.version}</bundle>
-        <bundle>mvn:ddf.security.handler/security-handler-oidc/${project.version}</bundle>
     </feature>
 
     <feature name="jackson" version="${project.version}">

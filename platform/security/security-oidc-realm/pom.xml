@@ -107,7 +107,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>lang-tag</artifactId>
-            <version>1.4.4</version>
+            <version>${nimbus.langtag.version}</version>
         </dependency>
         <dependency>
             <groupId>org.cryptomator</groupId>
@@ -142,9 +142,6 @@
                             ddf-security-common,
                             platform-util,
                             platform-util-unavailableurls,
-                            oauth2-oidc-sdk,
-                            lang-tag,
-                            json-smart,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>
