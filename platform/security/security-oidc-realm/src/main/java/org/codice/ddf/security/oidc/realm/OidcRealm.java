@@ -88,9 +88,9 @@ public class OidcRealm extends AuthenticatingRealm {
             oidcHandlerConfiguration.getOidcConfiguration(), oidcProviderMetadata);
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
+    oidcTokenValidator.validateAccessToken(credentials.getAccessToken(), credentials.getIdToken());
     if (credentials.getIdToken() != null) {
-      oidcTokenValidator.validateAccessToken(
-          credentials.getAccessToken(), credentials.getIdToken());
+      oidcTokenValidator.validateIdTokens(credentials.getIdToken(), webContext);
     } else {
       try {
         OidcAuthenticator authenticator =
