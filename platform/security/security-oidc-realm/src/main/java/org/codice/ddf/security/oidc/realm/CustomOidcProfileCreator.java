@@ -47,14 +47,12 @@ public class CustomOidcProfileCreator<U extends OidcProfile> extends OidcProfile
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcProfileCreator.class);
 
-  private OidcTokenValidator validator;
   private OIDCProviderMetadata metadata;
 
   public CustomOidcProfileCreator(
       OidcConfiguration configuration, OIDCProviderMetadata oidcProviderMetadata) {
     super(configuration);
     metadata = oidcProviderMetadata;
-    validator = new OidcTokenValidator(configuration, oidcProviderMetadata);
   }
 
   @Override
@@ -68,9 +66,13 @@ public class CustomOidcProfileCreator<U extends OidcProfile> extends OidcProfile
     profile.setAccessToken(accessToken);
     profile.setIdTokenString(idToken.getParsedString());
 
-    IDTokenClaimsSet claimsSet = validator.validateIdTokens(idToken, context);
-    assertNotNull("claimsSet", claimsSet);
-    profile.setId(ProfileHelper.sanitizeIdentifier(profile, claimsSet.getSubject()));
+    try {
+      IDTokenClaimsSet claimsSet = new IDTokenClaimsSet(idToken.getJWTClaimsSet());
+      assertNotNull("claimsSet", claimsSet);
+      profile.setId(ProfileHelper.sanitizeIdentifier(profile, claimsSet.getSubject()));
+    } catch (java.text.ParseException | ParseException e) {
+      LOGGER.warn("Unable to extract ID token claim set.", e);
+    }
 
     final RefreshToken refreshToken = credentials.getRefreshToken();
     if (refreshToken != null && !refreshToken.getValue().isEmpty()) {
