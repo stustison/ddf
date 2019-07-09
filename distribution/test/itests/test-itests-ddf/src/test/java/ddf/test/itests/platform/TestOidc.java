@@ -835,7 +835,7 @@ public class TestOidc extends AbstractIntegrationTest {
     String userInfo = createUserInfoJson(true, false);
 
     Response response =
-        processCredentialFlow(accessToken, userInfo, HttpStatus.SC_MOVED_TEMPORARILY, true);
+        processCredentialFlow(accessToken, userInfo, false, HttpStatus.SC_MOVED_TEMPORARILY, true);
 
     assertThat(response.header(LOCATION), is(SEARCH_URL.getUrl()));
 
@@ -852,7 +852,8 @@ public class TestOidc extends AbstractIntegrationTest {
     String signedUserInfo = createUserInfoJson(true, true);
 
     Response response =
-        processCredentialFlow(accessToken, signedUserInfo, HttpStatus.SC_MOVED_TEMPORARILY, true);
+        processCredentialFlow(
+            accessToken, signedUserInfo, true, HttpStatus.SC_MOVED_TEMPORARILY, true);
 
     assertThat(response.header(LOCATION), is(SEARCH_URL.getUrl()));
 
@@ -869,7 +870,8 @@ public class TestOidc extends AbstractIntegrationTest {
     String invalidSigUserInfo = createUserInfoJson(false, true);
 
     Response response =
-        processCredentialFlow(accessToken, invalidSigUserInfo, HttpStatus.SC_BAD_REQUEST, true);
+        processCredentialFlow(
+            accessToken, invalidSigUserInfo, true, HttpStatus.SC_BAD_REQUEST, true);
 
     // Verify that we're logged in as admin
     Map<String, Object> userInfoList = getUserInfo(response.cookies().get(JSESSIONID));
@@ -882,7 +884,8 @@ public class TestOidc extends AbstractIntegrationTest {
     String userInfo = createUserInfoJson(true, false);
 
     Response response =
-        processCredentialFlow(invalidAccessToken, userInfo, HttpStatus.SC_BAD_REQUEST, false);
+        processCredentialFlow(
+            invalidAccessToken, userInfo, false, HttpStatus.SC_BAD_REQUEST, false);
 
     // Verify that we're logged in as admin
     Map<String, Object> userInfoList = getUserInfo(response.cookies().get(JSESSIONID));
@@ -905,14 +908,17 @@ public class TestOidc extends AbstractIntegrationTest {
   private Response processCredentialFlow(
       String accessToken,
       String userInfoResponse,
+      boolean isSigned,
       int expectedStatusCode,
       boolean userInfoShouldBeHit) {
 
     // Host the user info endpoint with the access token in the auth header
     String basicAuthHeader = "Bearer " + accessToken;
+
+    String contentType = isSigned ? "application/jwt" : APPLICATION_JSON;
     whenHttp(server)
         .match(get(USER_INFO_ENDPOINT_PATH), withHeader(AUTHORIZATION, basicAuthHeader))
-        .then(ok(), contentType(APPLICATION_JSON), bytesContent(userInfoResponse.getBytes()));
+        .then(ok(), contentType(contentType), bytesContent(userInfoResponse.getBytes()));
 
     // Send a request to DDF with the access token
     Response response =
