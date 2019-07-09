@@ -31,6 +31,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.codice.ddf.itests.common.AbstractIntegrationTest.DynamicUrl.SECURE_ROOT;
 import static org.codice.ddf.itests.common.WaitCondition.expect;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -931,8 +932,12 @@ public class TestOidc extends AbstractIntegrationTest {
             .filter(call -> call.getUrl().equals(URL_START + USER_INFO_ENDPOINT_PATH))
             .collect(Collectors.toList());
 
-    int userInfoEndpointCalls = userInfoShouldBeHit ? 1 : 0;
-    assertThat(endpointCalls.size(), is(userInfoEndpointCalls));
+    if (userInfoShouldBeHit) {
+      assertThat(endpointCalls.size(), is(greaterThanOrEqualTo(1)));
+    } else {
+      assertThat(endpointCalls.size(), is(0));
+    }
+
     return response;
   }
 
