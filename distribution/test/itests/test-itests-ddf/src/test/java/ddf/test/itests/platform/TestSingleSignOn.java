@@ -73,6 +73,7 @@ import org.codice.ddf.test.common.LoggingUtils;
 import org.codice.ddf.test.common.annotations.BeforeExam;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -465,6 +466,7 @@ public class TestSingleSignOn extends AbstractIntegrationTest {
     // @formatter:on
   }
 
+  @Ignore("TODO: DDF-5072")
   @Test
   public void testGuestAuth() throws Exception {
     ResponseHelper searchHelper = getSearchResponse(false, null);
