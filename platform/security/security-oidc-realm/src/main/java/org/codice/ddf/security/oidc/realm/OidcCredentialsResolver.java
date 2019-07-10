@@ -86,7 +86,6 @@ public class OidcCredentialsResolver extends OidcAuthenticator {
     final List<AuthorizationGrant> grantList = new ArrayList<>();
 
     if (initialRefreshToken != null) {
-      // TODO add refresh token validation
       grantList.add(new RefreshTokenGrant(initialRefreshToken));
     }
 
@@ -178,8 +177,6 @@ public class OidcCredentialsResolver extends OidcAuthenticator {
     if (accessToken != null) {
       oidcTokenValidator.validateAccessToken(accessToken, idToken);
     }
-
-    // TODO validate refresh token
 
     // save tokens to credentials
     credentials.setAccessToken(accessToken);
