@@ -32,6 +32,7 @@ import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.context.session.J2ESessionStore;
 import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.core.http.callback.QueryParameterCallbackUrlResolver;
+import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.credentials.extractor.OidcExtractor;
 import org.slf4j.Logger;
@@ -90,18 +91,8 @@ public class OidcHandler implements AuthenticationHandler {
       return processHeadRequest(httpResponse);
     }
 
-    // at this point, the OIDC Handler must be configured
-    if (!configuration.isInitialized()) {
-      LOGGER.error(
-          "The OIDC Handler's configuration has not been initialized. "
-              + "Configure \"OIDC Handler Configuration\" in the admin console to initialize.");
-      return noActionResult;
-    }
-
     LOGGER.debug(
         "Doing Oidc authentication and authorization for path {}.", httpRequest.getContextPath());
-
-    OidcCredentials credentials = new OidcCredentials();
 
     J2ESessionStore sessionStore = new J2ESessionStore();
     J2EContext j2EContext = new J2EContext(httpRequest, httpResponse, sessionStore);
@@ -112,17 +103,18 @@ public class OidcHandler implements AuthenticationHandler {
     String requestUrl = requestUrlBuffer.toString();
     String ipAddress = httpRequest.getRemoteAddr();
 
-    configuration.getOidcClient().setCallbackUrl(requestUrl);
+    OidcClient oidcClient = configuration.getOidcClient();
+    oidcClient.setCallbackUrl(requestUrl);
 
+    OidcCredentials credentials;
     boolean isMachine = userAgentIsNotBrowser(httpRequest);
-
     if (isMachine) {
       LOGGER.debug(
           "The Oidc Handler does not handle machine to machine requests. Continuing to other handlers.");
       return noActionResult;
     } else { // check for Authorization Code Flow, Implicit Flow, or Hybrid Flow credentials
       try {
-        credentials = getCredentialsFromRequest(j2EContext);
+        credentials = getCredentialsFromRequest(oidcClient, j2EContext);
       } catch (IllegalArgumentException e) {
         LOGGER.debug(e.getMessage(), e);
         LOGGER.error(
@@ -131,7 +123,7 @@ public class OidcHandler implements AuthenticationHandler {
         return noActionResult;
       } catch (TechnicalException e) {
         LOGGER.debug("Problem extracting Oidc credentials from incoming user request.", e);
-        return redirectForCredentials(j2EContext, requestUrl);
+        return redirectForCredentials(oidcClient, j2EContext, requestUrl);
       }
     }
 
@@ -151,7 +143,7 @@ public class OidcHandler implements AuthenticationHandler {
       LOGGER.info(
           "No credentials found on user-agent request. "
               + "Redirecting user-agent to IdP for credentials.");
-      return redirectForCredentials(j2EContext, requestUrl);
+      return redirectForCredentials(oidcClient, j2EContext, requestUrl);
     }
   }
 
@@ -192,7 +184,7 @@ public class OidcHandler implements AuthenticationHandler {
             || userAgentHeader.contains("Chrome"));
   }
 
-  private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext) {
+  private OidcCredentials getCredentialsFromRequest(OidcClient oidcClient, J2EContext j2EContext) {
     // Check that the request contains a code, an access token or an id token
     Map<String, String[]> requestParams = j2EContext.getRequestParameters();
     if (!requestParams.containsKey("code")
@@ -200,16 +192,16 @@ public class OidcHandler implements AuthenticationHandler {
         && !requestParams.containsKey("id_token")) {
       return new OidcCredentials();
     }
-    configuration.getOidcClient().setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
+    oidcClient.setCallbackUrlResolver(new QueryParameterCallbackUrlResolver());
 
-    OidcExtractor oidcExtractor =
-        new OidcExtractor(configuration.getOidcConfiguration(), configuration.getOidcClient());
+    OidcExtractor oidcExtractor = new OidcExtractor(oidcClient.getConfiguration(), oidcClient);
     return oidcExtractor.extract(j2EContext);
   }
 
-  private HandlerResult redirectForCredentials(J2EContext j2EContext, String requestUrl) {
+  private HandlerResult redirectForCredentials(
+      OidcClient oidcClient, J2EContext j2EContext, String requestUrl) {
     j2EContext.getSessionStore().set(j2EContext, Pac4jConstants.REQUESTED_URL, requestUrl);
-    configuration.getOidcClient().redirect(j2EContext);
+    oidcClient.redirect(j2EContext);
     return redirectedResult;
   }
 

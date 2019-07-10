@@ -177,7 +177,6 @@
         <feature>cxf-jaxws</feature>
         <feature>cxf-jaxrs</feature>
         <feature>security-handler-api</feature>
-        <feature>oidc-dependencies</feature>
 
         <bundle>mvn:ddf.admin.core/admin-core-migration-commands/${project.version}</bundle>
     </feature>

@@ -16,16 +16,14 @@ package org.codice.ddf.security.handler.api;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
-import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 
 public interface OidcHandlerConfiguration {
+
   OidcConfiguration getOidcConfiguration();
 
   OidcClient getOidcClient();
 
-  OidcLogoutActionBuilder getLogoutActionBuilder();
+  OidcLogoutActionBuilder getOidcLogoutActionBuilder();
 
-  OidcProfileCreator getOidcProfileCreator();
-
-  boolean isInitialized();
+  void testConnection();
 }
