@@ -103,7 +103,8 @@ public class OidcLogoutActionProvider implements ActionProvider {
         throw new IllegalStateException("Unable to determine OIDC profile for logout");
       }
 
-      OidcLogoutActionBuilder logoutActionBuilder = handlerConfiguration.getLogoutActionBuilder();
+      OidcLogoutActionBuilder logoutActionBuilder =
+          handlerConfiguration.getOidcLogoutActionBuilder();
       logoutActionBuilder.setAjaxRequestResolver(
           new DefaultAjaxRequestResolver() {
             @Override
