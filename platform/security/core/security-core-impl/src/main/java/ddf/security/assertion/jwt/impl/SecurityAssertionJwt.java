@@ -54,10 +54,6 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private List<AuthenticationStatement> authenticationStatements = new ArrayList<>();
 
-  public SecurityAssertionJwt(OidcProfile profile) {
-    this(profile, new ArrayList<>());
-  }
-
   public SecurityAssertionJwt(OidcProfile profile, List<String> usernameAttributeList) {
     this.profile = profile;
     this.usernameAttributeList = usernameAttributeList;

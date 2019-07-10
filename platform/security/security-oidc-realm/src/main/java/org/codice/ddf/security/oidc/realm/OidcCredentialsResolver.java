@@ -78,10 +78,9 @@ public class OidcCredentialsResolver {
   public void resolveIdToken(OidcCredentials credentials, WebContext webContext) {
     final AccessToken initialAccessToken = credentials.getAccessToken();
     final JWT initialIdToken = credentials.getIdToken();
+
     if (initialIdToken != null) {
-      if (initialAccessToken != null) {
-        oidcTokenValidator.validateAccessToken(initialAccessToken, initialIdToken);
-      }
+      oidcTokenValidator.validateAccessToken(initialAccessToken, initialIdToken);
       oidcTokenValidator.validateIdTokens(initialIdToken, webContext);
       return;
     }
