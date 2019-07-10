@@ -28,6 +28,8 @@ import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
+import org.pac4j.oidc.client.OidcClient;
+import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.pac4j.oidc.profile.OidcProfile;
@@ -81,11 +83,11 @@ public class OidcRealm extends AuthenticatingRealm {
     // token is guaranteed to be of type OidcAuthenticationToken by the supports() method
     OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
     OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
-    OIDCProviderMetadata oidcProviderMetadata =
-        oidcHandlerConfiguration.getOidcConfiguration().findProviderMetadata();
+    OidcConfiguration oidcConfiguration = oidcHandlerConfiguration.getOidcConfiguration();
+    OidcClient oidcClient = oidcHandlerConfiguration.getOidcClient();
+    OIDCProviderMetadata oidcProviderMetadata = oidcConfiguration.findProviderMetadata();
     OidcTokenValidator oidcTokenValidator =
-        new OidcTokenValidator(
-            oidcHandlerConfiguration.getOidcConfiguration(), oidcProviderMetadata);
+        new OidcTokenValidator(oidcConfiguration, oidcProviderMetadata);
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
     oidcTokenValidator.validateAccessToken(credentials.getAccessToken(), credentials.getIdToken());
@@ -94,10 +96,7 @@ public class OidcRealm extends AuthenticatingRealm {
     } else {
       try {
         OidcAuthenticator authenticator =
-            new CustomOidcAuthenticator(
-                oidcHandlerConfiguration.getOidcConfiguration(),
-                oidcHandlerConfiguration.getOidcClient(),
-                oidcProviderMetadata);
+            new CustomOidcAuthenticator(oidcConfiguration, oidcClient, oidcProviderMetadata);
         authenticator.validate(credentials, webContext);
       } catch (TechnicalException e) {
         LOGGER.debug(
@@ -123,8 +122,7 @@ public class OidcRealm extends AuthenticatingRealm {
     }
 
     OidcProfileCreator oidcProfileCreator =
-        new CustomOidcProfileCreator(
-            oidcHandlerConfiguration.getOidcConfiguration(), oidcProviderMetadata);
+        new CustomOidcProfileCreator(oidcConfiguration, oidcProviderMetadata);
     OidcProfile profile = oidcProfileCreator.create(credentials, webContext);
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();

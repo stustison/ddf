@@ -65,7 +65,6 @@ public class OidcHandlerTest {
   @Mock private HttpServletResponse mockResponse;
   @Mock private HttpSession mockSession;
 
-  private OidcClient oidcClient;
   private Map<String, String[]> parameterMap = new HashMap<>();
 
   @BeforeClass
@@ -100,9 +99,8 @@ public class OidcHandlerTest {
     mockOidcClient = new MockOidcClient();
 
     // oidc configuration
-    when(mockConfiguration.getOidcClient()).thenReturn(mockOidcClient);
     when(mockConfiguration.getOidcConfiguration()).thenReturn(mockOidcConfiguration);
-    when(mockConfiguration.isInitialized()).thenReturn(true);
+    when(mockConfiguration.getOidcClient()).thenReturn(mockOidcClient);
 
     // session
     when(mockSession.getAttribute("oidcStateAttribute")).thenReturn(state);
@@ -130,7 +128,6 @@ public class OidcHandlerTest {
   @Test
   public void constructWithEmptyConfiguration() {
     OidcHandlerConfigurationImpl emptyConfiguration = new OidcHandlerConfigurationImpl();
-    emptyConfiguration.update(new HashMap<>());
     handler = new OidcHandler(emptyConfiguration);
 
     assertThat(handler.getConfiguration(), is(emptyConfiguration));
@@ -144,15 +141,6 @@ public class OidcHandlerTest {
 
     verify(mockResponse, times(1)).setStatus(HttpServletResponse.SC_OK);
     verify(mockResponse, times(1)).flushBuffer();
-    assertThat(result.getStatus(), is(Status.NO_ACTION));
-  }
-
-  @Test
-  public void getNormalizedTokenNonInitializedConfiguration() throws Exception {
-    when(mockConfiguration.isInitialized()).thenReturn(false);
-    handler = new OidcHandler(mockConfiguration);
-    result = handler.getNormalizedToken(mockRequest, mockResponse, null, false);
-
     assertThat(result.getStatus(), is(Status.NO_ACTION));
   }
 
@@ -231,6 +219,11 @@ public class OidcHandlerTest {
     @Override
     public String computeFinalCallbackUrl(final WebContext context) {
       return "https://final.callback.url";
+    }
+
+    @Override
+    public OidcConfiguration getConfiguration() {
+      return mockOidcConfiguration;
     }
   }
 }

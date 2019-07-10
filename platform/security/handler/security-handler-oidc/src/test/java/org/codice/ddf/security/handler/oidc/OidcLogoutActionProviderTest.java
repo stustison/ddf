@@ -37,7 +37,6 @@ import org.pac4j.core.redirect.RedirectAction;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.logout.OidcLogoutActionBuilder;
 import org.pac4j.oidc.profile.OidcProfile;
-import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 
 public class OidcLogoutActionProviderTest {
 
@@ -47,18 +46,13 @@ public class OidcLogoutActionProviderTest {
 
   @Before
   public void setup() {
-    OidcProfileCreator oidcProfileCreator = mock(OidcProfileCreator.class);
-    OidcProfile oidcProfile = mock(OidcProfile.class);
-    when(oidcProfileCreator.create(any(), any())).thenReturn(oidcProfile);
-
     OidcLogoutActionBuilder oidcLogoutActionBuilder = mock(OidcLogoutActionBuilder.class);
     RedirectAction redirectAction = mock(RedirectAction.class);
     when(redirectAction.getLocation()).thenReturn(LOCATION);
     when(oidcLogoutActionBuilder.getLogoutAction(any(), any(), any())).thenReturn(redirectAction);
 
     OidcHandlerConfiguration handlerConfiguration = mock(OidcHandlerConfiguration.class);
-    when(handlerConfiguration.getLogoutActionBuilder()).thenReturn(oidcLogoutActionBuilder);
-    when(handlerConfiguration.getOidcProfileCreator()).thenReturn(oidcProfileCreator);
+    when(handlerConfiguration.getOidcLogoutActionBuilder()).thenReturn(oidcLogoutActionBuilder);
 
     oidcLogoutActionProvider = new OidcLogoutActionProvider(handlerConfiguration);
   }

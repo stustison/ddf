@@ -135,9 +135,9 @@ define([
       this.$el.toggleClass('is-loading', false)
       var welcomeStep = 0,
         profileStep = 1,
-        ssoConfigurationStep = 2,
-        guestClaimsStep = 3,
-        configStep = 4,
+        guestClaimsStep = 2,
+        configStep = 3,
+        ssoConfigurationStep = 4,
         finishStep = 5
 
       var stepNumber = this.model.get('stepNumber')
