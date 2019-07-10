@@ -51,18 +51,18 @@ import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomOidcAuthenticator extends OidcAuthenticator {
+public class OidcCredentialsResolver extends OidcAuthenticator {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcAuthenticator.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(OidcCredentialsResolver.class);
 
   private OidcTokenValidator oidcTokenValidator;
   private OIDCProviderMetadata metadata;
 
-  public CustomOidcAuthenticator(
-      OidcConfiguration configuration, OidcClient client, OIDCProviderMetadata metadata) {
-    super(configuration, client);
+  public OidcCredentialsResolver(
+      OidcConfiguration oidcConfiguration, OidcClient oidcClient, OIDCProviderMetadata metadata) {
+    super(oidcConfiguration, oidcClient);
     this.metadata = metadata;
-    oidcTokenValidator = new OidcTokenValidator(configuration, metadata);
+    oidcTokenValidator = new OidcTokenValidator(oidcConfiguration, metadata);
   }
 
   /* This methods job is to try and get an id token from a
@@ -70,27 +70,35 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   2. authorization code
   3. access token
   */
-  @Override
-  public void validate(OidcCredentials credentials, WebContext webContext) {
-    final RefreshToken refreshToken = credentials.getRefreshToken();
-    final AuthorizationCode authorizationCode = credentials.getCode();
+  public void resolveIdToken(OidcCredentials credentials, WebContext webContext) {
+    final AccessToken initialAccessToken = credentials.getAccessToken();
+    final JWT initialIdToken = credentials.getIdToken();
+
+    oidcTokenValidator.validateAccessToken(initialAccessToken, initialIdToken);
+    if (initialIdToken != null) {
+      oidcTokenValidator.validateIdTokens(initialIdToken, webContext);
+      return;
+    }
+
+    final RefreshToken initialRefreshToken = credentials.getRefreshToken();
+    final AuthorizationCode initialAuthorizationCode = credentials.getCode();
 
     final List<AuthorizationGrant> grantList = new ArrayList<>();
 
-    if (refreshToken != null) {
-      grantList.add(new RefreshTokenGrant(refreshToken));
+    if (initialRefreshToken != null) {
+      grantList.add(new RefreshTokenGrant(initialRefreshToken));
     }
 
-    if (authorizationCode != null) {
+    if (initialAuthorizationCode != null) {
       try {
         final URI callbackUri = new URI(client.computeFinalCallbackUrl(webContext));
-        grantList.add(new AuthorizationCodeGrant(authorizationCode, callbackUri));
+        grantList.add(new AuthorizationCodeGrant(initialAuthorizationCode, callbackUri));
       } catch (URISyntaxException e) {
         LOGGER.debug("Problem computing callback url. Cannot add authorization code grant.");
       }
     }
 
-    // try to get credentials using refresh token and authorization code
+    // try to get id token using refresh token and authorization code
     for (AuthorizationGrant grant : grantList) {
       try {
         trySendingGrantAndPopulatingCredentials(grant, credentials, webContext);
@@ -103,15 +111,14 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
       }
     }
 
-    // try to get credentials using access token
-    final AccessToken accessToken = credentials.getAccessToken();
-    if (credentials.getIdToken() == null && accessToken != null) {
+    // try to get id token using access token
+    if (credentials.getIdToken() == null && initialAccessToken != null) {
 
       final UserInfoRequest userInfoRequest =
           new UserInfoRequest(
               metadata.getUserInfoEndpointURI(),
               Method.GET,
-              new BearerAccessToken(accessToken.toString()));
+              new BearerAccessToken(initialAccessToken.toString()));
       final HTTPRequest userInfoHttpRequest = userInfoRequest.toHTTPRequest();
 
       try {
@@ -172,8 +179,8 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
     }
 
     // save tokens to credentials
-    credentials.setAccessToken(oidcTokens.getAccessToken());
+    credentials.setAccessToken(accessToken);
+    credentials.setIdToken(idToken);
     credentials.setRefreshToken(oidcTokens.getRefreshToken());
-    credentials.setIdToken(oidcTokens.getIDToken());
   }
 }
