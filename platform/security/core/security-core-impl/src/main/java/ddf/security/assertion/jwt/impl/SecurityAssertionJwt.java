@@ -13,14 +13,16 @@
  */
 package ddf.security.assertion.jwt.impl;
 
+import static org.pac4j.core.profile.jwt.JwtClaims.EXPIRATION_TIME;
+import static org.pac4j.core.profile.jwt.JwtClaims.ISSUER;
+import static org.pac4j.core.profile.jwt.JwtClaims.NOT_BEFORE;
+
 import com.google.common.collect.ImmutableList;
-import com.nimbusds.jwt.JWTClaimsSet;
 import ddf.security.assertion.Attribute;
 import ddf.security.assertion.AttributeStatement;
 import ddf.security.assertion.AuthenticationStatement;
 import ddf.security.assertion.SecurityAssertion;
 import java.security.Principal;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +48,7 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   private final OidcProfile profile;
 
-  private JWTClaimsSet jwtClaimsSet;
+  private Map<String, Object> attributes;
 
   private List<AttributeStatement> attributeStatements;
 
@@ -59,29 +61,26 @@ public class SecurityAssertionJwt implements SecurityAssertion {
   public SecurityAssertionJwt(OidcProfile profile, List<String> usernameAttributeList) {
     this.profile = profile;
     this.usernameAttributeList = usernameAttributeList;
-    try {
-      jwtClaimsSet = profile.getIdToken().getJWTClaimsSet();
-      Map<String, Object> claims = jwtClaimsSet.getClaims();
-      attributeStatements = new ArrayList<>();
-      AttributeStatement attributeStatement = new AttributeStatementJwt();
-      attributeStatements.add(attributeStatement);
-      for (Map.Entry<String, Object> entry : claims.entrySet()) {
-        Attribute attribute = new AttributeJwt();
-        attribute.setName(entry.getKey());
-        List<String> values = new ArrayList<>();
-        if (entry.getValue() instanceof Collection) {
-          Collection collection = (Collection) entry.getValue();
-          for (Object next : collection) {
-            values.add(String.valueOf(next));
-          }
-        } else {
-          values.add(String.valueOf(entry.getValue()));
+
+    attributes = profile.getAttributes();
+    attributeStatements = new ArrayList<>();
+    AttributeStatement attributeStatement = new AttributeStatementJwt();
+    attributeStatements.add(attributeStatement);
+
+    for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+      Attribute attribute = new AttributeJwt();
+      attribute.setName(entry.getKey());
+      List<String> values = new ArrayList<>();
+      if (entry.getValue() instanceof Collection) {
+        Collection collection = (Collection) entry.getValue();
+        for (Object next : collection) {
+          values.add(String.valueOf(next));
         }
-        attribute.setValues(values);
-        attributeStatement.addAttribute(attribute);
+      } else {
+        values.add(String.valueOf(entry.getValue()));
       }
-    } catch (ParseException e) {
-      // do something
+      attribute.setValues(values);
+      attributeStatement.addAttribute(attribute);
     }
   }
 
@@ -98,7 +97,7 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public String getIssuer() {
-    return jwtClaimsSet.getIssuer();
+    return (String) attributes.get(ISSUER);
   }
 
   @Override
@@ -147,13 +146,13 @@ public class SecurityAssertionJwt implements SecurityAssertion {
 
   @Override
   public Date getNotBefore() {
-    Date notBefore = jwtClaimsSet.getNotBeforeTime();
+    Date notBefore = (Date) attributes.get(NOT_BEFORE);
     return notBefore == null ? null : Date.from(notBefore.toInstant());
   }
 
   @Override
   public Date getNotOnOrAfter() {
-    Date expiration = jwtClaimsSet.getExpirationTime();
+    Date expiration = (Date) attributes.get(EXPIRATION_TIME);
     return expiration == null ? null : Date.from(expiration.toInstant());
   }
 
@@ -189,14 +188,11 @@ public class SecurityAssertionJwt implements SecurityAssertion {
     final List<String> claimsToCheck = ImmutableList.of("preferred_username", "email", "sub");
 
     for (String claim : claimsToCheck) {
-      try {
-        return jwtClaimsSet.getStringClaim(claim);
-      } catch (ParseException ignore) {
-      }
+      return (String) attributes.get(claim);
     }
     throw new NoSuchElementException(
         String.format(
             "Cannot find any principal claims [%s] in jwt claims [%s]",
-            String.join(",", claimsToCheck), String.join(",", jwtClaimsSet.getClaims().keySet())));
+            String.join(",", claimsToCheck), String.join(",", attributes.keySet())));
   }
 }

@@ -23,9 +23,12 @@ import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
+import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest.Method;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
@@ -47,22 +50,24 @@ import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
-import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomOidcAuthenticator extends OidcAuthenticator {
+public class OidcCredentialsResolver {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CustomOidcAuthenticator.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(OidcCredentialsResolver.class);
 
+  private OidcConfiguration oidcConfiguration;
+  private OidcClient oidcClient;
   private OidcTokenValidator oidcTokenValidator;
   private OIDCProviderMetadata metadata;
 
-  public CustomOidcAuthenticator(
-      OidcConfiguration configuration, OidcClient client, OIDCProviderMetadata metadata) {
-    super(configuration, client);
+  public OidcCredentialsResolver(
+      OidcConfiguration oidcConfiguration, OidcClient oidcClient, OIDCProviderMetadata metadata) {
+    this.oidcConfiguration = oidcConfiguration;
+    this.oidcClient = oidcClient;
     this.metadata = metadata;
-    oidcTokenValidator = new OidcTokenValidator(configuration, metadata);
+    oidcTokenValidator = new OidcTokenValidator(oidcConfiguration, metadata);
   }
 
   /* This methods job is to try and get an id token from a
@@ -70,27 +75,37 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
   2. authorization code
   3. access token
   */
-  @Override
-  public void validate(OidcCredentials credentials, WebContext webContext) {
-    final RefreshToken refreshToken = credentials.getRefreshToken();
-    final AuthorizationCode authorizationCode = credentials.getCode();
+  public void resolveIdToken(OidcCredentials credentials, WebContext webContext) {
+    final AccessToken initialAccessToken = credentials.getAccessToken();
+    final JWT initialIdToken = credentials.getIdToken();
+    if (initialIdToken != null) {
+      if (initialAccessToken != null) {
+        oidcTokenValidator.validateAccessToken(initialAccessToken, initialIdToken);
+      }
+      oidcTokenValidator.validateIdTokens(initialIdToken, webContext);
+      return;
+    }
+
+    final RefreshToken initialRefreshToken = credentials.getRefreshToken();
+    final AuthorizationCode initialAuthorizationCode = credentials.getCode();
 
     final List<AuthorizationGrant> grantList = new ArrayList<>();
 
-    if (refreshToken != null) {
-      grantList.add(new RefreshTokenGrant(refreshToken));
+    if (initialRefreshToken != null) {
+      // TODO add refresh token validation
+      grantList.add(new RefreshTokenGrant(initialRefreshToken));
     }
 
-    if (authorizationCode != null) {
+    if (initialAuthorizationCode != null) {
       try {
-        final URI callbackUri = new URI(client.computeFinalCallbackUrl(webContext));
-        grantList.add(new AuthorizationCodeGrant(authorizationCode, callbackUri));
+        final URI callbackUri = new URI(oidcClient.computeFinalCallbackUrl(webContext));
+        grantList.add(new AuthorizationCodeGrant(initialAuthorizationCode, callbackUri));
       } catch (URISyntaxException e) {
         LOGGER.debug("Problem computing callback url. Cannot add authorization code grant.");
       }
     }
 
-    // try to get credentials using refresh token and authorization code
+    // try to get id token using refresh token and authorization code
     for (AuthorizationGrant grant : grantList) {
       try {
         trySendingGrantAndPopulatingCredentials(grant, credentials, webContext);
@@ -103,15 +118,16 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
       }
     }
 
-    // try to get credentials using access token
-    final AccessToken accessToken = credentials.getAccessToken();
-    if (credentials.getIdToken() == null && accessToken != null) {
+    // try to get id token using access token
+    if (credentials.getIdToken() == null && initialAccessToken != null) {
+
+      oidcTokenValidator.validateAccessToken(initialAccessToken, null);
 
       final UserInfoRequest userInfoRequest =
           new UserInfoRequest(
               metadata.getUserInfoEndpointURI(),
               Method.GET,
-              new BearerAccessToken(accessToken.toString()));
+              new BearerAccessToken(initialAccessToken.toString()));
       final HTTPRequest userInfoHttpRequest = userInfoRequest.toHTTPRequest();
 
       try {
@@ -123,6 +139,7 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
 
           JWT idToken = userInfoSuccessResponse.getUserInfoJWT();
           if (idToken == null && userInfoSuccessResponse.getUserInfo().toJWTClaimsSet() != null) {
+            // TODO validate user info if signed
             idToken = new PlainJWT(userInfoSuccessResponse.getUserInfo().toJWTClaimsSet());
           }
 
@@ -141,10 +158,15 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
       AuthorizationGrant grant, OidcCredentials credentials, WebContext webContext)
       throws IOException, ParseException {
     final TokenRequest request =
-        new TokenRequest(metadata.getTokenEndpointURI(), getClientAuthentication(), grant);
+        new TokenRequest(
+            metadata.getTokenEndpointURI(),
+            new ClientSecretBasic(
+                new ClientID(oidcConfiguration.getClientId()),
+                new Secret(oidcConfiguration.getSecret())),
+            grant);
     HTTPRequest tokenHttpRequest = request.toHTTPRequest();
-    tokenHttpRequest.setConnectTimeout(configuration.getConnectTimeout());
-    tokenHttpRequest.setReadTimeout(configuration.getReadTimeout());
+    tokenHttpRequest.setConnectTimeout(oidcConfiguration.getConnectTimeout());
+    tokenHttpRequest.setReadTimeout(oidcConfiguration.getReadTimeout());
 
     final HTTPResponse httpResponse = tokenHttpRequest.send();
     LOGGER.debug(
@@ -171,9 +193,11 @@ public class CustomOidcAuthenticator extends OidcAuthenticator {
       oidcTokenValidator.validateAccessToken(accessToken, idToken);
     }
 
+    // TODO validate refresh token
+
     // save tokens to credentials
-    credentials.setAccessToken(oidcTokens.getAccessToken());
+    credentials.setAccessToken(accessToken);
+    credentials.setIdToken(idToken);
     credentials.setRefreshToken(oidcTokens.getRefreshToken());
-    credentials.setIdToken(oidcTokens.getIDToken());
   }
 }

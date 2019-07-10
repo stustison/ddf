@@ -27,11 +27,9 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.codice.ddf.security.handler.api.OidcAuthenticationToken;
 import org.codice.ddf.security.handler.api.OidcHandlerConfiguration;
 import org.pac4j.core.context.WebContext;
-import org.pac4j.core.exception.TechnicalException;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
-import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.pac4j.oidc.profile.creator.OidcProfileCreator;
 import org.slf4j.Logger;
@@ -86,25 +84,15 @@ public class OidcRealm extends AuthenticatingRealm {
     OidcConfiguration oidcConfiguration = oidcHandlerConfiguration.getOidcConfiguration();
     OidcClient oidcClient = oidcHandlerConfiguration.getOidcClient();
     OIDCProviderMetadata oidcProviderMetadata = oidcConfiguration.findProviderMetadata();
-    OidcTokenValidator oidcTokenValidator =
-        new OidcTokenValidator(oidcConfiguration, oidcProviderMetadata);
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
-    oidcTokenValidator.validateAccessToken(credentials.getAccessToken(), credentials.getIdToken());
-    if (credentials.getIdToken() != null) {
-      oidcTokenValidator.validateIdTokens(credentials.getIdToken(), webContext);
-    } else {
-      try {
-        OidcAuthenticator authenticator =
-            new CustomOidcAuthenticator(oidcConfiguration, oidcClient, oidcProviderMetadata);
-        authenticator.validate(credentials, webContext);
-      } catch (TechnicalException e) {
-        LOGGER.debug(
-            "Problem fetching id token with credentials ({}) and web context ({}).",
-            credentials,
-            webContext);
-      }
-    }
+    OidcCredentialsResolver oidcCredentialsResolver =
+        new OidcCredentialsResolver(
+            oidcConfiguration,
+            oidcClient,
+            oidcProviderMetadata);
+
+    oidcCredentialsResolver.resolveIdToken(credentials, webContext);
 
     // problem getting id token, invalidate credentials
     if (credentials.getIdToken() == null) {
@@ -122,7 +110,7 @@ public class OidcRealm extends AuthenticatingRealm {
     }
 
     OidcProfileCreator oidcProfileCreator =
-        new CustomOidcProfileCreator(oidcConfiguration, oidcProviderMetadata);
+        new CustomOidcProfileCreator(oidcConfiguration);
     OidcProfile profile = oidcProfileCreator.create(credentials, webContext);
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
