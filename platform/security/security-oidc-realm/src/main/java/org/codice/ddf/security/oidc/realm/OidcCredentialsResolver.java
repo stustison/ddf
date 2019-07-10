@@ -23,15 +23,9 @@ import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
-import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
-import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
-import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
-import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest.Method;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
@@ -46,43 +40,29 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import javax.naming.AuthenticationException;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.exception.TechnicalException;
-import org.pac4j.core.util.CommonHelper;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
+import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OidcCredentialsResolver {
+public class OidcCredentialsResolver extends OidcAuthenticator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OidcCredentialsResolver.class);
 
-  private static final Collection<ClientAuthenticationMethod> SUPPORTED_METHODS =
-      Arrays.asList(
-          ClientAuthenticationMethod.CLIENT_SECRET_POST,
-          ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
-
-  private OidcConfiguration oidcConfiguration;
-  private OidcClient oidcClient;
   private OidcTokenValidator oidcTokenValidator;
   private OIDCProviderMetadata metadata;
-  private ClientAuthentication clientAuthentication;
 
   public OidcCredentialsResolver(
       OidcConfiguration oidcConfiguration, OidcClient oidcClient, OIDCProviderMetadata metadata) {
-    this.oidcConfiguration = oidcConfiguration;
-    this.oidcClient = oidcClient;
+    super(oidcConfiguration, oidcClient);
     this.metadata = metadata;
     oidcTokenValidator = new OidcTokenValidator(oidcConfiguration, metadata);
-
-    createClientAuthentication();
   }
 
   /* This methods job is to try and get an id token from a
@@ -112,7 +92,7 @@ public class OidcCredentialsResolver {
 
     if (initialAuthorizationCode != null) {
       try {
-        final URI callbackUri = new URI(oidcClient.computeFinalCallbackUrl(webContext));
+        final URI callbackUri = new URI(client.computeFinalCallbackUrl(webContext));
         grantList.add(new AuthorizationCodeGrant(initialAuthorizationCode, callbackUri));
       } catch (URISyntaxException e) {
         LOGGER.debug("Problem computing callback url. Cannot add authorization code grant.");
@@ -165,80 +145,14 @@ public class OidcCredentialsResolver {
     }
   }
 
-  private void createClientAuthentication() {
-    List<ClientAuthenticationMethod> metadataMethods = metadata.getTokenEndpointAuthMethods();
-    ClientAuthenticationMethod preferredMethod = getPreferredAuthenticationMethod();
-    ClientAuthenticationMethod chosenMethod;
-    if (CommonHelper.isNotEmpty(metadataMethods)) {
-      if (preferredMethod != null) {
-        if (!metadataMethods.contains(preferredMethod)) {
-          throw new TechnicalException(
-              "Preferred authentication method ("
-                  + preferredMethod
-                  + ") not supported by provider according to provider metadata ("
-                  + metadataMethods
-                  + ").");
-        }
-
-        chosenMethod = preferredMethod;
-      } else {
-        chosenMethod = firstSupportedMethod(metadataMethods);
-      }
-    } else {
-      chosenMethod =
-          preferredMethod != null ? preferredMethod : ClientAuthenticationMethod.getDefault();
-      LOGGER.info(
-          "Provider metadata does not provide Token endpoint authentication methods. Using: {}",
-          chosenMethod);
-    }
-
-    ClientID clientID = new ClientID(oidcConfiguration.getClientId());
-    Secret secret = new Secret(oidcConfiguration.getSecret());
-    if (ClientAuthenticationMethod.CLIENT_SECRET_POST.equals(chosenMethod)) {
-      this.clientAuthentication = new ClientSecretPost(clientID, secret);
-    } else {
-      if (!ClientAuthenticationMethod.CLIENT_SECRET_BASIC.equals(chosenMethod)) {
-        throw new TechnicalException("Unsupported client authentication method: " + chosenMethod);
-      }
-
-      this.clientAuthentication = new ClientSecretBasic(clientID, secret);
-    }
-  }
-
-  private ClientAuthenticationMethod getPreferredAuthenticationMethod() {
-    ClientAuthenticationMethod configurationMethod =
-        oidcConfiguration.getClientAuthenticationMethod();
-    if (configurationMethod == null) {
-      return null;
-    } else if (!SUPPORTED_METHODS.contains(configurationMethod)) {
-      throw new TechnicalException(
-          "Configured authentication method (" + configurationMethod + ") is not supported.");
-    } else {
-      return configurationMethod;
-    }
-  }
-
-  private ClientAuthenticationMethod firstSupportedMethod(
-      List<ClientAuthenticationMethod> metadataMethods) {
-    Optional<ClientAuthenticationMethod> firstSupported =
-        metadataMethods.stream().filter(SUPPORTED_METHODS::contains).findFirst();
-    if (firstSupported.isPresent()) {
-      return firstSupported.get();
-    } else {
-      throw new TechnicalException(
-          "None of the Token endpoint provider metadata authentication methods are supported: "
-              + metadataMethods);
-    }
-  }
-
   private void trySendingGrantAndPopulatingCredentials(
       AuthorizationGrant grant, OidcCredentials credentials, WebContext webContext)
       throws IOException, ParseException {
     final TokenRequest request =
-        new TokenRequest(metadata.getTokenEndpointURI(), clientAuthentication, grant);
+        new TokenRequest(metadata.getTokenEndpointURI(), getClientAuthentication(), grant);
     HTTPRequest tokenHttpRequest = request.toHTTPRequest();
-    tokenHttpRequest.setConnectTimeout(oidcConfiguration.getConnectTimeout());
-    tokenHttpRequest.setReadTimeout(oidcConfiguration.getReadTimeout());
+    tokenHttpRequest.setConnectTimeout(configuration.getConnectTimeout());
+    tokenHttpRequest.setReadTimeout(configuration.getReadTimeout());
 
     final HTTPResponse httpResponse = tokenHttpRequest.send();
     LOGGER.debug(
