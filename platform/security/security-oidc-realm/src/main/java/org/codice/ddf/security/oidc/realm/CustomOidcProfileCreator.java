@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.shiro.authc.AuthenticationException;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.profile.ProfileHelper;
+import org.pac4j.core.profile.jwt.JwtClaims;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
 import org.pac4j.oidc.profile.OidcProfile;
@@ -64,8 +65,11 @@ public class CustomOidcProfileCreator<U extends OidcProfile> extends OidcProfile
       profile.setId(ProfileHelper.sanitizeIdentifier(profile, claimsSet.getSubject()));
 
       for (final Map.Entry<String, Object> entry : claimsSet.getClaims().entrySet()) {
-        getProfileDefinition()
-            .convertAndAdd(profile, PROFILE_ATTRIBUTE, entry.getKey(), entry.getValue());
+        if (!JwtClaims.SUBJECT.equals(entry.getKey())
+            && profile.getAttribute(entry.getKey()) == null) {
+          getProfileDefinition()
+              .convertAndAdd(profile, PROFILE_ATTRIBUTE, entry.getKey(), entry.getValue());
+        }
       }
 
       profile.setTokenExpirationAdvance(configuration.getTokenExpirationAdvance());
