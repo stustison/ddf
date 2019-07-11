@@ -114,12 +114,6 @@ IdP Architecture
 |                   \---------------------------------------------------------/                                                         |
 +---------------------------------------------------------------------------------------------------------------------------------------+
 
-
-
-
-
-
-
 ....
 
 The IdP Handler is a configured handler on the Web SSO Filter just like the other handlers in the previous diagram.

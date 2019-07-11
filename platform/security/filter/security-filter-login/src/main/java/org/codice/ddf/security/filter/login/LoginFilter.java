@@ -19,6 +19,7 @@ import com.google.common.hash.Hashing;
 import ddf.security.SecurityConstants;
 import ddf.security.Subject;
 import ddf.security.assertion.SecurityAssertion;
+import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
 import ddf.security.common.SecurityTokenHolder;
 import ddf.security.common.audit.SecurityLogger;
 import ddf.security.http.SessionFactory;
@@ -46,12 +47,13 @@ import org.codice.ddf.platform.filter.SecurityFilter;
 import org.codice.ddf.platform.util.XMLUtils;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
+import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
+import org.codice.ddf.security.handler.api.SessionToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
-import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet filter that exchanges all incoming tokens for a SAML assertion via an STS. */
+/** A filter that exchanges all incoming tokens for a security assertion. */
 public class LoginFilter implements SecurityFilter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LoginFilter.class);
@@ -74,8 +76,6 @@ public class LoginFilter implements SecurityFilter {
   private SecurityManager securityManager;
 
   private SessionFactory sessionFactory;
-
-  private ContextPolicyManager contextPolicyManager;
 
   private int expirationTime;
 
@@ -125,7 +125,7 @@ public class LoginFilter implements SecurityFilter {
         (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
     token.setRequestURI(httpRequest.getRequestURI());
 
-    // this is temporary
+    // TODO - temporary method call should be removed once the STS is removed
     token = checkSessionTokenExpiration(token);
 
     // get subject from the token
@@ -184,26 +184,26 @@ public class LoginFilter implements SecurityFilter {
         });
   }
 
-  // temporary method
+  // TODO - temporary method should be removed once the STS is removed
   private BaseAuthenticationToken checkSessionTokenExpiration(BaseAuthenticationToken token) {
-    //    if (token instanceof SessionToken) {
-    //      Collection<SecurityAssertion> securityAssertions =
-    //          ((PrincipalCollection) token.getCredentials()).byType(SecurityAssertion.class);
-    //      SecurityAssertionSaml securityAssertionSaml =
-    //          (SecurityAssertionSaml) securityAssertions
-    //              .stream()
-    //              .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
-    //              .findFirst()
-    //              .orElse(null);
-    //      if (securityAssertionSaml != null) {
-    //        SAMLAuthenticationToken authToken =
-    //            new SAMLAuthenticationToken(
-    //                null, (PrincipalCollection) token.getCredentials(), token.getIpAddress());
-    //        authToken.setAllowGuest(token.getAllowGuest());
-    //        return authToken;
-    //      }
-    //    }
-    //    return token;
+    if (token instanceof SessionToken) {
+      Collection<SecurityAssertion> securityAssertions =
+          ((PrincipalCollection) token.getCredentials()).byType(SecurityAssertion.class);
+      SecurityAssertionSaml securityAssertionSaml =
+          (SecurityAssertionSaml)
+              securityAssertions
+                  .stream()
+                  .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
+                  .findFirst()
+                  .orElse(null);
+      if (securityAssertionSaml != null) {
+        SAMLAuthenticationToken authToken =
+            new SAMLAuthenticationToken(
+                null, (PrincipalCollection) token.getCredentials(), token.getIpAddress());
+        authToken.setAllowGuest(token.getAllowGuest());
+        return authToken;
+      }
+    }
     return token;
   }
 

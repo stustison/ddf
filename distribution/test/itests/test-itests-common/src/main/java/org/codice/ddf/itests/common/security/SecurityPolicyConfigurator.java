@@ -90,13 +90,6 @@ public class SecurityPolicyConfigurator {
         .until(() -> when().get(url).then().extract().statusCode() == 401);
   }
 
-  public void waitForPkiAuthReady(String url) {
-    expect("Waiting for basic auth")
-        .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .checkEvery(1, TimeUnit.SECONDS)
-        .until(() -> when().get(url).then().extract().statusCode() == 403);
-  }
-
   public void waitForGuestAuthReady(String url) {
     expect("Waiting for guest auth")
         .within(AbstractIntegrationTest.GENERIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)

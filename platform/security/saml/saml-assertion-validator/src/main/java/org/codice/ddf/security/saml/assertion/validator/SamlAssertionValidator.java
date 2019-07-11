@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.saml.assertion.validator;
 
-import ddf.security.http.SessionFactory;
 import org.codice.ddf.platform.filter.AuthenticationFailureException;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 
@@ -24,6 +23,4 @@ public interface SamlAssertionValidator {
   void setSignatureProperties(String signatureProperties);
 
   String getSignatureProperties(String signatureProperties);
-
-  void setSessionFactory(SessionFactory sessionFactory);
 }

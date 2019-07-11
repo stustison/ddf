@@ -155,7 +155,6 @@ public class OAuthHandler implements AuthenticationHandler {
 
   private OidcCredentials getCredentialsFromRequest(J2EContext j2EContext) {
     CustomOAuthCredentialsExtractor credentialsExtractor = new CustomOAuthCredentialsExtractor();
-
     return credentialsExtractor.getOauthCredentialsAsOidcCredentials(j2EContext);
   }
 }

@@ -42,7 +42,6 @@ import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.policy.context.ContextPolicy;
-import org.codice.ddf.security.saml.assertion.validator.SamlAssertionValidator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,7 +70,6 @@ public class LoginFilterTest {
   @Mock private SecurityToken goodSecurityTokenMock;
   @Mock private SecurityToken badSecurityTokenMock;
   @Mock private BaseAuthenticationToken referenceTokenMock;
-  @Mock private SamlAssertionValidator samlAssertionValidatorMock;
   @Mock private SessionFactory sessionFactory;
 
   @BeforeClass

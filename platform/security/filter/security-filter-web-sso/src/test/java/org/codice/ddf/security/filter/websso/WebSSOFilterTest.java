@@ -50,8 +50,6 @@ public class WebSSOFilterTest {
 
   private static final String MOCK_CONTEXT = "/test";
 
-  private WebSSOFilter webSSOFilter;
-
   @Test
   public void testInit() {
     final Logger logger = (Logger) LoggerFactory.getLogger(WebSSOFilter.class);

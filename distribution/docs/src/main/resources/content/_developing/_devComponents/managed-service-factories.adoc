@@ -152,6 +152,8 @@ authenticationTypes=[ \
   "/security-config\=basic", \
   "/search\=basic", \
   ]
+sessionAccess=B"true"
+guestAccess=B"true"
 realms=[ \
   "/\=karaf", \
   ]

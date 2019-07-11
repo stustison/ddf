@@ -13,7 +13,6 @@
  */
 package org.codice.ddf.security.handler.oidc;
 
-import ddf.security.http.SessionFactory;
 import java.io.IOException;
 import java.util.Map;
 import javax.servlet.ServletRequest;
@@ -57,7 +56,6 @@ public class OidcHandler implements AuthenticationHandler {
   }
 
   private OidcHandlerConfiguration configuration;
-  private SessionFactory sessionFactory;
 
   public OidcHandler(OidcHandlerConfiguration configuration) {
     this.configuration = configuration;
@@ -204,12 +202,4 @@ public class OidcHandler implements AuthenticationHandler {
     oidcClient.redirect(j2EContext);
     return redirectedResult;
   }
-
-  // hack
-
-  public void setSessionFactory(SessionFactory sessionFactory) {
-    this.sessionFactory = sessionFactory;
-  }
-
-  // end hack
 }

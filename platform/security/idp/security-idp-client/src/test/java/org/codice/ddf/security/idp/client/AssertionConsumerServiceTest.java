@@ -32,7 +32,6 @@ import ddf.security.http.SessionFactory;
 import ddf.security.samlp.SimpleSign;
 import ddf.security.samlp.SystemCrypto;
 import ddf.security.samlp.impl.RelayStates;
-import ddf.security.service.SecurityManager;
 import java.io.ByteArrayInputStream;
 import java.security.Principal;
 import java.util.Arrays;
@@ -47,7 +46,6 @@ import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.http.HttpStatus;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.codice.ddf.platform.filter.SecurityFilter;
-import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -92,7 +90,6 @@ public class AssertionConsumerServiceTest {
   @Mock private PrincipalCollection principalCollection;
   @Mock private Subject subject;
   @Mock private SecurityAssertion securityAssertion;
-  @Mock private SecurityManager securityManager;
   @Mock private ContextPolicyManager contextPolicyManager;
 
   @BeforeClass
@@ -153,11 +150,8 @@ public class AssertionConsumerServiceTest {
 
     when(subject.getPrincipals()).thenReturn(principalCollection);
 
-    when(securityManager.getSubject(any(BaseAuthenticationToken.class))).thenReturn(subject);
-
     assertionConsumerService =
-        new AssertionConsumerService(
-            simpleSign, idpMetadata, systemCrypto, relayStates, securityManager);
+        new AssertionConsumerService(simpleSign, idpMetadata, systemCrypto, relayStates);
     assertionConsumerService.setRequest(httpRequest);
     assertionConsumerService.setLoginFilter(loginFilter);
     assertionConsumerService.setSessionFactory(sessionFactory);

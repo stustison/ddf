@@ -203,6 +203,7 @@
         </dependencies>
     </dependencyManagement>
     <modules>
+        <module>security-oidc-bundle</module>
         <module>platform-security-core-api</module>
         <module>security-saml-util</module>
         <module>encryption</module>
@@ -210,6 +211,7 @@
         <module>common</module>
         <module>core</module>
         <module>policy</module>
+        <module>saml</module>
         <module>sts</module>
         <module>pdp</module>
         <module>pep</module>
@@ -227,7 +229,5 @@
         <module>secure-boot</module>
         <module>security-guest-realm</module>
         <module>security-oidc-realm</module>
-        <module>security-oidc-bundle</module>
-        <module>saml</module>
     </modules>
 </project>

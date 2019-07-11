@@ -265,8 +265,6 @@
                             platform-util-unavailableurls,
                             ddf-security-common,
                             platform-util,
-                            lang-tag,
-                            json-smart,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>

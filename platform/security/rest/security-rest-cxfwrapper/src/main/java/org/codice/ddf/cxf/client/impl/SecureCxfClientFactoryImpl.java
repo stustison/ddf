@@ -92,8 +92,7 @@ import org.slf4j.LoggerFactory;
 public class SecureCxfClientFactoryImpl<T> implements SecureCxfClientFactory<T> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SecureCxfClientFactoryImpl.class);
-
-  private static final String HTTPS = "https";
+  public static final String HTTPS = "https";
 
   private final JAXRSClientFactoryBean clientFactory;
 

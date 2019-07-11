@@ -112,6 +112,7 @@ public class Security {
 
     if (securityManager != null) {
       try {
+        // TODO - Change when class is a service
         token.setAllowGuest(true);
         return securityManager.getSubject(token);
       } catch (SecurityServiceException | RuntimeException e) {

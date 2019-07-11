@@ -85,6 +85,7 @@ import org.codice.ddf.test.common.LoggingUtils;
 import org.codice.ddf.test.common.annotations.BeforeExam;
 import org.hamcrest.xml.HasXPath;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -768,78 +769,74 @@ public class TestSecurity extends AbstractIntegrationTest {
     getSecurityPolicy().waitForGuestAuthReady(openSearchQuery);
     delete(recordId);
   }
-  //
-  //  @Test
-  //  public void testGuestSoapAccess() throws Exception {
-  //    String body =
-  //        "<soapenv:Envelope xmlns:hel=\"http://ddf.sdk/soap/hello\"
-  // xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-  //            + "   <soapenv:Header>\n"
-  //            + "   </soapenv:Header>\n"
-  //            + "   <soapenv:Body>\n"
-  //            + "      <hel:helloWorld/>\n"
-  //            + "   </soapenv:Body>\n"
-  //            + "</soapenv:Envelope>";
-  //    // we are only testing guest because that hits the most code, testing with an assertion
-  // would be
-  //    // mostly testing the same stuff that this is hitting
-  //    given()
-  //        .log()
-  //        .all()
-  //        .body(body)
-  //        .header("Content-Type", "text/xml; charset=utf-8")
-  //        .header("SOAPAction", "helloWorld")
-  //        .expect()
-  //        .statusCode(equalTo(200))
-  //        .when()
-  //        .post(SERVICE_ROOT.getUrl() + "/sdk/SoapService")
-  //        .then()
-  //        .log()
-  //        .all()
-  //        .assertThat()
-  //        .body(
-  //            HasXPath.hasXPath(
-  //                "//*[local-name()='helloWorldResponse']/result/text()",
-  // containsString("Guest")));
-  //  }
-  //
-  //  @Test
-  //  public void testGuestSoapAccessHttp() throws Exception {
-  //    getServiceManager().startFeature(true, "platform-http-proxy");
-  //
-  //    String body =
-  //        "<soapenv:Envelope xmlns:hel=\"http://ddf.sdk/soap/hello\"
-  // xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-  //            + "   <soapenv:Header>\n"
-  //            + "   </soapenv:Header>\n"
-  //            + "   <soapenv:Body>\n"
-  //            + "      <hel:helloWorld/>\n"
-  //            + "   </soapenv:Body>\n"
-  //            + "</soapenv:Envelope>";
-  //    // we are only testing guest because that hits the most code, testing with an assertion
-  // would be
-  //    // mostly testing the same stuff that this is hitting
-  //    given()
-  //        .log()
-  //        .all()
-  //        .body(body)
-  //        .header("Content-Type", "text/xml; charset=utf-8")
-  //        .header("SOAPAction", "helloWorld")
-  //        .expect()
-  //        .statusCode(equalTo(200))
-  //        .when()
-  //        .post(INSECURE_SERVICE_ROOT.getUrl() + "/sdk/SoapService")
-  //        .then()
-  //        .log()
-  //        .all()
-  //        .assertThat()
-  //        .body(
-  //            HasXPath.hasXPath(
-  //                "//*[local-name()='helloWorldResponse']/result/text()",
-  // containsString("Guest")));
-  //
-  //    getServiceManager().stopFeature(false, "platform-http-proxy");
-  //  }
+
+  @Test
+  @Ignore
+  public void testGuestSoapAccess() throws Exception {
+    String body =
+        "<soapenv:Envelope xmlns:hel=\"http://ddf.sdk/soap/hello\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+            + "   <soapenv:Header>\n"
+            + "   </soapenv:Header>\n"
+            + "   <soapenv:Body>\n"
+            + "      <hel:helloWorld/>\n"
+            + "   </soapenv:Body>\n"
+            + "</soapenv:Envelope>";
+    // we are only testing guest because that hits the most code, testing with an assertion would be
+    // mostly testing the same stuff that this is hitting
+    given()
+        .log()
+        .all()
+        .body(body)
+        .header("Content-Type", "text/xml; charset=utf-8")
+        .header("SOAPAction", "helloWorld")
+        .expect()
+        .statusCode(equalTo(200))
+        .when()
+        .post(SERVICE_ROOT.getUrl() + "/sdk/SoapTransportService")
+        .then()
+        .log()
+        .all()
+        .assertThat()
+        .body(
+            HasXPath.hasXPath(
+                "//*[local-name()='helloWorldResponse']/result/text()", containsString("Guest")));
+  }
+
+  @Test
+  @Ignore
+  public void testGuestSoapAccessHttp() throws Exception {
+    getServiceManager().startFeature(true, "platform-http-proxy");
+
+    String body =
+        "<soapenv:Envelope xmlns:hel=\"http://ddf.sdk/soap/hello\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+            + "   <soapenv:Header>\n"
+            + "   </soapenv:Header>\n"
+            + "   <soapenv:Body>\n"
+            + "      <hel:helloWorld/>\n"
+            + "   </soapenv:Body>\n"
+            + "</soapenv:Envelope>";
+    // we are only testing guest because that hits the most code, testing with an assertion would be
+    // mostly testing the same stuff that this is hitting
+    given()
+        .log()
+        .all()
+        .body(body)
+        .header("Content-Type", "text/xml; charset=utf-8")
+        .header("SOAPAction", "helloWorld")
+        .expect()
+        .statusCode(equalTo(200))
+        .when()
+        .post(INSECURE_SERVICE_ROOT.getUrl() + "/sdk/SoapTransportService")
+        .then()
+        .log()
+        .all()
+        .assertThat()
+        .body(
+            HasXPath.hasXPath(
+                "//*[local-name()='helloWorldResponse']/result/text()", containsString("Guest")));
+
+    getServiceManager().stopFeature(false, "platform-http-proxy");
+  }
 
   /* These STS tests are here to prove out functionality that doesn't get hit when accessing internal services. The standard UsernameToken and BinarySecurityToken elements are supported
    * by DDF, but not used internally. These elements need to be checked for functionality independently since going through our REST security framework won't touch these validators. */
