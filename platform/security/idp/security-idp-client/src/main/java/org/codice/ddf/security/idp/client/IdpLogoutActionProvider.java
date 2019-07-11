@@ -19,9 +19,11 @@ import ddf.action.impl.ActionImpl;
 import ddf.security.SecurityConstants;
 import ddf.security.SubjectUtils;
 import ddf.security.encryption.EncryptionService;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.apache.shiro.subject.Subject;
 import org.codice.ddf.configuration.SystemBaseUrl;
@@ -65,7 +67,9 @@ public class IdpLogoutActionProvider implements ActionProvider {
       String nameId = SubjectUtils.getName((Subject) subject, "You", true);
 
       String nameIdTimestamp = nameId + "\n" + System.currentTimeMillis();
-      nameIdTimestamp = URLEncoder.encode(encryptionService.encrypt(nameIdTimestamp));
+      nameIdTimestamp =
+          URLEncoder.encode(
+              encryptionService.encrypt(nameIdTimestamp), StandardCharsets.UTF_8.name());
       logoutUrlString =
           SystemBaseUrl.EXTERNAL.constructUrl(
               "/saml/logout/request?EncryptedNameIdTime=" + nameIdTimestamp, true);
@@ -75,6 +79,8 @@ public class IdpLogoutActionProvider implements ActionProvider {
       LOGGER.info("Unable to resolve URL: {}", logoutUrlString);
     } catch (ClassCastException e) {
       LOGGER.debug("Unable to cast parameter to Map<String, Object>, {}", subjectMap, e);
+    } catch (UnsupportedEncodingException e) {
+      LOGGER.debug("Unable to encode the encrypted timestamp.", subjectMap, e);
     }
     return new ActionImpl(ID, TITLE, DESCRIPTION, logoutUrl);
   }

@@ -385,7 +385,7 @@ public class SecurityAssertionSaml implements SecurityAssertion {
   /*
    * (non-Javadoc)
    *
-   * @see ddf.security.assertion.SecurityAssertion#getPrincipals()
+   * @see ddf.security.assertion.SecurityAssertion#getToken()
    */
   @Override
   public Object getToken() {

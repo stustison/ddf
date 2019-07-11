@@ -887,10 +887,6 @@ public abstract class AbstractIntegrationTest {
     getSecurityPolicy().configureRestForSaml(whitelist);
   }
 
-  public void configureRestForPki(String whitelist) throws Exception {
-    getSecurityPolicy().configureRestForPki(whitelist);
-  }
-
   protected void configureBundle(
       String bundleName, String pid, Dictionary<String, Object> properties)
       throws IOException, BundleException, InterruptedException {

@@ -51,7 +51,7 @@ public class GuestRealmTest {
   @Test
   public void testSupportsBaseGuestAllowed() {
     BaseAuthenticationToken baseAuthenticationToken =
-        new BaseAuthenticationToken("principal", "credentials", "0.0.0.0");
+        new MockBaseAuthenticationToken("principal", "credentials", "0.0.0.0");
     baseAuthenticationToken.setAllowGuest(true);
 
     boolean supports = guestRealm.supports(baseAuthenticationToken);
@@ -81,7 +81,7 @@ public class GuestRealmTest {
   @Test
   public void testSupportsBaseGuestNotAllowed() {
     BaseAuthenticationToken baseAuthenticationToken =
-        new BaseAuthenticationToken("principal", "credentials", "0.0.0.0");
+        new MockBaseAuthenticationToken("principal", "credentials", "0.0.0.0");
     baseAuthenticationToken.setAllowGuest(false);
 
     boolean supports = guestRealm.supports(baseAuthenticationToken);
@@ -93,7 +93,7 @@ public class GuestRealmTest {
   @Test
   public void testDoGetAuthenticationInfo() {
     BaseAuthenticationToken baseAuthenticationToken =
-        new BaseAuthenticationToken("principal", "credentials", "0.0.0.0");
+        new MockBaseAuthenticationToken("principal", "credentials", "0.0.0.0");
     baseAuthenticationToken.setAllowGuest(true);
 
     AuthenticationInfo authenticationInfo =
@@ -147,5 +147,11 @@ public class GuestRealmTest {
         guestRealm.doGetAuthenticationInfo(baseAuthenticationToken);
 
     assertNotSame(authenticationInfo, newAuthenticationInfo);
+  }
+
+  class MockBaseAuthenticationToken extends BaseAuthenticationToken {
+    public MockBaseAuthenticationToken(Object principal, Object credentials, String ip) {
+      super(principal, credentials, ip);
+    }
   }
 }

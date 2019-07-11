@@ -23,7 +23,6 @@ import ddf.security.samlp.SimpleSign;
 import ddf.security.samlp.SystemCrypto;
 import ddf.security.samlp.ValidationException;
 import ddf.security.samlp.impl.RelayStates;
-import ddf.security.service.SecurityManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,8 +114,6 @@ public class AssertionConsumerService {
 
   private SessionFactory sessionFactory;
 
-  private SecurityManager securityManager;
-
   private ContextPolicyManager contextPolicyManager;
 
   static {
@@ -127,13 +124,11 @@ public class AssertionConsumerService {
       SimpleSign simpleSign,
       IdpMetadata metadata,
       SystemCrypto crypto,
-      RelayStates<String> relayStates,
-      SecurityManager securityManager) {
+      RelayStates<String> relayStates) {
     this.simpleSign = simpleSign;
     idpMetadata = metadata;
     systemCrypto = crypto;
     this.relayStates = relayStates;
-    this.securityManager = securityManager;
   }
 
   @POST

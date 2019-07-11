@@ -392,12 +392,6 @@
         <bundle>mvn:ddf.platform.security/security-oidc-realm/${project.version}</bundle>
     </feature>
 
-    <feature name="jackson" version="${project.version}">
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/${jackson.version}</bundle>
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson.version}</bundle>
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson.version}</bundle>
-    </feature>
-
     <feature name="security-filter-login" version="${project.version}"
              description="Login Filter for web applications.">
         <feature>security-core</feature>

@@ -13,11 +13,9 @@
  */
 package org.codice.ddf.security.saml.assertion.validator.impl;
 
-import com.google.common.annotations.VisibleForTesting;
 import ddf.security.PropertiesLoader;
 import ddf.security.assertion.SecurityAssertion;
 import ddf.security.assertion.saml.impl.SecurityAssertionSaml;
-import ddf.security.http.SessionFactory;
 import ddf.security.service.SecurityServiceException;
 import java.io.ByteArrayInputStream;
 import java.security.InvalidKeyException;
@@ -74,9 +72,6 @@ import org.w3c.dom.Node;
 
 public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
 
-  @VisibleForTesting
-  static final String SAML_PROPERTY_KEY = ddf.security.SecurityConstants.SECURITY_TOKEN_KEY;
-
   private static final Logger LOGGER = LoggerFactory.getLogger(SamlAssertionValidatorImpl.class);
 
   private static final XMLUtils XML_UTILS = XMLUtils.getInstance();
@@ -110,8 +105,6 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
   private String signatureProperties;
 
   private Validator assertionValidator = new org.apache.wss4j.dom.validate.SamlAssertionValidator();
-
-  private SessionFactory sessionFactory;
 
   /**
    * Validates a SAMLAuthenticationToken by checking it's signature against the configured system
@@ -413,10 +406,5 @@ public class SamlAssertionValidatorImpl implements SamlAssertionValidator {
   @Override
   public String getSignatureProperties(String signatureProperties) {
     return signatureProperties;
-  }
-
-  @Override
-  public void setSessionFactory(SessionFactory sessionFactory) {
-    this.sessionFactory = sessionFactory;
   }
 }

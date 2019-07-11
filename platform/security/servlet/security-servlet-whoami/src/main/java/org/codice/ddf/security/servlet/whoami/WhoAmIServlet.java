@@ -15,8 +15,6 @@ package org.codice.ddf.security.servlet.whoami;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ddf.security.http.SessionFactory;
-import ddf.security.service.SecurityManager;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +31,6 @@ public class WhoAmIServlet extends HttpServlet {
   private static final Logger LOGGER = LoggerFactory.getLogger(WhoAmIServlet.class);
 
   private static final long serialVersionUID = 5538001643612956658L;
-
-  private static SessionFactory httpSessionFactory;
-
-  private static SecurityManager securityManager;
 
   private static Gson gson =
       new GsonBuilder()
@@ -63,14 +57,5 @@ public class WhoAmIServlet extends HttpServlet {
     } catch (IOException ex) {
       LOGGER.debug("Unable to write to response for /whoami", ex);
     }
-  }
-
-  public void setHttpSessionFactory(SessionFactory sessionFactory) {
-    httpSessionFactory = sessionFactory; // NOSONAR Blueprint cannot use a static setter but
-    // servlet field should be final and/or static.
-  }
-
-  public void setSecurityManager(SecurityManager manager) {
-    securityManager = manager; // NOSONAR
   }
 }

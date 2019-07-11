@@ -73,12 +73,6 @@ public class OidcTokenValidator {
    *   <li>If the ID token is not signed, an exception is thrown
    *   <li>If the ID token is signed, the required signing algorithm list from the metadata is used
    *       along with the header to validate it
-   *   <li>If the ID token is encrypted
-   *       <ul>
-   *         <li>If encryption methods and algorithms are listed in the metadata, we use that
-   *             information along with the header attributes to validate the token
-   *         <li>If encryption methods and algorithms are NOT listed in the metadata, we just use
-   *             the header attributes to validate the token
    *
    * @param idToken - id token to validate
    * @param webContext - the web context used to get the session information

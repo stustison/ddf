@@ -56,10 +56,12 @@
       <Option label="Implicit Flow - id_token token" value="id_token token" />
     </AD>
 
-    <AD name="Mode" id="responseMode" type="String" default="form_post"
-        description="Mode. Leave blank if you are unsure of the value to use.">
-        <Option label="" value=""/>
+    <AD name="Response Mode" id="responseMode" type="String" default="form_post"
+        description="Informs the Authorization Server of the mechanism to be used for returning parameters from the Authorization Endpoint.">
+        <Option label="unspecified" value=""/>
         <Option label="form_post" value="form_post"/>
+        <Option label="query" value="query"/>
+        <Option label="fragment" value="fragment"/>
     </AD>
 
   </OCD>

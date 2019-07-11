@@ -13,23 +13,12 @@
  */
 package org.codice.ddf.security.servlet.whoami
 
-import ddf.security.SecurityConstants
-import ddf.security.Subject
-import ddf.security.common.SecurityTokenHolder
-import ddf.security.http.SessionFactory
-import ddf.security.permission.CollectionPermission
 import ddf.security.service.SecurityManager
 import groovy.json.JsonSlurper
-import org.apache.cxf.ws.security.tokenstore.SecurityToken
 import org.apache.shiro.util.ThreadContext
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpSession
-
-import static org.mockito.Matchers.any
-import static org.mockito.Mockito.mock
-import static org.mockito.Mockito.when
 
 class WhoAmIServletSpec extends SubjectSpec {
 
@@ -37,8 +26,6 @@ class WhoAmIServletSpec extends SubjectSpec {
 
     def setup() {
         whoAmIServlet = new WhoAmIServlet()
-
-        def securityToken = Mock(SecurityToken)
 
         def securityManager = Mock(SecurityManager)
         securityManager.getSubject(_) >> mockSubject()

@@ -47,11 +47,10 @@ import org.codice.ddf.platform.util.XMLUtils;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.policy.context.ContextPolicy;
-import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet filter that exchanges all incoming tokens for a SAML assertion via an STS. */
+/** A filter that exchanges all incoming tokens for a security assertion. */
 public class LoginFilter implements SecurityFilter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LoginFilter.class);
@@ -74,8 +73,6 @@ public class LoginFilter implements SecurityFilter {
   private SecurityManager securityManager;
 
   private SessionFactory sessionFactory;
-
-  private ContextPolicyManager contextPolicyManager;
 
   private int expirationTime;
 
@@ -124,9 +121,6 @@ public class LoginFilter implements SecurityFilter {
     token.setX509Certs(
         (X509Certificate[]) httpRequest.getAttribute("javax.servlet.request.X509Certificate"));
     token.setRequestURI(httpRequest.getRequestURI());
-
-    // this is temporary
-    token = checkSessionTokenExpiration(token);
 
     // get subject from the token
     Subject subject;
@@ -182,29 +176,6 @@ public class LoginFilter implements SecurityFilter {
           }
           return null;
         });
-  }
-
-  // temporary method
-  private BaseAuthenticationToken checkSessionTokenExpiration(BaseAuthenticationToken token) {
-    //    if (token instanceof SessionToken) {
-    //      Collection<SecurityAssertion> securityAssertions =
-    //          ((PrincipalCollection) token.getCredentials()).byType(SecurityAssertion.class);
-    //      SecurityAssertionSaml securityAssertionSaml =
-    //          (SecurityAssertionSaml) securityAssertions
-    //              .stream()
-    //              .filter(sa -> SecurityAssertionSaml.SAML2_TOKEN_TYPE.equals(sa.getTokenType()))
-    //              .findFirst()
-    //              .orElse(null);
-    //      if (securityAssertionSaml != null) {
-    //        SAMLAuthenticationToken authToken =
-    //            new SAMLAuthenticationToken(
-    //                null, (PrincipalCollection) token.getCredentials(), token.getIpAddress());
-    //        authToken.setAllowGuest(token.getAllowGuest());
-    //        return authToken;
-    //      }
-    //    }
-    //    return token;
-    return token;
   }
 
   /**

@@ -40,7 +40,6 @@ import org.codice.ddf.security.handler.api.AuthenticationHandler;
 import org.codice.ddf.security.handler.api.GuestAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.HandlerResult.Status;
-import org.codice.ddf.security.handler.api.InvalidSAMLReceivedException;
 import org.codice.ddf.security.handler.api.SessionToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
 import org.codice.ddf.security.policy.context.ContextPolicyManager;
@@ -51,8 +50,7 @@ import org.slf4j.LoggerFactory;
  * Serves as the main security filter that works in conjunction with a number of handlers to protect
  * a variety of contexts each using different authentication schemes and policies. The basic premise
  * is that this filter is installed on any registered http context and it handles delegating the
- * authentication to the specified handlers in order to normalize and consolidate a session token
- * (the SAML assertion).
+ * authentication to the specified handlers in order to normalize and consolidate a session token.
  */
 public class WebSSOFilter implements SecurityFilter {
 
@@ -80,12 +78,11 @@ public class WebSSOFilter implements SecurityFilter {
   }
 
   /**
-   * Provides filtering for every registered http context. Checks for an existing session (via the
-   * SAML assertion included as a cookie). If it doesn't exist, it then looks up the current context
-   * and determines the proper handlers to include in the chain. Each handler is given the
-   * opportunity to locate their specific tokens if they exist or to go off and obtain them. Once a
-   * token has been received that we know how to convert to a SAML assertion, we attach them to the
-   * request and continue down the chain.
+   * Provides filtering for every registered http context. Checks for an existing session. If it
+   * doesn't exist, it then looks up the current context and determines the proper handlers to
+   * include in the chain. Each handler is given the opportunity to locate their specific tokens if
+   * they exist or to go off and obtain them. Once a token has been received that we know how to
+   * process , we attach them to the request and continue down the chain.
    *
    * @param servletRequest incoming http request
    * @param servletResponse response stream for returning the response
@@ -172,10 +169,6 @@ public class WebSSOFilter implements SecurityFilter {
     LOGGER.debug("Invoking the rest of the filter chain");
     try {
       filterChain.doFilter(httpRequest, httpResponse);
-    } catch (InvalidSAMLReceivedException e) {
-      // we tried to process an invalid or missing SAML assertion
-      returnSimpleResponse(HttpServletResponse.SC_UNAUTHORIZED, httpResponse);
-      throw new AuthenticationFailureException(e);
     } catch (Exception e) {
       LOGGER.debug(
           "Exception in filter chain - passing off to handlers. Msg: {}", e.getMessage(), e);

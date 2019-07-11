@@ -21,7 +21,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BaseAuthenticationToken implements AuthenticationToken {
+public abstract class BaseAuthenticationToken implements AuthenticationToken {
 
   private X509Certificate[] x509Certs;
 

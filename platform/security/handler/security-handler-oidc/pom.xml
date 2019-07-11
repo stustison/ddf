@@ -146,9 +146,6 @@
                             <rules>
                                 <enforceBytecodeVersion>
                                     <maxJdkVersion>1.8</maxJdkVersion>
-                                    <!--<excludes>-->
-                                        <!--<exclude>org.mindrot:jbcrypt</exclude>-->
-                                    <!--</excludes>-->
                                 </enforceBytecodeVersion>
                             </rules>
                             <fail>true</fail>
@@ -188,7 +185,6 @@
                             ddf-security-common,
                             platform-util,
                             platform-util-unavailableurls,
-                            lang-tag,
                             siv-mode,
                             jbcrypt
                         </Embed-Dependency>

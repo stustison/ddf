@@ -14,6 +14,7 @@
 package org.codice.ddf.security.handler.api;
 
 import ddf.security.assertion.SecurityAssertion;
+import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.ws.security.tokenstore.SecurityToken;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ public class SAMLAuthenticationToken extends STSAuthenticationToken {
         ((PrincipalCollection) getCredentials())
             .byType(SecurityAssertion.class)
             .stream()
-            .filter(sa -> sa.getTokenType().contains("SAML"))
+            .filter(sa -> StringUtils.containsIgnoreCase(sa.getTokenType(), "saml"))
             .map(SecurityAssertion::getToken)
             .filter(SecurityToken.class::isInstance)
             .map(SecurityToken.class::cast)
