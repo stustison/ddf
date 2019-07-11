@@ -61,6 +61,7 @@ import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.junit.Before;
 import org.junit.Test;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 import org.pac4j.oidc.credentials.OidcCredentials;
 
@@ -117,6 +118,7 @@ public class OidcRealmTest {
 
     OidcHandlerConfiguration handlerConfiguration = mock(OidcHandlerConfiguration.class);
     when(handlerConfiguration.getOidcConfiguration()).thenReturn(configuration);
+    when(handlerConfiguration.getOidcClient()).thenReturn(mock(OidcClient.class));
 
     realm.setOidcHandlerConfiguration(handlerConfiguration);
 
