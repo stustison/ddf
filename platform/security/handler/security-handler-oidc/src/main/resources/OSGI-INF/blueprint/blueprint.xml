@@ -24,26 +24,24 @@
         cm:managed-properties inline in the bean didn't persist configuration across restarts.
         Using cm:property-placeholder instead
       -->
-    <cm:property-placeholder persistent-id="org.codice.ddf.security.handler.api.OidcHandlerConfiguration" update-strategy="reload">
+    <cm:property-placeholder persistent-id="org.codice.ddf.security.handler.api.OidcHandlerConfiguration"
+                             update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="properties">
-                <map>
-                    <entry key="idpType" value="Keycloak"/>
-                    <entry key="clientId" value="ddf-client"/>
-                    <entry key="realm" value="master"/>
-                    <entry key="secret" value="secret"/>
-                    <entry key="discoveryUri"
-                      value="http://localhost:8080/auth/realms/master/.well-known/openid-configuration"/>
-                    <entry key="baseUri" value="http://localhost:8080/auth"/>
-                    <entry key="logoutUri" value="http://localhost:8080/auth/realms/master/protocol/openid-connect/logout"/>
-                    <entry key="scope" value="openid profile email resource.read"/>
-                    <entry key="useNonce">
-                        <value type="java.lang.Boolean">true</value>
-                    </entry>
-                    <entry key="responseType" value="code"/>
-                    <entry key="responseMode" value="form_post"/>
-                </map>
+            <cm:property name="idpType" value="Keycloak"/>
+            <cm:property name="clientId" value="ddf-client"/>
+            <cm:property name="realm" value="master"/>
+            <cm:property name="secret" value="secret"/>
+            <cm:property name="discoveryUri"
+                         value="http://localhost:8080/auth/realms/master/.well-known/openid-configuration"/>
+            <cm:property name="baseUri" value="http://localhost:8080/auth"/>
+            <cm:property name="logoutUri"
+                         value="http://localhost:8080/auth/realms/master/protocol/openid-connect/logout"/>
+            <cm:property name="scope" value="openid profile email resource.read"/>
+            <cm:property name="useNonce">
+                <value type="java.lang.Boolean">true</value>
             </cm:property>
+            <cm:property name="responseType" value="code"/>
+            <cm:property name="responseMode" value="form_post"/>
         </cm:default-properties>
     </cm:property-placeholder>
 

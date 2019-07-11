@@ -49,30 +49,32 @@ public class SessionManagementServiceImpl implements SessionManagementService {
 
   @Override
   public String getExpiry(HttpServletRequest request) {
+    long timeLeft = 0;
     HttpSession session = sessionFactory.getOrCreateSession(request);
     if (session == null) {
-      return null;
+      return Long.toString(timeLeft);
     }
 
     Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
     if (!(securityToken instanceof SecurityTokenHolder)) {
-      return null;
+      return Long.toString(timeLeft);
     }
 
-    long timeLeft = getTimeLeft(((SecurityTokenHolder) securityToken).getPrincipals(), session);
+    timeLeft = getTimeLeft(((SecurityTokenHolder) securityToken).getPrincipals(), session);
     return Long.toString(timeLeft);
   }
 
   @Override
   public String getRenewal(HttpServletRequest request) {
+    long timeLeft = 0;
     HttpSession session = sessionFactory.getOrCreateSession(request);
     if (session == null) {
-      return null;
+      return Long.toString(timeLeft);
     }
 
     Object securityToken = session.getAttribute(SecurityConstants.SECURITY_TOKEN_KEY);
     if (!(securityToken instanceof SecurityTokenHolder)) {
-      return null;
+      return Long.toString(timeLeft);
     }
 
     SecurityTokenHolder tokenHolder = (SecurityTokenHolder) securityToken;
@@ -81,13 +83,13 @@ public class SessionManagementServiceImpl implements SessionManagementService {
       renewedPrincipals = renewSecurityAssertions(tokenHolder, request);
     } catch (SecurityServiceException e) {
       LOGGER.error("Failed to renew", e);
-      return null;
+      return Long.toString(timeLeft);
     }
 
     if (renewedPrincipals != null) {
       tokenHolder.setPrincipals(renewedPrincipals);
     }
-    long timeLeft = getTimeLeft(renewedPrincipals, session);
+    timeLeft = getTimeLeft(renewedPrincipals, session);
     return Long.toString(timeLeft);
   }
 

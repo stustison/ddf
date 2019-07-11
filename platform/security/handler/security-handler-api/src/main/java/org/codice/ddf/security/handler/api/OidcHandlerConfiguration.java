@@ -21,7 +21,7 @@ public interface OidcHandlerConfiguration {
 
   OidcConfiguration getOidcConfiguration();
 
-  OidcClient getOidcClient();
+  OidcClient getOidcClient(String callBackUri);
 
   OidcLogoutActionBuilder getOidcLogoutActionBuilder();
 
