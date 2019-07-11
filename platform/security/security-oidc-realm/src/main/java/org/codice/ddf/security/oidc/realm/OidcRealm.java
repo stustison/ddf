@@ -87,10 +87,7 @@ public class OidcRealm extends AuthenticatingRealm {
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
 
     OidcCredentialsResolver oidcCredentialsResolver =
-        new OidcCredentialsResolver(
-            oidcConfiguration,
-            oidcClient,
-            oidcProviderMetadata);
+        new OidcCredentialsResolver(oidcConfiguration, oidcClient, oidcProviderMetadata);
 
     oidcCredentialsResolver.resolveIdToken(credentials, webContext);
 
@@ -109,8 +106,7 @@ public class OidcRealm extends AuthenticatingRealm {
       throw new AuthenticationException(msg);
     }
 
-    OidcProfileCreator oidcProfileCreator =
-        new CustomOidcProfileCreator(oidcConfiguration);
+    OidcProfileCreator oidcProfileCreator = new CustomOidcProfileCreator(oidcConfiguration);
     OidcProfile profile = oidcProfileCreator.create(credentials, webContext);
 
     SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo();
