@@ -13,6 +13,7 @@
  */
 package org.codice.ddf.security.handler.oidc;
 
+import static org.codice.ddf.security.handler.oidc.OidcHandlerConfigurationImpl.DEFAULT_CALLBACK_URL;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -80,21 +81,24 @@ public class OidcHandlerConfigurationImplTest {
   @Test
   public void testCreateOidcClientKeycloak() {
     OidcConfiguration oidcConfiguration = mock(KeycloakOidcConfiguration.class);
-    OidcClient oidcClient = handlerConfiguration.createOidcClient("Keycloak", oidcConfiguration);
+    OidcClient oidcClient =
+        handlerConfiguration.createOidcClient("Keycloak", oidcConfiguration, DEFAULT_CALLBACK_URL);
     assertTrue(oidcClient instanceof KeycloakOidcClient);
   }
 
   @Test
   public void testCreateOidcClientAzure() {
     OidcConfiguration oidcConfiguration = mock(AzureAdOidcConfiguration.class);
-    OidcClient oidcClient = handlerConfiguration.createOidcClient("Azure", oidcConfiguration);
+    OidcClient oidcClient =
+        handlerConfiguration.createOidcClient("Azure", oidcConfiguration, DEFAULT_CALLBACK_URL);
     assertTrue(oidcClient instanceof AzureAdClient);
   }
 
   @Test
   public void testCreateOidcClientGoogle() {
     OidcConfiguration oidcConfiguration = mock(OidcConfiguration.class);
-    OidcClient oidcClient = handlerConfiguration.createOidcClient("Google", oidcConfiguration);
+    OidcClient oidcClient =
+        handlerConfiguration.createOidcClient("Google", oidcConfiguration, DEFAULT_CALLBACK_URL);
     assertTrue(oidcClient instanceof GoogleOidcClient);
   }
 }

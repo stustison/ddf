@@ -118,7 +118,7 @@ public class OidcRealmTest {
 
     OidcHandlerConfiguration handlerConfiguration = mock(OidcHandlerConfiguration.class);
     when(handlerConfiguration.getOidcConfiguration()).thenReturn(configuration);
-    when(handlerConfiguration.getOidcClient()).thenReturn(mock(OidcClient.class));
+    when(handlerConfiguration.getOidcClient(any())).thenReturn(mock(OidcClient.class));
 
     realm.setOidcHandlerConfiguration(handlerConfiguration);
 
