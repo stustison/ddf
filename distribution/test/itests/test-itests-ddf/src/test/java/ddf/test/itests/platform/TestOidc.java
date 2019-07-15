@@ -60,7 +60,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.xebialabs.restito.semantics.Call;
 import com.xebialabs.restito.server.StubServer;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -73,7 +72,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -169,6 +169,7 @@ public class TestOidc extends AbstractIntegrationTest {
           .registerTypeAdapterFactory(GsonTypeAdapters.LongDoubleTypeAdapter.FACTORY)
           .create();
 
+  private static Dictionary<String, Object> handlerConfig;
   private static StubServer server;
   private static RSAPublicKey publicKey;
   private static Algorithm validAlgorithm;
@@ -211,7 +212,7 @@ public class TestOidc extends AbstractIntegrationTest {
       setUp();
 
       // Configure OIDC Handler
-      Map<String, Object> handlerConfig = new HashMap<>();
+      handlerConfig = new Hashtable<>();
       handlerConfig.put("idpType", "Keycloak");
       handlerConfig.put("clientId", DDF_CLIENT_ID);
       handlerConfig.put("realm", "master");
@@ -222,7 +223,7 @@ public class TestOidc extends AbstractIntegrationTest {
       handlerConfig.put(SCOPE, DDF_SCOPE);
       handlerConfig.put("useNonce", true);
       handlerConfig.put("responseMode", FORM_POST);
-      setConfig(handlerConfig);
+      setConfig();
     } catch (Exception e) {
       LoggingUtils.failWithThrowableStacktrace(e, "Failed in @BeforeExam: ");
     }
@@ -1022,7 +1023,8 @@ public class TestOidc extends AbstractIntegrationTest {
    */
   private Map<String, String> sendInitialRequest(String responseType) throws Exception {
     // Configure DDF to use given flow
-    setConfig(ImmutableMap.of("responseType", responseType));
+    handlerConfig.put("responseType", responseType);
+    setConfig();
 
     Response initialResponse =
         given()
@@ -1307,28 +1309,22 @@ public class TestOidc extends AbstractIntegrationTest {
   }
 
   /** Configure the OIDC Handler with the given parameters */
-  private void setConfig(Map<String, Object> params) throws IOException {
+  private void setConfig() throws Exception {
     Configuration config =
         getAdminConfig()
             .getConfiguration("org.codice.ddf.security.handler.api.OidcHandlerConfiguration", null);
 
-    config.update(
-        new Hashtable<String, Object>() {
-          {
-            putAll(params);
-          }
-        });
+    config.update(handlerConfig);
 
-    for (Map.Entry<String, Object> entry : params.entrySet()) {
-      expect("Configs to update")
+    for (Enumeration<String> keys = handlerConfig.keys(); keys.hasMoreElements(); ) {
+      String key = keys.nextElement();
+      expect("Wait for the OIDC Handler Configuration to be updated.")
           .within(2, TimeUnit.MINUTES)
-          .until(
-              () ->
-                  config.getProperties() != null
-                      && (config.getProperties().get(entry.getKey()) == entry.getValue()));
+          .until(() -> config.getProperties().get(key).equals(handlerConfig.get(key)));
     }
 
-    waitForSystemReady();
+    // Wait for the OIDC Handler to test the connection, create the OIDC client etc..
+    Thread.sleep(1000);
   }
 
   /** Adds library used to create JWT tokens when responding to DDF */
