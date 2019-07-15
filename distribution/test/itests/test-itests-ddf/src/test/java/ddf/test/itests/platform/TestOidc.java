@@ -34,9 +34,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.pac4j.oidc.profile.OidcProfileDefinition.ACCESS_TOKEN;
 import static org.pac4j.oidc.profile.OidcProfileDefinition.AUTH_TIME;
 import static org.pac4j.oidc.profile.OidcProfileDefinition.AZP;
@@ -92,7 +89,6 @@ import org.json.simple.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
@@ -1325,13 +1321,5 @@ public class TestOidc extends AbstractIntegrationTest {
 
     // Wait for the OIDC Handler to test the connection, create the OIDC client etc..
     Thread.sleep(1000);
-  }
-
-  /** Adds library used to create JWT tokens when responding to DDF */
-  @Override
-  protected Option[] configureCustom() {
-    Option[] addedOption =
-        options(wrappedBundle(mavenBundle("com.auth0", "java-jwt").versionAsInProject()));
-    return combineOptions(super.configureCustom(), addedOption);
   }
 }
