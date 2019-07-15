@@ -107,8 +107,8 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
   }
 
   @Override
-  public OidcClient getOidcClient() {
-    OidcClient oidcClient = createOidcClient(idpType, oidcConfiguration);
+  public OidcClient getOidcClient(String callBackUri) {
+    OidcClient oidcClient = createOidcClient(idpType, oidcConfiguration, callBackUri);
     oidcClient.init();
 
     return oidcClient;
@@ -123,7 +123,7 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
   @Override
   public void testConnection() {
     getOidcConfiguration();
-    getOidcClient();
+    getOidcClient(DEFAULT_CALLBACK_URL);
   }
 
   @VisibleForTesting
@@ -147,7 +147,8 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
   }
 
   @VisibleForTesting
-  OidcClient createOidcClient(String idpType, OidcConfiguration oidcConfiguration) {
+  OidcClient createOidcClient(
+      String idpType, OidcConfiguration oidcConfiguration, String callBackUri) {
     OidcClient oidcClient;
 
     if ("Keycloak".equals(idpType)) {
@@ -161,8 +162,10 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
     }
 
     oidcClient.setName(oidcConfiguration.getClientId());
-    if (isBlank(oidcClient.getCallbackUrl())) {
+    if (isBlank(callBackUri)) {
       oidcClient.setCallbackUrl(DEFAULT_CALLBACK_URL);
+    } else {
+      oidcClient.setCallbackUrl(callBackUri);
     }
 
     return oidcClient;

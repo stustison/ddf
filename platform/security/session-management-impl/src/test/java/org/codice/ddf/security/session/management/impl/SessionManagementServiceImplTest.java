@@ -15,8 +15,8 @@ package org.codice.ddf.security.session.management.impl;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
@@ -232,7 +232,7 @@ public class SessionManagementServiceImplTest {
     when(manager.getSubject(isA(SAMLAuthenticationToken.class)))
         .thenThrow(new SecurityServiceException());
     String renewalString = sessionManagementServiceImpl.getRenewal(request);
-    assertNull(renewalString);
+    assertEquals("0", renewalString);
   }
 
   @Test

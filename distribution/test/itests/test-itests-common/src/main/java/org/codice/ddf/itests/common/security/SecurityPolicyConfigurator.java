@@ -157,6 +157,8 @@ public class SecurityPolicyConfigurator {
 
     putPolicyValues(policyProperties, "guestAccess", true);
 
+    putPolicyValues(policyProperties, "sessionAccess", true);
+
     new SynchronizedConfiguration(
             FACTORY_PID, null, policyProperties, createChecker(policyProperties), configAdmin)
         .updateConfig();

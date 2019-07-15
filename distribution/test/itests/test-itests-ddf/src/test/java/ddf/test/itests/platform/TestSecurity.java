@@ -85,7 +85,6 @@ import org.codice.ddf.test.common.LoggingUtils;
 import org.codice.ddf.test.common.annotations.BeforeExam;
 import org.hamcrest.xml.HasXPath;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -771,7 +770,6 @@ public class TestSecurity extends AbstractIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testGuestSoapAccess() throws Exception {
     String body =
         "<soapenv:Envelope xmlns:hel=\"http://ddf.sdk/soap/hello\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
@@ -792,7 +790,7 @@ public class TestSecurity extends AbstractIntegrationTest {
         .expect()
         .statusCode(equalTo(200))
         .when()
-        .post(SERVICE_ROOT.getUrl() + "/sdk/SoapTransportService")
+        .post(SERVICE_ROOT.getUrl() + "/sdk/SoapService")
         .then()
         .log()
         .all()
@@ -803,7 +801,6 @@ public class TestSecurity extends AbstractIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testGuestSoapAccessHttp() throws Exception {
     getServiceManager().startFeature(true, "platform-http-proxy");
 
@@ -826,7 +823,7 @@ public class TestSecurity extends AbstractIntegrationTest {
         .expect()
         .statusCode(equalTo(200))
         .when()
-        .post(INSECURE_SERVICE_ROOT.getUrl() + "/sdk/SoapTransportService")
+        .post(INSECURE_SERVICE_ROOT.getUrl() + "/sdk/SoapService")
         .then()
         .log()
         .all()

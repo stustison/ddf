@@ -101,8 +101,7 @@ public class OidcHandler implements AuthenticationHandler {
     String requestUrl = requestUrlBuffer.toString();
     String ipAddress = httpRequest.getRemoteAddr();
 
-    OidcClient oidcClient = configuration.getOidcClient();
-    oidcClient.setCallbackUrl(requestUrl);
+    OidcClient oidcClient = configuration.getOidcClient(requestUrl);
 
     OidcCredentials credentials;
     boolean isMachine = userAgentIsNotBrowser(httpRequest);

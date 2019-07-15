@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -100,7 +101,7 @@ public class OidcHandlerTest {
 
     // oidc configuration
     when(mockConfiguration.getOidcConfiguration()).thenReturn(mockOidcConfiguration);
-    when(mockConfiguration.getOidcClient()).thenReturn(mockOidcClient);
+    when(mockConfiguration.getOidcClient(anyString())).thenReturn(mockOidcClient);
 
     // session
     when(mockSession.getAttribute("oidcStateAttribute")).thenReturn(state);

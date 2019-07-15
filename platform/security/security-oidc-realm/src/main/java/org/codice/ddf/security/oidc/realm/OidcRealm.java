@@ -82,9 +82,9 @@ public class OidcRealm extends AuthenticatingRealm {
     OidcAuthenticationToken oidcAuthenticationToken = (OidcAuthenticationToken) authenticationToken;
     OidcCredentials credentials = (OidcCredentials) oidcAuthenticationToken.getCredentials();
     OidcConfiguration oidcConfiguration = oidcHandlerConfiguration.getOidcConfiguration();
-    OidcClient oidcClient = oidcHandlerConfiguration.getOidcClient();
     OIDCProviderMetadata oidcProviderMetadata = oidcConfiguration.findProviderMetadata();
     WebContext webContext = (WebContext) oidcAuthenticationToken.getContext();
+    OidcClient oidcClient = oidcHandlerConfiguration.getOidcClient(webContext.getFullRequestURL());
 
     OidcCredentialsResolver oidcCredentialsResolver =
         new OidcCredentialsResolver(oidcConfiguration, oidcClient, oidcProviderMetadata);

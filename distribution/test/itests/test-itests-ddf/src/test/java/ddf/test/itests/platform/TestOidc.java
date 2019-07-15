@@ -84,7 +84,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.codice.ddf.itests.common.AbstractIntegrationTest;
-import org.codice.ddf.test.common.DependencyVersionResolver;
 import org.codice.ddf.test.common.LoggingUtils;
 import org.codice.ddf.test.common.annotations.AfterExam;
 import org.codice.ddf.test.common.annotations.BeforeExam;
@@ -1336,10 +1335,7 @@ public class TestOidc extends AbstractIntegrationTest {
   @Override
   protected Option[] configureCustom() {
     Option[] addedOption =
-        options(
-            wrappedBundle(
-                mavenBundle("com.auth0", "java-jwt")
-                    .version(DependencyVersionResolver.resolver())));
+        options(wrappedBundle(mavenBundle("com.auth0", "java-jwt").versionAsInProject()));
     return combineOptions(super.configureCustom(), addedOption);
   }
 }
