@@ -21,7 +21,7 @@
 
         <AD name="OIDC NameID Policy" id="usernameAttributeList"
             type="String" cardinality="100"
-            default="name, email"
+            default="preferred_username, name, email, sub"
             description="List of attributes that are considered for replacing the username of the logged in user.
             If any of these attributes match any of the attributes within the SecurityAssertion, the value of the first matching attribute will be used as the username.
             (Does not apply when NameIDFormat is of the following: X509, persistent, kerberos or unspecified, and the username is not empty).-"/>

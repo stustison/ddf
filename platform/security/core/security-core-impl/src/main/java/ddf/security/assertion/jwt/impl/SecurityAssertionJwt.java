@@ -17,7 +17,6 @@ import static org.pac4j.core.profile.jwt.JwtClaims.EXPIRATION_TIME;
 import static org.pac4j.core.profile.jwt.JwtClaims.ISSUER;
 import static org.pac4j.core.profile.jwt.JwtClaims.NOT_BEFORE;
 
-import com.google.common.collect.ImmutableList;
 import ddf.security.assertion.Attribute;
 import ddf.security.assertion.AttributeStatement;
 import ddf.security.assertion.AuthenticationStatement;
@@ -181,14 +180,19 @@ public class SecurityAssertionJwt implements SecurityAssertion {
   }
 
   private String getMainPrincipalAsString() throws NoSuchElementException {
-    final List<String> claimsToCheck = ImmutableList.of("preferred_username", "email", "sub");
-
-    for (String claim : claimsToCheck) {
-      return (String) attributes.get(claim);
+    for (String claim : usernameAttributeList) {
+      try {
+        return (String) attributes.get(claim);
+      } catch (NoSuchElementException e) {
+        LOGGER.debug(
+            "Could not find username claim [%s] in jwt claims [%s]",
+            claim, String.join(",", attributes.keySet()), e);
+      }
     }
+
     throw new NoSuchElementException(
         String.format(
-            "Cannot find any principal claims [%s] in jwt claims [%s]",
-            String.join(",", claimsToCheck), String.join(",", attributes.keySet())));
+            "Cannot find any username claims [%s] in jwt claims [%s]",
+            String.join(",", usernameAttributeList), String.join(",", attributes.keySet())));
   }
 }
