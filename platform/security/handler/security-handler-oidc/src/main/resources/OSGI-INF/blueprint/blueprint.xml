@@ -32,10 +32,10 @@
             <cm:property name="realm" value="master"/>
             <cm:property name="secret" value="secret"/>
             <cm:property name="discoveryUri"
-                         value="http://localhost:8080/auth/realms/master/.well-known/openid-configuration"/>
-            <cm:property name="baseUri" value="http://localhost:8080/auth"/>
+                         value="https://localhost:8443/auth/realms/master/.well-known/openid-configuration"/>
+            <cm:property name="baseUri" value="https://localhost:8443/auth"/>
             <cm:property name="logoutUri"
-                         value="http://localhost:8080/auth/realms/master/protocol/openid-connect/logout"/>
+                         value="https://localhost:8443/auth/realms/master/protocol/openid-connect/logout"/>
             <cm:property name="scope" value="openid profile email resource.read"/>
             <cm:property name="useNonce">
                 <value type="java.lang.Boolean">true</value>

@@ -34,13 +34,13 @@
     <AD name="Secret" id="secret" type="String" default="secret"
       description="This value must match the value set on the Identity Provider."/>
 
-    <AD name="Discovery URI" id="discoveryUri" type="String" default="http://localhost:8080/auth/realms/master/.well-known/openid-configuration"
+    <AD name="Discovery URI" id="discoveryUri" type="String" default="https://localhost:8443/auth/realms/master/.well-known/openid-configuration"
         description="Discovery URI for fetching OP metadata (http://openid.net/specs/openid-connect-discovery-1_0.html)."/>
 
-    <AD name="Base URI" id="baseUri" type="String" default="http://localhost:8080/auth"
+    <AD name="Base URI" id="baseUri" type="String" default="https://localhost:8443/auth"
         description="Base URI for IdP. Do not fill out both this and the Discovery URI. Only one is needed depending on the IdP in use."/>
 
-    <AD name="Logout URI" id="logoutUri" type="String" default="http://localhost:8080/auth/realms/master/protocol/openid-connect/logout"
+    <AD name="Logout URI" id="logoutUri" type="String" default="https://localhost:8443/auth/realms/master/protocol/openid-connect/logout"
         description="URI directing to single logout service of the IdP in use."/>
 
     <AD name="Scope" id="scope" type="String" default="openid profile email resource.read"
@@ -60,8 +60,6 @@
         description="Informs the Authorization Server of the mechanism to be used for returning parameters from the Authorization Endpoint.">
         <Option label="unspecified" value=""/>
         <Option label="form_post" value="form_post"/>
-        <Option label="query" value="query"/>
-        <Option label="fragment" value="fragment"/>
     </AD>
 
   </OCD>
