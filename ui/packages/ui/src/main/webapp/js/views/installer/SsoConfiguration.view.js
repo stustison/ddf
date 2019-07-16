@@ -75,6 +75,7 @@ define([
       this.navigationModel.set('hidePrevious', false)
       this.modified = false
       this.listenTo(this.navigationModel, 'next', this.next)
+      this.listenTo(this.navigationModel, 'previous', this.previous)
       this.listenTo(wreqr.vent, 'ssoConfigModified', this.setModified)
 
       this.samlMetatypes = []
@@ -144,6 +145,9 @@ define([
 
       this.navigationModel.set('modified', this.modified)
       this.navigationModel.nextStep('', 100)
+    },
+    previous: function() {
+      this.navigationModel.previousStep()
     },
     persistConfig: function() {
       var config = this.getConfig()

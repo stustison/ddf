@@ -130,9 +130,9 @@ public class WebSSOFilter implements SecurityFilter {
       FilterChain filterChain,
       List<AuthenticationHandler> handlers)
       throws AuthenticationException, IOException {
+    HandlerResult result = null;
 
     // First pass, see if anyone can come up with proper security token from the get-go
-    HandlerResult result;
     LOGGER.debug("Checking for existing tokens in request.");
 
     final String path = httpRequest.getRequestURI();
@@ -142,7 +142,9 @@ public class WebSSOFilter implements SecurityFilter {
       ipAddress = httpRequest.getRemoteAddr();
     }
 
-    result = checkForPreviousResultOnSession(httpRequest, ipAddress);
+    if (contextPolicyManager.getSessionAccess()) {
+      result = checkForPreviousResultOnSession(httpRequest, ipAddress);
+    }
 
     // no result found on session, try and get result from handlers
     if (result == null) {

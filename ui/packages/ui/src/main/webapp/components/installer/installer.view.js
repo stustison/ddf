@@ -92,9 +92,9 @@ define([
     regions: {
       welcome: '#welcome',
       profiles: '#profiles',
-      ssoConfiguration: '#ssoConfiguration',
       guestClaims: '#guestClaims',
       configuration: '#configuration',
+      ssoConfiguration: '#ssoConfiguration',
       finish: '#finish',
       navigation: '#navigation',
     },
@@ -121,17 +121,17 @@ define([
       if (this.profiles.currentView && stepNumber !== profileStep) {
         this.hideProfiles()
       }
-      if (
-        this.ssoConfiguration.currentView &&
-        stepNumber != ssoConfigurationStep
-      ) {
-        this.hideSsoConfiguration()
-      }
       if (this.guestClaims.currentView && stepNumber !== guestClaimsStep) {
         this.hideGuestClaims()
       }
       if (this.configuration.currentView && stepNumber !== configStep) {
         this.hideConfiguration()
+      }
+      if (
+        this.ssoConfiguration.currentView &&
+        stepNumber != ssoConfigurationStep
+      ) {
+        this.hideSsoConfiguration()
       }
       if (this.finish.currentView && stepNumber !== finishStep) {
         this.hideFinish()
@@ -142,17 +142,17 @@ define([
       } else if (!this.profiles.currentView && stepNumber === profileStep) {
         this.showProfiles()
       } else if (
-        !this.ssoConfiguration.currentView &&
-        stepNumber === ssoConfigurationStep
-      ) {
-        this.showSsoConfiguration()
-      } else if (
         !this.guestClaims.currentView &&
         stepNumber === guestClaimsStep
       ) {
         this.showGuestClaims()
       } else if (!this.configuration.currentView && stepNumber === configStep) {
         this.showConfiguration()
+      } else if (
+        !this.ssoConfiguration.currentView &&
+        stepNumber === ssoConfigurationStep
+      ) {
+        this.showSsoConfiguration()
       } else if (!this.finish.currentView && stepNumber >= finishStep) {
         this.showFinish()
       }
@@ -221,6 +221,28 @@ define([
         this.showLoading()
       }
     },
+    showConfiguration: function() {
+      if (systemPropertiesWrapped.get('fetched')) {
+        if (this.configuration.currentView) {
+          this.configuration.show()
+        } else {
+          this.configuration.show(
+            new ConfigurationView({
+              model: systemPropertiesWrapped.get('systemProperties'),
+              navigationModel: this.model,
+            })
+          )
+        }
+        this.$(this.configuration.el).show()
+      } else {
+        this.listenToOnce(
+          systemPropertiesWrapped,
+          'change:fetched',
+          this.changePage
+        )
+        this.showLoading()
+      }
+    },
     showSsoConfiguration: function() {
       if (ssoConfigurationServiceResponses.get('fetched') != true) {
         // wait for fetch
@@ -261,28 +283,6 @@ define([
       }
       this.$(this.ssoConfiguration.el).show()
     },
-    showConfiguration: function() {
-      if (systemPropertiesWrapped.get('fetched')) {
-        if (this.configuration.currentView) {
-          this.configuration.show()
-        } else {
-          this.configuration.show(
-            new ConfigurationView({
-              model: systemPropertiesWrapped.get('systemProperties'),
-              navigationModel: this.model,
-            })
-          )
-        }
-        this.$(this.configuration.el).show()
-      } else {
-        this.listenToOnce(
-          systemPropertiesWrapped,
-          'change:fetched',
-          this.changePage
-        )
-        this.showLoading()
-      }
-    },
     showFinish: function() {
       if (this.finish.currentView) {
         this.finish.show()
@@ -299,21 +299,21 @@ define([
       this.profiles.close()
       this.$(this.profiles.el).hide()
     },
-    hideSsoConfiguration: function() {
-      this.ssoConfiguration.close()
-      this.$(this.ssoConfiguration.el).hide()
-    },
     hideGuestClaims: function() {
       this.guestClaims.close()
       this.$(this.guestClaims.el).hide()
     },
-    hideFinish: function() {
-      this.finish.close()
-      this.$(this.finish.el).hide()
-    },
     hideConfiguration: function() {
       this.configuration.close()
       this.$(this.configuration.el).hide()
+    },
+    hideSsoConfiguration: function() {
+      this.ssoConfiguration.close()
+      this.$(this.ssoConfiguration.el).hide()
+    },
+    hideFinish: function() {
+      this.finish.close()
+      this.$(this.finish.el).hide()
     },
   })
 

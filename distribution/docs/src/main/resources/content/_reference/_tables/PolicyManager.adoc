@@ -33,7 +33,7 @@
 |Allow Session Storage
 |sessionAccess
 |Boolean
-|Allow for session cookies to be used.
+|Allow for session cookies to be used. Note that the SAML and OIDC authorization types require session storage to be enabled.
 |true
 |true
 

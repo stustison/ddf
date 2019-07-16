@@ -23,7 +23,7 @@ The guest principal will be used either by itself or along with any other princi
 
 === Session Storage
 Enabling session storage allows Jetty to enable the JSESSIONID cookie to maintain the user login.
-
+Note that the `SAML` and `OIDC` authorization types require session storage to be enabled.
 
 === Authentication Types
 

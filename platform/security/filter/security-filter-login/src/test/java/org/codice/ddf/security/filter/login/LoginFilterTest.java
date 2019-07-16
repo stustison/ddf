@@ -42,6 +42,7 @@ import org.codice.ddf.platform.filter.FilterChain;
 import org.codice.ddf.security.handler.api.BaseAuthenticationToken;
 import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.policy.context.ContextPolicy;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,6 +72,7 @@ public class LoginFilterTest {
   @Mock private SecurityToken badSecurityTokenMock;
   @Mock private BaseAuthenticationToken referenceTokenMock;
   @Mock private SessionFactory sessionFactory;
+  @Mock private ContextPolicyManager contextPolicyManager;
 
   @BeforeClass
   public static void init() {
@@ -87,6 +89,7 @@ public class LoginFilterTest {
     loginFilter = new LoginFilter();
     loginFilter.setSecurityManager(securityManagerMock);
     loginFilter.setSessionFactory(sessionFactory);
+    loginFilter.setContextPolicyManager(contextPolicyManager);
     loginFilter.init();
 
     subject =
@@ -113,6 +116,8 @@ public class LoginFilterTest {
     when(sessionFactory.getOrCreateSession(any())).thenReturn(sessionMock);
 
     when(sessionMock.getAttribute(SECURITY_TOKEN_KEY)).thenReturn(securityTokenHolder);
+
+    when(contextPolicyManager.getSessionAccess()).thenReturn(true);
   }
 
   @Test

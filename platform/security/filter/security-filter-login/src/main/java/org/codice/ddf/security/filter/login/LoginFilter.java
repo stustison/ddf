@@ -50,6 +50,7 @@ import org.codice.ddf.security.handler.api.HandlerResult;
 import org.codice.ddf.security.handler.api.SAMLAuthenticationToken;
 import org.codice.ddf.security.handler.api.SessionToken;
 import org.codice.ddf.security.policy.context.ContextPolicy;
+import org.codice.ddf.security.policy.context.ContextPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,8 @@ public class LoginFilter implements SecurityFilter {
   private SecurityManager securityManager;
 
   private SessionFactory sessionFactory;
+
+  private ContextPolicyManager contextPolicyManager;
 
   private int expirationTime;
 
@@ -144,7 +147,9 @@ public class LoginFilter implements SecurityFilter {
     }
 
     // attach subject to the http session
-    addToSession(httpRequest, subject);
+    if (contextPolicyManager.getSessionAccess()) {
+      addToSession(httpRequest, subject);
+    }
 
     // subject is now resolved, perform request as that subject
     httpRequest.setAttribute(SecurityConstants.SECURITY_SUBJECT, subject);
@@ -244,6 +249,10 @@ public class LoginFilter implements SecurityFilter {
 
   public void setSessionFactory(SessionFactory sessionFactory) {
     this.sessionFactory = sessionFactory;
+  }
+
+  public void setContextPolicyManager(ContextPolicyManager contextPolicyManager) {
+    this.contextPolicyManager = contextPolicyManager;
   }
 
   @Override
