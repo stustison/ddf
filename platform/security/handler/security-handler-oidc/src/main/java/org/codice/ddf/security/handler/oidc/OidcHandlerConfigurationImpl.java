@@ -14,6 +14,7 @@
 package org.codice.ddf.security.handler.oidc;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.pac4j.oidc.config.OidcConfiguration.IMPLICIT_FLOWS;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
@@ -78,6 +79,11 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
     responseType = (String) properties.getOrDefault(RESPONSE_TYPE_KEY, responseType);
     responseMode = (String) properties.getOrDefault(RESPONSE_MODE_KEY, responseMode);
     logoutUri = (String) properties.getOrDefault(LOGOUT_URI_KEY, logoutUri);
+
+    // TODO - Remove if fragment response_mode is supported
+    if (IMPLICIT_FLOWS.contains(responseType)) {
+      responseMode = "form_post";
+    }
 
     oidcConfiguration = createOidcConfiguration(idpType, realm, baseUri);
 
@@ -179,7 +185,9 @@ public class OidcHandlerConfigurationImpl implements OidcHandlerConfiguration {
     if (isBlank(callBackUri)) {
       oidcClient.setCallbackUrl(DEFAULT_CALLBACK_URL);
     } else {
-      oidcClient.setCallbackUrl(callBackUri);
+      // Strip additional query parameters from the callBackUri
+      String uri = callBackUri.split("&")[0];
+      oidcClient.setCallbackUrl(uri);
     }
 
     return oidcClient;
