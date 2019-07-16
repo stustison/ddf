@@ -23,7 +23,14 @@
         <cm:managed-properties persistent-id="org.codice.ddf.security.oidc.realm.OidcRealm"
                                update-strategy="container-managed"/>
         <property name="oidcHandlerConfiguration" ref="oidcHandlerConfiguration"/>
-        <property name="usernameAttributeList" value="preferred_username, name, email, sub"/>
+        <property name="usernameAttributeList">
+          <list>
+              <value>preferred_username</value>
+              <value>name</value>
+              <value>email</value>
+              <value>subject</value>
+          </list>
+        </property>
     </bean>
 
     <service ref="oidcRealm" interface="org.apache.shiro.realm.Realm"/>
