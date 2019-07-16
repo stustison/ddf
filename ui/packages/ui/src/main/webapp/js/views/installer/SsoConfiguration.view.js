@@ -72,7 +72,7 @@ define([
     initialize: function(options) {
       this.metatypes = options.metatypes
       this.navigationModel = options.navigationModel
-      this.navigationModel.set('hidePrevious', true)
+      this.navigationModel.set('hidePrevious', false)
       this.modified = false
       this.listenTo(this.navigationModel, 'next', this.next)
       this.listenTo(wreqr.vent, 'ssoConfigModified', this.setModified)
