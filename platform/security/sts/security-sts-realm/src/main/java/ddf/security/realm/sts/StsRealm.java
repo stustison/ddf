@@ -23,7 +23,6 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -532,10 +531,6 @@ public class StsRealm extends AuthenticatingRealm implements STSClientConfigurat
 
   public void setUsernameAttributeList(List<String> usernameAttributeList) {
     this.usernameAttributeList = usernameAttributeList;
-  }
-
-  public void setUsernameAttributeList(String usernameAttributeList) {
-    this.usernameAttributeList = Arrays.asList(usernameAttributeList.split("\\s*,\\s*"));
   }
 
   @Override
