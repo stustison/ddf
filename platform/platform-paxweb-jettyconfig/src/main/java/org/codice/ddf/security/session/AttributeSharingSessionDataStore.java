@@ -96,6 +96,11 @@ public class AttributeSharingSessionDataStore extends AbstractSessionDataStore {
   }
 
   @Override
+  public SessionData doLoad(String id) throws Exception {
+    return sessionDataMap.get(id);
+  }
+
+  @Override
   public SessionData newSessionData(
       String id, long created, long accessed, long lastAccessed, long maxInactiveMs) {
     SessionData sessionData =
@@ -157,5 +162,10 @@ public class AttributeSharingSessionDataStore extends AbstractSessionDataStore {
       sessionData = sessionDataMap.get(candidateId);
     }
     return sessionData != null && sessionData.getExpiry() < now;
+  }
+
+  @Override
+  public String dumpSelf() {
+    return this.getClass().getName();
   }
 }

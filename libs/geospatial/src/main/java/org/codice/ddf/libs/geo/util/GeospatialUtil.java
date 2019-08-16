@@ -13,22 +13,21 @@
  */
 package org.codice.ddf.libs.geo.util;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
-import javax.measure.Measure;
-import javax.measure.quantity.Length;
-import javax.measure.unit.SI;
-import javax.measure.unit.Unit;
+import javax.measure.Unit;
+import javax.measure.UnitConverter;
 import org.apache.commons.collections.CollectionUtils;
 import org.codice.ddf.libs.geo.GeoFormatException;
 import org.geotools.factory.Hints;
 import org.geotools.geometry.jts.JTS;
+import org.geotools.measure.Measure;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -39,6 +38,7 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import systems.uom.common.USCustomary;
 
 /** Convenience methods for performing geospatial conversions. */
 public class GeospatialUtil {
@@ -288,7 +288,7 @@ public class GeospatialUtil {
   public static Geometry createCirclePolygon(
       double lat, double lon, double radius, int maxVertices, double distanceTolerance) {
     double step = distanceTolerance;
-    Measure measure = Measure.valueOf(radius, SI.METER);
+    Measure measure = new Measure(radius, USCustomary.METER);
     Point jtsPoint = new GeometryFactory().createPoint(new Coordinate(lon, lat));
 
     Geometry bufferedCircle =
@@ -307,10 +307,10 @@ public class GeospatialUtil {
   }
 
   private static Geometry createBufferedCircleFromPoint(
-      Measure<Double, Length> distance, CoordinateReferenceSystem origCRS, Geometry point) {
+      Measure distance, CoordinateReferenceSystem origCRS, Geometry point) {
     Geometry pointGeo = point;
 
-    Unit<Length> unit = distance.getUnit();
+    Unit unit = null;
     if (!(origCRS instanceof ProjectedCRS)) {
 
       double x = point.getCoordinate().x;
@@ -323,14 +323,18 @@ public class GeospatialUtil {
         MathTransform toTransform = CRS.findMathTransform(DefaultGeographicCRS.WGS84, utmCrs);
         MathTransform fromTransform = CRS.findMathTransform(utmCrs, DefaultGeographicCRS.WGS84);
         pointGeo = JTS.transform(point, toTransform);
-        return JTS.transform(pointGeo.buffer(distance.doubleValue(SI.METER)), fromTransform);
+        return JTS.transform(pointGeo.buffer(distance.doubleValue()), fromTransform);
       } catch (MismatchedDimensionException | TransformException | FactoryException e) {
         LOGGER.debug("Unable to create buffered circle from point.", e);
       }
     } else {
-      unit = (Unit<Length>) origCRS.getCoordinateSystem().getAxis(0).getUnit();
+      unit = origCRS.getCoordinateSystem().getAxis(0).getUnit();
     }
 
-    return pointGeo.buffer(distance.doubleValue(unit));
+    if (unit != null) {
+      UnitConverter converter = distance.getUnit().getConverterTo(unit);
+      return pointGeo.buffer(converter.convert(distance.doubleValue()));
+    }
+    return pointGeo.buffer(distance.doubleValue());
   }
 }
